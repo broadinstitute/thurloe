@@ -8,9 +8,13 @@ import MediaTypes._
 import spray.json._
 import ApiDataModelsJsonProtocol._
 
+import scala.util.{Try, Failure, Success}
+
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class ThurloeService extends Actor with MyService {
+class ThurloeService extends Actor with ThurloeApi {
+
+  val dataAccess = DatabaseConnectedThurloe
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
@@ -22,36 +26,66 @@ class ThurloeService extends Actor with MyService {
   def receive = runRoute(thurloeRoutes)
 }
 
+case object DatabaseConnectedThurloe extends DataAccess {
+  
+  // TODO: Fill THESE in with database access implementation.
+  def keyLookup(key: String) = Success(KeyValuePair("yek", "eulav"))
+  def collectAll() = Success(Seq(
+    KeyValuePair("key1", "Bob Loblaw's Law Blog"),
+    KeyValuePair("key2", "Blah blah blah blah blah")))
+  def setKeyValuePair(keyValuePair: KeyValuePair): Try[Unit] = Success(())
+  def deleteKeyValuePair(key: String): Try[Unit] = Success()
+}
+
 // this trait defines our service behavior independently from the service actor
 @Api(value="/thurloe", description = "Thurloe service", produces = "application/json", position = 1)
-trait MyService extends HttpService {
+trait ThurloeApi extends HttpService {
 
   import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
+  val dataAccess: DataAccess
 
   val thurloePrefix = "thurloe"
 
   val getRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     get {
-      // TODO: Get a value from the DB instead of this placeholder
-      respondWithMediaType(`application/json`) {
-        complete {
-          val json = KeyValuePair(key, "Bob Loblaw's Law Blog").toJson
-          json.prettyPrint
+      dataAccess.keyLookup(key) match {
+        case Success(keyValuePair) =>
+          respondWithMediaType(`application/json`) {
+          complete {
+            keyValuePair.toJson.prettyPrint
+          }
         }
+        case Failure(e: KeyNotFoundException) =>
+          respondWithStatus(StatusCodes.NotFound) {
+            complete {
+              s"Key not found: $key"
+            }
+          }
+        case Failure(e) =>
+          respondWithStatus(StatusCodes.InternalServerError) {
+            complete {
+              s"Oops! $e"
+            }
+          }
       }
     }
   }
 
   val getAllRoute = path(thurloePrefix / Segment) { (userId) =>
     get {
-      // TODO: Get all values from the DB instead of this placeholder
-      respondWithMediaType(`application/json`) {
-        complete {
-          val json = Array(
-            KeyValuePair("key1", "Bob Loblaw's Law Blog"),
-            KeyValuePair("key2", "Blah blah blah blah blah")).toJson
-          json.prettyPrint
-        }
+      dataAccess.collectAll() match {
+        case Success(array) =>
+          respondWithMediaType(`application/json`) {
+            complete {
+              array.toJson.prettyPrint
+            }
+          }
+        case Failure(e) =>
+          respondWithStatus(StatusCodes.InternalServerError) {
+            complete {
+              s"Oops! $e"
+            }
+          }
       }
     }
   }
@@ -59,12 +93,22 @@ trait MyService extends HttpService {
   val setRoute = path(thurloePrefix / Segment) { (userId) =>
     post {
       entity(as[KeyValuePair]) { keyValuePair =>
-        // TODO: Database write here.
-        respondWithMediaType(`application/json`) {
-          complete {
-            val json = KeyValuePair(keyValuePair.key, keyValuePair.value).toJson
-            json.prettyPrint
+        dataAccess.setKeyValuePair(keyValuePair) match {
+          case Success(unit) =>
+            respondWithMediaType(`application/json`) {
+              respondWithStatus(StatusCodes.OK) {
+                complete {
+                  ""
+                }
+              }
           }
+          case Failure(e) =>
+            respondWithStatus(StatusCodes.InternalServerError)
+            {
+              complete {
+                s"Oops! $e"
+              }
+            }
         }
       }
     }
@@ -72,11 +116,25 @@ trait MyService extends HttpService {
 
   val deleteRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     delete {
-      // TODO: Delete the entry here.
-      respondWithMediaType(`text/plain`) {
-        complete {
-          "Done"
-        }
+      dataAccess.deleteKeyValuePair(key) match {
+        case Success(_) =>
+          respondWithMediaType(`text/plain`) {
+            complete {
+              "Key deleted."
+            }
+          }
+        case Failure(e: KeyNotFoundException) =>
+          respondWithStatus(StatusCodes.NotFound) {
+            complete {
+              s"Key not found: $key"
+            }
+          }
+        case Failure(e) =>
+          respondWithStatus(StatusCodes.InternalServerError) {
+            complete {
+              s"Oops! $e"
+            }
+          }
       }
     }
   }

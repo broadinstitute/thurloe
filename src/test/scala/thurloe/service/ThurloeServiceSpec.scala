@@ -5,10 +5,14 @@ import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
+import scala.collection.immutable.Map
 
-class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with MyService {
+import scala.util.{Failure, Try, Success}
+
+class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi {
 
   import ApiDataModelsJsonProtocol.format
+  val dataAccess = MockedThurloeService
 
   def actorRefFactory = system
 
@@ -22,22 +26,16 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with MyService 
         assertResult(StatusCodes.OK) {
           status
         }
-        assertResult(kvp1) {
-          responseAs[KeyValuePair]
-        }
       }
 
       Post(uriPrefix, kvp2) ~> thurloeRoutes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
-        assertResult(kvp2) {
-          responseAs[KeyValuePair]
-        }
       }
     }
 
-    it("should return the just-stored key value pairs when requested") {
+    it("should return stored key value pairs when requested") {
       Get(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
         assertResult(kvp1) {
           responseAs[KeyValuePair]
@@ -65,9 +63,6 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with MyService 
         assertResult(StatusCodes.OK) {
           status
         }
-        assertResult("Done") {
-          responseAs[String]
-        }
       }
     }
 
@@ -77,6 +72,29 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with MyService 
           status
         }
       }
+    }
+  }
+}
+
+case object MockedThurloeService extends DataAccess {
+  var database = Map[String, String]()
+
+  def keyLookup(key: String) = database get key match {
+    case Some(x) => Success(KeyValuePair(key, x))
+    case None => Failure(new KeyNotFoundException())
+  }
+  def collectAll() = Success((database map {case (key,value) => KeyValuePair(key, value)}).to[Seq])
+  def setKeyValuePair(keyValuePair: KeyValuePair): Try[Unit] = {
+    database = database + (keyValuePair.key -> keyValuePair.value)
+    Success(())
+  }
+  def deleteKeyValuePair(key: String): Try[Unit] = {
+    if (database contains key) {
+      database = database - key
+      Success()
+    }
+    else {
+      Failure(new KeyNotFoundException)
     }
   }
 }
