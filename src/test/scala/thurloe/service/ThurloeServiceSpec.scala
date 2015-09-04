@@ -1,33 +1,82 @@
 package thurloe.service
 
-import org.scalatest.{FunSpec}
-// import spray.http._
+import org.scalatest.FunSpec
+import spray.http.StatusCodes
+import spray.testkit.ScalatestRouteTest
+import spray.httpx.SprayJsonSupport._
+import spray.json.DefaultJsonProtocol._
 
-class ThurloeServiceSpec extends FunSpec with MyService {
+class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with MyService {
 
-  // TODO: Test the real API not the one I copied the tests from:
+  import ApiDataModelsJsonProtocol.format
 
-  //def actorRefFactory = system
-  def actorRefFactory = ???
+  def actorRefFactory = system
 
-  describe("MyService") {
-    it("should return a greeting for GET requests to the root path") {
-//      Get() ~> myRoute ~> check {
-//        responseAs[String] must contain("Say hello")
-//      }
+  val uriPrefix = "/thurloe/username"
+  val kvp1 = KeyValuePair("key", "value")
+  val kvp2 = KeyValuePair("678457834", "7984574398")
+
+  describe("The Thurloe Service") {
+    it("should allow key/value pairs to be set and echo the key/value pair back in response") {
+      Post(uriPrefix, kvp1) ~> thurloeRoutes ~> check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+        assertResult(kvp1) {
+          responseAs[KeyValuePair]
+        }
+      }
+
+      Post(uriPrefix, kvp2) ~> thurloeRoutes ~> check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+        assertResult(kvp2) {
+          responseAs[KeyValuePair]
+        }
+      }
     }
 
-    it("should leave GET requests to other paths unhandled") {
-//      Get("/kermit") ~> myRoute ~> check {
-//        handled must beFalse
-//      }
+    it("should return the just-stored key value pairs when requested") {
+      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+        assertResult(kvp1) {
+          responseAs[KeyValuePair]
+        }
+      }
+      Get(s"$uriPrefix/${kvp2.key}") ~> thurloeRoutes ~> check {
+        assertResult(kvp2) {
+          responseAs[KeyValuePair]
+        }
+      }
     }
 
-    it("should return a MethodNotAllowed error for PUT requests to the root path") {
-//      Put() ~> sealRoute(myRoute) ~> check {
-//        status === MethodNotAllowed
-//        responseAs[String] === "HTTP method not allowed, supported methods: GET"
-//      }
+    it("should return all stored values on GET with no key supplied.") {
+      // This one should return both of the key/value pairs we've stored:
+      Get(uriPrefix) ~> thurloeRoutes ~> check {
+        val resp = responseAs[Seq[KeyValuePair]]
+        assert(resp.size == 2)
+        assert(resp contains kvp1)
+        assert(resp contains kvp2)
+      }
+    }
+
+    it("should allow key-based deletion") {
+      Delete(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+        assertResult("Done") {
+          responseAs[String]
+        }
+      }
+    }
+
+    it("should return an appropriate error code for a missing value") {
+      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+        assertResult(StatusCodes.NotFound) {
+          status
+        }
+      }
     }
   }
 }
