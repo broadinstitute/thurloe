@@ -1,6 +1,8 @@
 package thurloe.service
 
+import akka.serialization.Serialization
 import com.wordnik.swagger.annotations.{ApiModel, ApiModelProperty}
+import spray.http.HttpEntity
 import spray.json.DefaultJsonProtocol
 
 import scala.annotation.meta.field

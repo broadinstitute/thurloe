@@ -33,10 +33,11 @@ trait MyService extends HttpService {
   val getRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     get {
       // TODO: Get a value from the DB instead of this placeholder
-      respondWithMediaType(`application/json`)
-      complete {
-        val json = KeyValuePair(key, "Bob Loblaw's Law Blog").toJson
-        json.prettyPrint
+      respondWithMediaType(`application/json`) {
+        complete {
+          val json = KeyValuePair(key, "Bob Loblaw's Law Blog").toJson
+          json.prettyPrint
+        }
       }
     }
   }
@@ -44,12 +45,13 @@ trait MyService extends HttpService {
   val getAllRoute = path(thurloePrefix / Segment) { (userId) =>
     get {
       // TODO: Get all values from the DB instead of this placeholder
-      respondWithMediaType(`application/json`)
-      complete {
-        val json = Array(
-          KeyValuePair("key1", "Bob Loblaw's Law Blog"),
-          KeyValuePair("key2", "Blah blah blah blah blah")).toJson
-        json.prettyPrint
+      respondWithMediaType(`application/json`) {
+        complete {
+          val json = Array(
+            KeyValuePair("key1", "Bob Loblaw's Law Blog"),
+            KeyValuePair("key2", "Blah blah blah blah blah")).toJson
+          json.prettyPrint
+        }
       }
     }
   }
@@ -58,10 +60,11 @@ trait MyService extends HttpService {
     post {
       entity(as[KeyValuePair]) { keyValuePair =>
         // TODO: Database write here.
-        respondWithMediaType(`application/json`)
-        complete {
-          val json = KeyValuePair(keyValuePair.key, keyValuePair.value).toJson
-          json.prettyPrint
+        respondWithMediaType(`application/json`) {
+          complete {
+            val json = KeyValuePair(keyValuePair.key, keyValuePair.value).toJson
+            json.prettyPrint
+          }
         }
       }
     }
@@ -70,27 +73,13 @@ trait MyService extends HttpService {
   val deleteRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     delete {
       // TODO: Delete the entry here.
-      respondWithMediaType(`text/plain`)
-      respondWithStatus(StatusCode.int2StatusCode(200))
-      complete {
-        "Done"
-      }
-    }
-  }
-
-  val myRoute = path("") {
-    get {
-      respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
+      respondWithMediaType(`text/plain`) {
         complete {
-          <html>
-            <body>
-              <h1>Say hello to <i>Thurloeeeeeeee</i>!</h1>
-            </body>
-          </html>
+          "Done"
         }
       }
     }
   }
 
-  val thurloeRoutes: Route = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute ~ myRoute
+  val thurloeRoutes: Route = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute
 }
