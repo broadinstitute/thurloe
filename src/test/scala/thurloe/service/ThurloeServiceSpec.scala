@@ -9,12 +9,14 @@ import scala.collection.immutable.Map
 
 import scala.util.{Failure, Try, Success}
 
-class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi {
+class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol.format
-  val dataAccess = MockedThurloeService
 
-  def actorRefFactory = system
+  def thurloeService = new ThurloeService {
+    val dataAccess = MockedThurloeDatabase
+    def actorRefFactory = system
+  }
 
   val uriPrefix = "/thurloe/username"
   val kvp1 = KeyValuePair("key", "value")
@@ -22,13 +24,13 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
 
   describe("The Thurloe Service") {
     it("should allow key/value pairs to be set and echo the key/value pair back in response") {
-      Post(uriPrefix, kvp1) ~> thurloeRoutes ~> check {
+      Post(uriPrefix, kvp1) ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
       }
 
-      Post(uriPrefix, kvp2) ~> thurloeRoutes ~> check {
+      Post(uriPrefix, kvp2) ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
@@ -36,12 +38,12 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
     }
 
     it("should return stored key value pairs when requested") {
-      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeService.routes ~> check {
         assertResult(kvp1) {
           responseAs[KeyValuePair]
         }
       }
-      Get(s"$uriPrefix/${kvp2.key}") ~> thurloeRoutes ~> check {
+      Get(s"$uriPrefix/${kvp2.key}") ~> thurloeService.routes ~> check {
         assertResult(kvp2) {
           responseAs[KeyValuePair]
         }
@@ -50,7 +52,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
 
     it("should return all stored values on GET with no key supplied.") {
       // This one should return both of the key/value pairs we've stored:
-      Get(uriPrefix) ~> thurloeRoutes ~> check {
+      Get(uriPrefix) ~> thurloeService.routes ~> check {
         val resp = responseAs[Seq[KeyValuePair]]
         assert(resp.size == 2)
         assert(resp contains kvp1)
@@ -59,7 +61,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
     }
 
     it("should allow key-based deletion") {
-      Delete(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+      Delete(s"$uriPrefix/${kvp1.key}") ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
@@ -67,7 +69,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
     }
 
     it("should return an appropriate error code for a missing value") {
-      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.NotFound) {
           status
         }
@@ -76,7 +78,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
   }
 }
 
-case object MockedThurloeService extends DataAccess {
+case object MockedThurloeDatabase extends DataAccess {
   var database = Map[String, String]()
 
   def keyLookup(key: String) = database get key match {

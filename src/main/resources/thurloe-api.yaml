@@ -1,0 +1,96 @@
+swagger: "2.0"
+info:
+  title: Thurloe Service
+  version: 0.1
+paths:
+  /thurloe/{userId}:
+    get:
+      operationId: getAll
+      summary: Returns a list of all keys and values stored in Thurloe.
+      produces:
+      - application/json
+      - text/plain
+      parameters:
+      - name: userId
+        in: path
+        description: The user ID of the requester
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal server error
+    post:
+      operationId: setKey
+      summary: Adds or resets a single key/value pair to the database.
+      produces:
+      - text/plain
+      consumes:
+      - application/json
+      parameters:
+      - name: UserId
+        in: path
+        description: User ID of the requester
+        required: true
+        type: string
+      - name: body
+        in: body
+        description: Key/Value pair to add to the system
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+        400:
+          description: Bad request (e.g. invalid JSON input)
+        500:
+          description: Internal server error
+  /thurloe/{userId}/{key}:
+    get:
+      operationId: getKvp
+      summary: Returns a single key/value pair, looked up by key.
+      produces:
+      - application/json
+      - text/plain
+      parameters:
+      - name: userId
+        in: path
+        description: The user ID of the requester
+        required: true
+        type: string
+      - name: key
+        in: path
+        description: The key of the data to return
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+        404:
+          description: Key not found
+        500:
+          description: Internal server error
+    delete:
+      operationId: deleteKvp
+      summary: Deletes a single key/value pair, referenced by key.
+      produces:
+      - text/plain
+      parameters:
+      - name: userId
+        in: path
+        description: The user ID of the requester
+        required: true
+        type: string
+      - name: key
+        in: path
+        description: The key of the data to return
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+        404:
+          description: Key not found
+        500:
+          description: Internal server error
