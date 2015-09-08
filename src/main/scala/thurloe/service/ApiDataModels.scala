@@ -1,19 +1,13 @@
 package thurloe.service
 
-import com.wordnik.swagger.annotations.{ApiModel, ApiModelProperty}
 import spray.json.DefaultJsonProtocol
 
-import scala.annotation.meta.field
-
 object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
-  implicit val format = jsonFormat2(KeyValuePair)
+  implicit val keyValuePairFormat = jsonFormat2(KeyValuePair)
+  implicit val userKeyValuePairFormat = jsonFormat2(UserKeyValuePair)
+  implicit val userKeyValuePairsFormat = jsonFormat2(UserKeyValuePairs)
 }
 
-@ApiModel(value = "Key Value Pair")
-case class KeyValuePair
-(
-  @(ApiModelProperty@field)(required = true, value = "The key")
-  key: String,
-  @(ApiModelProperty@field)(required = true, value = "The value")
-  value: String
-)
+case class KeyValuePair(key: String, value: String)
+case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
+case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair])

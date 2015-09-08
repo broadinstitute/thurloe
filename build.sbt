@@ -13,7 +13,6 @@ val downgradedSprayV = "1.3.1"
 val akkaV = "2.3.12"
 
 libraryDependencies ++= Seq(
-  "com.gettyimages" %% "spray-swagger" % "0.5.1",
   "org.webjars" % "swagger-ui" % "2.1.1",
   "io.spray" %% "spray-can" % sprayV,
   "io.spray" %% "spray-routing" % sprayV,
