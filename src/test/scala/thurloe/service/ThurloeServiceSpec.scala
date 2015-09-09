@@ -5,6 +5,7 @@ import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
+import thurloe.database.{KeyNotFoundException, DataAccess}
 import scala.collection.immutable.Map
 
 import scala.util.{Failure, Try, Success}

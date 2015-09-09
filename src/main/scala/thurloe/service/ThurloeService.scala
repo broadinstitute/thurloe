@@ -6,6 +6,7 @@ import spray.routing.HttpService
 import MediaTypes._
 import spray.json._
 import ApiDataModelsJsonProtocol._
+import thurloe.database.{KeyNotFoundException, DataAccess}
 
 import scala.util.{Failure, Success}
 
