@@ -15,9 +15,9 @@ class ThurloeServiceActor extends HttpServiceActor with ActorLogging {
   }
 
   // TODO: Relies on swagger existing in resources/swagger/
-  val swaggerSite = HostedResource("swagger/index.html", "swagger", "swagger", context)
+  val swaggerSite = HostedResource("swagger/index.html", Option("swagger"), "swagger", context)
 
-  val apiSpecYaml = new HostedResource("thurloe-api.yaml", "", "thurloe-api", context)
+  val apiSpecYaml = new HostedResource("yaml/thurloe-api.yaml", None, "thurloe-api", context)
 
   // this actor only runs our route, but you could add
   // other things here, like request stream processing
@@ -25,12 +25,12 @@ class ThurloeServiceActor extends HttpServiceActor with ActorLogging {
   def receive = runRoute(thurloeService.routes ~ swaggerSite.routes ~ apiSpecYaml.routes)
 }
 
-case class HostedResource(resource: String, resourceDirectory: String, path: String, actorRefFactorye: ActorRefFactory) extends HttpService {
-
-  implicit val actorRefFactory = actorRefFactorye
-  val routes =
-    path(path) { getFromResource(resource) } ~
-      getFromResourceDirectory(resourceDirectory)
+case class HostedResource(resource: String, resourceDirectory: Option[String], path: String, actorRefFactoryImp: ActorRefFactory) extends HttpService {
+  implicit val actorRefFactory = actorRefFactoryImp
+  val routes = resourceDirectory match {
+    case Some(rd) => path(path) { getFromResource(resource) } ~ getFromResourceDirectory(rd)
+    case None => path(path) { getFromResource(resource) }
+  }
 }
 
 case object ThurloeDatabaseConnector extends DataAccess {
