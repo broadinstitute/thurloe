@@ -22,7 +22,7 @@ trait ThurloeService extends HttpService {
         case Success(keyValuePair) =>
           respondWithMediaType(`application/json`) {
             complete {
-              keyValuePair.toJson.prettyPrint
+              UserKeyValuePair(userId, keyValuePair).toJson.prettyPrint
             }
           }
         case Failure(e: KeyNotFoundException) =>
@@ -47,7 +47,7 @@ trait ThurloeService extends HttpService {
         case Success(array) =>
           respondWithMediaType(`application/json`) {
             complete {
-              array.toJson.prettyPrint
+              UserKeyValuePairs(userId, array).toJson.prettyPrint
             }
           }
         case Failure(e) =>
@@ -60,9 +60,9 @@ trait ThurloeService extends HttpService {
     }
   }
 
-  val setRoute = path(thurloePrefix / Segment) { (userId) =>
+  val setRoute = path(thurloePrefix) {
     post {
-      entity(as[KeyValuePair]) { keyValuePair =>
+      entity(as[UserKeyValuePair]) { case UserKeyValuePair(userId, keyValuePair) =>
         dataAccess.setKeyValuePair(keyValuePair) match {
           case Success(unit) =>
             respondWithMediaType(`application/json`) {
