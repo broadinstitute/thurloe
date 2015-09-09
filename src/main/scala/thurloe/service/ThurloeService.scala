@@ -91,7 +91,7 @@ trait ThurloeService extends HttpService {
         case Success(_) =>
           respondWithMediaType(`text/plain`) {
             complete {
-              "Key deleted."
+              ""
             }
           }
         case Failure(e: KeyNotFoundException) =>

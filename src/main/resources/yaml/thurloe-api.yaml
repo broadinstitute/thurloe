@@ -7,8 +7,6 @@ paths:
     post:
       operationId: setKey
       summary: Adds or resets a single key/value pair to the database for a given user ID.
-      produces:
-      - text/plain
       consumes:
       - application/json
       parameters:
