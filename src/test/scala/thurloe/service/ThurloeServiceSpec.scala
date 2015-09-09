@@ -5,30 +5,36 @@ import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
+import thurloe.database.{KeyNotFoundException, DataAccess}
 import scala.collection.immutable.Map
 
 import scala.util.{Failure, Try, Success}
 
-class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi {
+class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
-  import ApiDataModelsJsonProtocol.format
-  val dataAccess = MockedThurloeService
+  import ApiDataModelsJsonProtocol._
 
-  def actorRefFactory = system
+  def thurloeService = new ThurloeService {
+    val dataAccess = MockedThurloeDatabase
+    def actorRefFactory = system
+  }
 
-  val uriPrefix = "/thurloe/username"
+  val uriPrefix = "/thurloe"
+  val username = "username"
   val kvp1 = KeyValuePair("key", "value")
+  val ukvp1 = UserKeyValuePair(username, kvp1)
   val kvp2 = KeyValuePair("678457834", "7984574398")
+  val ukvp2 = UserKeyValuePair(username, kvp2)
 
   describe("The Thurloe Service") {
     it("should allow key/value pairs to be set and echo the key/value pair back in response") {
-      Post(uriPrefix, kvp1) ~> thurloeRoutes ~> check {
+      Post(uriPrefix, ukvp1) ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
       }
 
-      Post(uriPrefix, kvp2) ~> thurloeRoutes ~> check {
+      Post(uriPrefix, ukvp2) ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
@@ -36,30 +42,31 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
     }
 
     it("should return stored key value pairs when requested") {
-      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
-        assertResult(kvp1) {
-          responseAs[KeyValuePair]
+      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
+        assertResult(ukvp1) {
+          responseAs[UserKeyValuePair]
         }
       }
-      Get(s"$uriPrefix/${kvp2.key}") ~> thurloeRoutes ~> check {
-        assertResult(kvp2) {
-          responseAs[KeyValuePair]
+      Get(s"$uriPrefix/$username/${kvp2.key}") ~> thurloeService.routes ~> check {
+        assertResult(ukvp2) {
+          responseAs[UserKeyValuePair]
         }
       }
     }
 
     it("should return all stored values on GET with no key supplied.") {
       // This one should return both of the key/value pairs we've stored:
-      Get(uriPrefix) ~> thurloeRoutes ~> check {
-        val resp = responseAs[Seq[KeyValuePair]]
-        assert(resp.size == 2)
-        assert(resp contains kvp1)
-        assert(resp contains kvp2)
+      Get(s"$uriPrefix/$username") ~> thurloeService.routes ~> check {
+        val resp = responseAs[UserKeyValuePairs]
+        assert(resp.userId == username)
+        assert(resp.keyValuePairs.size == 2)
+        assert(resp.keyValuePairs contains kvp1)
+        assert(resp.keyValuePairs contains kvp2)
       }
     }
 
     it("should allow key-based deletion") {
-      Delete(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+      Delete(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
@@ -67,7 +74,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
     }
 
     it("should return an appropriate error code for a missing value") {
-      Get(s"$uriPrefix/${kvp1.key}") ~> thurloeRoutes ~> check {
+      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
         assertResult(StatusCodes.NotFound) {
           status
         }
@@ -76,7 +83,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest with ThurloeApi
   }
 }
 
-case object MockedThurloeService extends DataAccess {
+case object MockedThurloeDatabase extends DataAccess {
   var database = Map[String, String]()
 
   def keyLookup(key: String) = database get key match {

@@ -1,0 +1,162 @@
+swagger: "2.0"
+info:
+  title: Thurloe Service
+  version: 0.1
+paths:
+  /thurloe:
+    post:
+      operationId: setKey
+      summary: Adds or resets a single key/value pair to the database for a given user ID.
+      consumes:
+      - application/json
+      parameters:
+      - name: body
+        in: body
+        description: The Key/Value pair to add to the system
+        required: true
+        type: string
+        schema:
+          {
+            "type": "object",
+            "required": ["key", "value"],
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "keyValuePair": {
+                "type": "object",
+                "required": [ "key", "value" ],
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+      responses:
+        200:
+          description: OK
+        400:
+          description: Bad request (e.g. invalid JSON input)
+        500:
+          description: Internal server error
+  /thurloe/{userId}:
+    get:
+      operationId: getAll
+      summary: Returns a list of all keys and values stored in Thurloe for the specified user ID.
+      parameters:
+      - name: userId
+        in: path
+        description: The user ID whose data is being requested
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          produces:
+          - application/json
+          schema:
+            {
+              "properties": {
+                "userId": {
+                  type: "string"
+                },
+                "keyValuePairs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [ "key", "value" ],
+                    "properties": {
+                      "key": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "type": "object",
+              "required": [ "userId", "keyValuePairs" ]
+            }
+        500:
+          description: Internal server error
+          produces: text/plain
+  /thurloe/{userId}/{key}:
+    get:
+      operationId: getKvp
+      summary: Returns a single key/value pair, looked up by key and userId.
+      parameters:
+      - name: userId
+        in: path
+        description: The user ID whose data is being requested
+        required: true
+        type: string
+      - name: key
+        in: path
+        description: The key of the data to return
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+          produces:
+            - application/json
+          schema:
+            {
+              "type": "object",
+              "required": ["key", "value"],
+              "properties": {
+                "userId": {
+                  "type": "string"
+                },
+                "keyValuePair": {
+                  "type": "object",
+                  "required": [ "key", "value" ],
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+        404:
+          description: Key not found
+          produces:
+          - text/plain
+        500:
+          description: Internal server error
+          produces:
+          - text/plain
+    delete:
+      operationId: deleteKvp
+      summary: Deletes a single key/value pair, referenced by key and userId.
+      produces:
+      - text/plain
+      parameters:
+      - name: userId
+        in: path
+        description: The user ID whose data is being deleted
+        required: true
+        type: string
+      - name: key
+        in: path
+        description: The key of the data to delete
+        required: true
+        type: string
+      responses:
+        200:
+          description: OK
+        404:
+          description: Key not found
+        500:
+          description: Internal server error

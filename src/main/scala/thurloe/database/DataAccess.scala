@@ -1,4 +1,6 @@
-package thurloe.service
+package thurloe.database
+
+import thurloe.service.KeyValuePair
 
 import scala.util.Try
 

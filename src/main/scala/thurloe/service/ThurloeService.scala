@@ -1,49 +1,20 @@
 package thurloe.service
 
-import akka.actor.Actor
-import com.wordnik.swagger.annotations._
-import spray.routing._
-import spray.http._
+import spray.http.{MediaTypes, StatusCodes}
+import spray.routing.HttpService
+
 import MediaTypes._
 import spray.json._
 import ApiDataModelsJsonProtocol._
+import thurloe.database.{KeyNotFoundException, DataAccess}
 
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success}
 
-// we don't implement our route structure directly in the service actor because
-// we want to be able to test it independently, without having to spin up an actor
-class ThurloeService extends Actor with ThurloeApi {
-
-  val dataAccess = DatabaseConnectedThurloe
-
-  // the HttpService trait defines only one abstract member, which
-  // connects the services environment to the enclosing actor or test
-  def actorRefFactory = context
-
-  // this actor only runs our route, but you could add
-  // other things here, like request stream processing
-  // or timeout handling
-  def receive = runRoute(thurloeRoutes)
-}
-
-case object DatabaseConnectedThurloe extends DataAccess {
-  
-  // TODO: Fill THESE in with database access implementation.
-  def keyLookup(key: String) = Success(KeyValuePair("yek", "eulav"))
-  def collectAll() = Success(Seq(
-    KeyValuePair("key1", "Bob Loblaw's Law Blog"),
-    KeyValuePair("key2", "Blah blah blah blah blah")))
-  def setKeyValuePair(keyValuePair: KeyValuePair): Try[Unit] = Success(())
-  def deleteKeyValuePair(key: String): Try[Unit] = Success()
-}
-
-// this trait defines our service behavior independently from the service actor
-@Api(value="/thurloe", description = "Thurloe service", produces = "application/json", position = 1)
-trait ThurloeApi extends HttpService {
+trait ThurloeService extends HttpService {
 
   import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
-  val dataAccess: DataAccess
 
+  val dataAccess: DataAccess
   val thurloePrefix = "thurloe"
 
   val getRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
@@ -51,10 +22,10 @@ trait ThurloeApi extends HttpService {
       dataAccess.keyLookup(key) match {
         case Success(keyValuePair) =>
           respondWithMediaType(`application/json`) {
-          complete {
-            keyValuePair.toJson.prettyPrint
+            complete {
+              UserKeyValuePair(userId, keyValuePair).toJson.prettyPrint
+            }
           }
-        }
         case Failure(e: KeyNotFoundException) =>
           respondWithStatus(StatusCodes.NotFound) {
             complete {
@@ -77,7 +48,7 @@ trait ThurloeApi extends HttpService {
         case Success(array) =>
           respondWithMediaType(`application/json`) {
             complete {
-              array.toJson.prettyPrint
+              UserKeyValuePairs(userId, array).toJson.prettyPrint
             }
           }
         case Failure(e) =>
@@ -90,9 +61,9 @@ trait ThurloeApi extends HttpService {
     }
   }
 
-  val setRoute = path(thurloePrefix / Segment) { (userId) =>
+  val setRoute = path(thurloePrefix) {
     post {
-      entity(as[KeyValuePair]) { keyValuePair =>
+      entity(as[UserKeyValuePair]) { case UserKeyValuePair(userId, keyValuePair) =>
         dataAccess.setKeyValuePair(keyValuePair) match {
           case Success(unit) =>
             respondWithMediaType(`application/json`) {
@@ -101,7 +72,7 @@ trait ThurloeApi extends HttpService {
                   ""
                 }
               }
-          }
+            }
           case Failure(e) =>
             respondWithStatus(StatusCodes.InternalServerError)
             {
@@ -120,7 +91,7 @@ trait ThurloeApi extends HttpService {
         case Success(_) =>
           respondWithMediaType(`text/plain`) {
             complete {
-              "Key deleted."
+              ""
             }
           }
         case Failure(e: KeyNotFoundException) =>
@@ -139,5 +110,5 @@ trait ThurloeApi extends HttpService {
     }
   }
 
-  val thurloeRoutes: Route = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute
+  val routes = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute
 }
