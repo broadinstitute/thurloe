@@ -19,7 +19,7 @@ trait ThurloeService extends HttpService {
 
   val getRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     get {
-      dataAccess.keyLookup(key) match {
+      dataAccess.keyLookup(userId, key) match {
         case Success(keyValuePair) =>
           respondWithMediaType(`application/json`) {
             complete {
@@ -44,11 +44,11 @@ trait ThurloeService extends HttpService {
 
   val getAllRoute = path(thurloePrefix / Segment) { (userId) =>
     get {
-      dataAccess.collectAll() match {
-        case Success(array) =>
+      dataAccess.collectAll(userId) match {
+        case Success(userKeyValuePairs) =>
           respondWithMediaType(`application/json`) {
             complete {
-              UserKeyValuePairs(userId, array).toJson.prettyPrint
+              userKeyValuePairs.toJson.prettyPrint
             }
           }
         case Failure(e) =>
@@ -63,7 +63,7 @@ trait ThurloeService extends HttpService {
 
   val setRoute = path(thurloePrefix) {
     post {
-      entity(as[UserKeyValuePair]) { case UserKeyValuePair(userId, keyValuePair) =>
+      entity(as[UserKeyValuePair]) { keyValuePair =>
         dataAccess.setKeyValuePair(keyValuePair) match {
           case Success(unit) =>
             respondWithMediaType(`application/json`) {
@@ -87,7 +87,7 @@ trait ThurloeService extends HttpService {
 
   val deleteRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     delete {
-      dataAccess.deleteKeyValuePair(key) match {
+      dataAccess.deleteKeyValuePair(userId, key) match {
         case Success(_) =>
           respondWithMediaType(`text/plain`) {
             complete {

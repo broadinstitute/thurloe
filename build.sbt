@@ -21,8 +21,13 @@ libraryDependencies ++= Seq(
   "io.spray" %% "spray-json" % downgradedSprayV,
   "com.typesafe.akka" %% "akka-actor" % akkaV,
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
+  "com.typesafe.slick" %% "slick" % "3.0.2",
+  "com.typesafe" % "config" % "1.3.0",
+  "org.slf4j" % "slf4j-nop" % "1.6.4",
   "commons-io" % "commons-io" % "2.4",
   "mysql" % "mysql-connector-java" % "5.1.35",
+  "org.liquibase" % "liquibase-core" % "3.3.5",
+  "com.h2database" % "h2" % "1.3.166",
   //---------- Test libraries -------------------//
   "io.spray" %% "spray-testkit" % sprayV % Test,
   "org.scalatest" %% "scalatest" % "2.2.5" % Test,

@@ -86,22 +86,25 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 case object MockedThurloeDatabase extends DataAccess {
   var database = Map[String, String]()
 
-  def keyLookup(key: String) = database get key match {
+  def keyLookup(userId: String, key: String) = database get key match {
     case Some(x) => Success(KeyValuePair(key, x))
-    case None => Failure(new KeyNotFoundException())
+    case None => Failure(KeyNotFoundException(userId, key))
   }
-  def collectAll() = Success((database map {case (key,value) => KeyValuePair(key, value)}).to[Seq])
-  def setKeyValuePair(keyValuePair: KeyValuePair): Try[Unit] = {
+  def collectAll(userId: String) = Success(
+    UserKeyValuePairs(userId,
+    (database map {case (key,value) => KeyValuePair(key, value)}).to[Seq]))
+  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Try[Unit] = {
+    val keyValuePair = userKeyValuePair.keyValuePair
     database = database + (keyValuePair.key -> keyValuePair.value)
     Success(())
   }
-  def deleteKeyValuePair(key: String): Try[Unit] = {
+  def deleteKeyValuePair(userId: String, key: String): Try[Unit] = {
     if (database contains key) {
       database = database - key
       Success()
     }
     else {
-      Failure(new KeyNotFoundException)
+      Failure(KeyNotFoundException(userId, key))
     }
   }
 }
