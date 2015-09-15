@@ -13,6 +13,7 @@ val downgradedSprayV = "1.3.1"
 val akkaV = "2.3.12"
 
 libraryDependencies ++= Seq(
+  "org.scala-lang" % "scala-reflect" % "2.11.7",
   "org.webjars" % "swagger-ui" % "2.1.1",
   "io.spray" %% "spray-can" % sprayV,
   "io.spray" %% "spray-routing" % sprayV,

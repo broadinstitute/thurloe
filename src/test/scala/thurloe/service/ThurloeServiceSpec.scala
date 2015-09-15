@@ -5,7 +5,7 @@ import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
-import thurloe.database.{KeyNotFoundException, DataAccess}
+import thurloe.database.{ThurloeDatabaseConnector, KeyNotFoundException, DataAccess}
 import scala.collection.immutable.Map
 
 import scala.util.{Failure, Try, Success}
@@ -15,7 +15,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
   import ApiDataModelsJsonProtocol._
 
   def thurloeService = new ThurloeService {
-    val dataAccess = MockedThurloeDatabase
+    val dataAccess = ThurloeDatabaseConnector
     def actorRefFactory = system
   }
 
@@ -79,32 +79,6 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
           status
         }
       }
-    }
-  }
-}
-
-case object MockedThurloeDatabase extends DataAccess {
-  var database = Map[String, String]()
-
-  def keyLookup(userId: String, key: String) = database get key match {
-    case Some(x) => Success(KeyValuePair(key, x))
-    case None => Failure(KeyNotFoundException(userId, key))
-  }
-  def collectAll(userId: String) = Success(
-    UserKeyValuePairs(userId,
-    (database map {case (key,value) => KeyValuePair(key, value)}).to[Seq]))
-  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Try[Unit] = {
-    val keyValuePair = userKeyValuePair.keyValuePair
-    database = database + (keyValuePair.key -> keyValuePair.value)
-    Success(())
-  }
-  def deleteKeyValuePair(userId: String, key: String): Try[Unit] = {
-    if (database contains key) {
-      database = database - key
-      Success()
-    }
-    else {
-      Failure(KeyNotFoundException(userId, key))
     }
   }
 }

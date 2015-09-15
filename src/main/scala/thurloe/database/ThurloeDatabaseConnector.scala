@@ -1,6 +1,6 @@
 package thurloe.database
 
-import slick.driver.H2Driver.api._
+import com.typesafe.config.ConfigFactory
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
 import thurloe.service.{UserKeyValuePairs, UserKeyValuePair, KeyValuePair}
@@ -10,79 +10,94 @@ import scala.util.{Failure, Success, Try}
 
 case object ThurloeDatabaseConnector extends DataAccess {
 
-  val database = Database.forConfig("h2mem1")
-  setupInMemoryDatabase(database)
+  val config = ConfigFactory.load().getConfig("database")
+  val databaseConfig = config.getConfig(config.getString("config"))
 
-  private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Seq[KeyValuePair] = {
+  val dataModels = new DatabaseDataModels(databaseConfig.getString("slick.driver"))
+
+  import dataModels._
+  import dataModels.driver.api._
+
+  val database = Database.forConfig("", databaseConfig)
+
+  if (databaseConfig.hasPath("slick.createSchema") && databaseConfig.getBoolean("slick.createSchema"))
+    setupInMemoryDatabase(database)
+
+  private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[KeyValuePair]] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
     val q = keyValuePairs.filter(constraint)
 
-    val futureResults = database.run(q.result).map {_.map {
+    val futureResults = database.run(q.result.transactionally) map {
+      _ map {
       case (id, userId, key, value) =>
         println("  " + id + "\t" + userId + "\t" + key + "\t" + value + "\t")
         KeyValuePair(key, value)
     }}
 
-    // TODO: This is horrible. Don't let this get past a PR if I forget to refactor!
-    Await.result(futureResults, Duration.fromNanos(500 * 1000 * 1000))
+    futureResults
   }
 
-  def keyLookup(userId: String, key: String): Try[KeyValuePair] = {
-    val results = lookupWithConstraint(x => (x.key === key && x.userId === userId))
-
-    if(results.size == 0) Failure(new KeyNotFoundException(userId, key))
-    else if (results.size == 1) Success (results.head)
-    else Failure(InvalidDatabaseStateException(s"Too many results: ${results.size}"))
+  def keyLookup(userId: String, key: String): Future[KeyValuePair] = {
+    for {
+      results <- lookupWithConstraint(x => x.key === key && x.userId === userId)
+      result <- if (results.isEmpty) {
+        Future.failed(new KeyNotFoundException(userId, key))
+      } else if (results.size == 1) {
+        Future.successful(results.head)
+      } else {
+        Future.failed(InvalidDatabaseStateException(s"Too many results: ${results.size}"))
+      }
+    } yield result
   }
 
-  def collectAll(userId: String): Try[UserKeyValuePairs] = {
-    val results = lookupWithConstraint(x => x.userId === userId)
-
-    Success(UserKeyValuePairs(userId, results))
+  def collectAll(userId: String): Future[UserKeyValuePairs] = {
+    for {
+      results <- lookupWithConstraint(x => x.userId === userId)
+    } yield UserKeyValuePairs(userId, results)
   }
 
-  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Try[Unit] = {
+  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Future[Unit] = {
 
     val keyValuePairs = TableQuery[DbKeyValuePair]
 
     val action = keyValuePairs.insertOrUpdate(
-      0, // TODO: This seems to be ignored because AUTO_INC. Can that be made obvious ("None" doesn't compile)?
+      None,
       userKeyValuePair.userId,
       userKeyValuePair.keyValuePair.key,
       userKeyValuePair.keyValuePair.value)
 
-    val affectedRowsCountFuture: Future[Int] = database.run(action)
-    // TODO: This is horrible. Don't let this get past a PR if I forget to refactor!
-
-    val affectedRowCount = Try(Await.result(affectedRowsCountFuture, Duration.fromNanos(500 * 1000 * 1000)))
-
-    affectedRowCount match {
-      case Success(x) =>
-        if (x==1) Success(())
-        else Failure(InvalidDatabaseStateException(s"Modified $x rows in database (expected to modify 1)"))
-      case Failure(e) => Failure(e)
-    }
+    for {
+      affectedRowsCount <- database.run(action.transactionally)
+      _ <- if (affectedRowsCount == 1) {
+        Future.successful(())
+      } else {
+        Future.failed(InvalidDatabaseStateException(
+          s"Modified $affectedRowsCount rows in database (expected to modify 1)"))
+      }
+    } yield ()
   }
 
-  def deleteKeyValuePair(userId: String, key: String): Try[Unit] = {
+  def deleteKeyValuePair(userId: String, key: String): Future[Unit] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
     val q = keyValuePairs.filter(x => x.key === key && x.userId === userId)
     val action = q.delete
-    val affectedRowsCountFuture: Future[Int] = database.run(action)
+    val affectedRowsCountFuture: Future[Int] = database.run(action.transactionally)
 
-    // TODO: This is horrible. Don't let this get past a PR if I forget to refactor!
-    val affectedRowCount: Int = Await.result(affectedRowsCountFuture, Duration.fromNanos(500 * 1000 * 1000))
-
-    if (affectedRowCount > 0) Success()
-    else Failure(KeyNotFoundException(userId, key))
+    for {
+      affectedRowCount <- affectedRowsCountFuture
+      _ <- if (affectedRowCount > 0) {
+        Future.successful(())
+      } else {
+        Future.failed(KeyNotFoundException(userId, key))
+      }
+    } yield ()
   }
 
-
-  def setupInMemoryDatabase(database: Database) = {
+  def setupInMemoryDatabase(database: Database): Unit = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
     val setup = DBIO.seq(
-      (keyValuePairs.schema).create
+      keyValuePairs.schema.create
     )
-    database.run(setup)
+    Await.result(database.run(setup), Duration.Inf)
   }
 }
