@@ -1,14 +1,21 @@
 package thurloe.database
 
-import thurloe.service.KeyValuePair
+import thurloe.service.{UserKeyValuePairs, UserKeyValuePair, KeyValuePair}
 
+import scala.concurrent.Future
 import scala.util.Try
 
 trait DataAccess {
-  def setKeyValuePair(keyValuePair: KeyValuePair): Try[Unit]
-  def keyLookup(key: String): Try[KeyValuePair]
-  def collectAll(): Try[Seq[KeyValuePair]]
-  def deleteKeyValuePair(key: String): Try[Unit]
+  def setKeyValuePair(keyValuePair: UserKeyValuePair): Future[Unit]
+  def keyLookup(userId: String, key: String): Future[KeyValuePair]
+  def collectAll(userId: String): Future[UserKeyValuePairs]
+  def deleteKeyValuePair(userId: String, key: String): Future[Unit]
 }
 
-class KeyNotFoundException extends Exception
+case class KeyNotFoundException(userId: String, key: String) extends Exception {
+  override def getMessage = s"Key '$key' not found for user '$userId'"
+}
+
+case class InvalidDatabaseStateException(message: String) extends Exception {
+  override def getMessage = message
+}

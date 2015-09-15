@@ -1,13 +1,13 @@
 package thurloe.service
 
+import spray.http.MediaTypes._
 import spray.http.{MediaTypes, StatusCodes}
-import spray.routing.HttpService
-
-import MediaTypes._
 import spray.json._
-import ApiDataModelsJsonProtocol._
-import thurloe.database.{KeyNotFoundException, DataAccess}
+import spray.routing.HttpService
+import thurloe.database.{DataAccess, KeyNotFoundException}
+import thurloe.service.ApiDataModelsJsonProtocol._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 trait ThurloeService extends HttpService {
@@ -19,7 +19,7 @@ trait ThurloeService extends HttpService {
 
   val getRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     get {
-      dataAccess.keyLookup(key) match {
+      onComplete(dataAccess.keyLookup(userId, key)) {
         case Success(keyValuePair) =>
           respondWithMediaType(`application/json`) {
             complete {
@@ -44,11 +44,11 @@ trait ThurloeService extends HttpService {
 
   val getAllRoute = path(thurloePrefix / Segment) { (userId) =>
     get {
-      dataAccess.collectAll() match {
-        case Success(array) =>
+      onComplete(dataAccess.collectAll(userId)) {
+        case Success(userKeyValuePairs) =>
           respondWithMediaType(`application/json`) {
             complete {
-              UserKeyValuePairs(userId, array).toJson.prettyPrint
+              userKeyValuePairs.toJson.prettyPrint
             }
           }
         case Failure(e) =>
@@ -63,8 +63,8 @@ trait ThurloeService extends HttpService {
 
   val setRoute = path(thurloePrefix) {
     post {
-      entity(as[UserKeyValuePair]) { case UserKeyValuePair(userId, keyValuePair) =>
-        dataAccess.setKeyValuePair(keyValuePair) match {
+      entity(as[UserKeyValuePair]) { keyValuePair =>
+        onComplete(dataAccess.setKeyValuePair(keyValuePair)) {
           case Success(unit) =>
             respondWithMediaType(`application/json`) {
               respondWithStatus(StatusCodes.OK) {
@@ -87,7 +87,7 @@ trait ThurloeService extends HttpService {
 
   val deleteRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     delete {
-      dataAccess.deleteKeyValuePair(key) match {
+      onComplete(dataAccess.deleteKeyValuePair(userId, key)) {
         case Success(_) =>
           respondWithMediaType(`text/plain`) {
             complete {

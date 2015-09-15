@@ -26,7 +26,11 @@ class ThurloeServiceActor extends HttpServiceActor with ActorLogging {
   def receive = runRoute(thurloeService.routes ~ swaggerSite.routes ~ apiSpecYaml.routes)
 }
 
-case class HostedResource(resource: String, resourceDirectory: Option[String], path: String, actorRefFactoryImp: ActorRefFactory) extends HttpService {
+case class HostedResource(
+      resource: String,
+      resourceDirectory: Option[String],
+      path: String,
+      actorRefFactoryImp: ActorRefFactory) extends HttpService {
   implicit val actorRefFactory = actorRefFactoryImp
   val routes = resourceDirectory match {
     case Some(rd) => path(path) { getFromResource(resource) } ~ getFromResourceDirectory(rd)
