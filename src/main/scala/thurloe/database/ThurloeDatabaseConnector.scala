@@ -25,12 +25,11 @@ case object ThurloeDatabaseConnector extends DataAccess {
 
   private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[KeyValuePair]] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
-    val q = keyValuePairs.filter(constraint)
+    val query = keyValuePairs.filter(constraint)
 
-    val futureResults = database.run(q.result.transactionally) map {
+    val futureResults = database.run(query.result.transactionally) map {
       _ map {
       case (id, userId, key, value) =>
-        println("  " + id + "\t" + userId + "\t" + key + "\t" + value + "\t")
         KeyValuePair(key, value)
     }}
 
@@ -79,8 +78,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
 
   def deleteKeyValuePair(userId: String, key: String): Future[Unit] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
-    val q = keyValuePairs.filter(x => x.key === key && x.userId === userId)
-    val action = q.delete
+    val action = keyValuePairs.filter(x => x.key === key && x.userId === userId).delete
     val affectedRowsCountFuture: Future[Int] = database.run(action.transactionally)
 
     for {
@@ -95,9 +93,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
 
   def setupInMemoryDatabase(database: Database): Unit = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
-    val setup = DBIO.seq(
-      keyValuePairs.schema.create
-    )
+    val setup = DBIO.seq(keyValuePairs.schema.create)
     Await.result(database.run(setup), Duration.Inf)
   }
 }
