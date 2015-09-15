@@ -1,6 +1,6 @@
 package thurloe.database
 
-import slick.driver.H2Driver.api._
+import com.typesafe.config.ConfigFactory
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
 import thurloe.service.{UserKeyValuePairs, UserKeyValuePair, KeyValuePair}
@@ -10,8 +10,18 @@ import scala.util.{Failure, Success, Try}
 
 case object ThurloeDatabaseConnector extends DataAccess {
 
-  val database = Database.forConfig("h2mem1")
-  setupInMemoryDatabase(database)
+  val config = ConfigFactory.load().getConfig("database")
+  val databaseConfig = config.getConfig(config.getString("config"))
+
+  val dataModels = new DatabaseDataModels(databaseConfig.getString("slick.driver"))
+
+  import dataModels._
+  import dataModels.driver.api._
+
+  val database = Database.forConfig("", databaseConfig)
+
+  if (databaseConfig.hasPath("slick.createSchema") && databaseConfig.getBoolean("slick.createSchema"))
+    setupInMemoryDatabase(database)
 
   private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Seq[KeyValuePair] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
@@ -28,9 +38,9 @@ case object ThurloeDatabaseConnector extends DataAccess {
   }
 
   def keyLookup(userId: String, key: String): Try[KeyValuePair] = {
-    val results = lookupWithConstraint(x => (x.key === key && x.userId === userId))
+    val results = lookupWithConstraint(x => x.key === key && x.userId === userId)
 
-    if(results.size == 0) Failure(new KeyNotFoundException(userId, key))
+    if(results.isEmpty) Failure(new KeyNotFoundException(userId, key))
     else if (results.size == 1) Success (results.head)
     else Failure(InvalidDatabaseStateException(s"Too many results: ${results.size}"))
   }
@@ -46,7 +56,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
     val keyValuePairs = TableQuery[DbKeyValuePair]
 
     val action = keyValuePairs.insertOrUpdate(
-      0, // TODO: This seems to be ignored because AUTO_INC. Can that be made obvious ("None" doesn't compile)?
+      None,
       userKeyValuePair.userId,
       userKeyValuePair.keyValuePair.key,
       userKeyValuePair.keyValuePair.value)
@@ -81,7 +91,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
   def setupInMemoryDatabase(database: Database) = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
     val setup = DBIO.seq(
-      (keyValuePairs.schema).create
+      keyValuePairs.schema.create
     )
     database.run(setup)
   }
