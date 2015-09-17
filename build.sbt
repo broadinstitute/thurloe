@@ -26,6 +26,7 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.3.0",
   "org.slf4j" % "slf4j-nop" % "1.6.4",
   "commons-io" % "commons-io" % "2.4",
+  "commons-codec" % "commons-codec" % "1.10",
   "mysql" % "mysql-connector-java" % "5.1.35",
   "org.liquibase" % "liquibase-core" % "3.3.5",
   "com.h2database" % "h2" % "1.3.166",
