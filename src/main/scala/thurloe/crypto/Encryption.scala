@@ -8,13 +8,13 @@ import org.apache.commons.codec.binary.Base64
 
 import scala.util.{Failure, Success, Try}
 
-sealed trait Encryption {
+case object Aes256Cbc {
 
-  def encryption: String
-  def blockSize: Int
-  def keySize: Int
-  def paddingMode: String
-  def cipherMode: String
+  val encryption = "AES"
+  val blockSize = 128
+  val keySize = 256
+  val paddingMode = "PKCS5Padding"
+  val cipherMode = "CBC"
 
   val ranGen = new SecureRandom()
 
@@ -26,40 +26,36 @@ sealed trait Encryption {
     cipher
   }
 
-  final def encrypt(plainText: Array[Byte], secretKey: SecretKey): Try[EncryptedBytes] = {
-    if(secretKey.key.length != keySize / 8) {
-      Failure(new IllegalArgumentException(s"Key size (${secretKey.key.length}) did not match required ${keySize / 8}"))
+  final def validateLength(arrayName: String, array: Array[Byte], expectedBitLength: Int): Try[Unit] = {
+    if (array.length * 8 == expectedBitLength) {
+      Success()
+    } else {
+      Failure(new IllegalArgumentException(s"$arrayName size (${array.length * 8} bits) did not match the required length $expectedBitLength"))
     }
-    else {
-      // Generate an IV:
+  }
+
+  implicit class validationChain(x: Try[Unit]) {
+    def validateAnotherLength(arrayName: String, array: Array[Byte], expectedBitLength: Int): Try[Unit] = {
+      x flatMap { _ => validateLength(arrayName, array, expectedBitLength) }
+    }
+  }
+
+  final def encrypt(plainText: Array[Byte], secretKey: SecretKey): Try[EncryptedBytes] = {
+    validateLength("Secret key", secretKey.key, keySize) map { _ =>
       val iv = new Array[Byte](blockSize / 8)
       ranGen.nextBytes(iv)
 
       val cipher = init(Cipher.ENCRYPT_MODE, secretKey.key, iv)
-      Success(EncryptedBytes(cipher.doFinal(plainText), iv))
+      EncryptedBytes(cipher.doFinal(plainText), iv)
     }
   }
 
   final def decrypt(encryptedBytes: EncryptedBytes, secretKey: SecretKey): Try[Array[Byte]] = {
-    if(secretKey.key.length != keySize / 8) {
-      Failure(new IllegalArgumentException(s"Key size (${secretKey.key.length}) did not match required ${keySize / 8}"))
-    }
-    else if(encryptedBytes.iv.length != blockSize / 8) {
-      Failure(new IllegalArgumentException(s"IV size (${encryptedBytes.iv.length}) did not match required ${blockSize / 8}"))
-    }
-    else {
+    validateLength("Secret key", secretKey.key, keySize) validateAnotherLength("Initialization vector", encryptedBytes.iv, blockSize) map { _ =>
       val cipher = init(Cipher.DECRYPT_MODE, secretKey.key, encryptedBytes.iv)
-      Success(cipher.doFinal(encryptedBytes.cipherText))
+      cipher.doFinal(encryptedBytes.cipherText)
     }
   }
-}
-
-case object Aes256Cbc extends Encryption {
-  override def encryption = "AES"
-  override def blockSize = 128
-  override def keySize = 256
-  override def paddingMode = "PKCS5Padding"
-  override def cipherMode = "CBC"
 }
 
 final case class EncryptedBytes(cipherText: Array[Byte], iv: Array[Byte]) {

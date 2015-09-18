@@ -32,9 +32,15 @@ case object ThurloeDatabaseConnector extends DataAccess {
   if (databaseInstanceConfig.hasPath("slick.createSchema") && databaseInstanceConfig.getBoolean("slick.createSchema"))
     setupInMemoryDatabase(database)
 
-  def databaseValuesToKeyValuePair(key: String, value: String, iv: String): Try[KeyValuePair] = {
+  private def databaseValuesToKeyValuePair(key: String, value: String, iv: String): Try[KeyValuePair] = {
     Aes256Cbc.decrypt(EncryptedBytes(value, iv), secretKey) map { decryptedBytes =>
       KeyValuePair(key, new String(decryptedBytes, "UTF-8"))
+    }
+  }
+
+  private def interpretDatabaseResponse(resultSequence: Seq[(Option[Int], String, String, String, String)]): Seq[Future[KeyValuePair]] = {
+    resultSequence map {
+      case (id, userId, key, value, iv) => Future.fromTry(databaseValuesToKeyValuePair(key, value, iv))
     }
   }
 
@@ -43,11 +49,8 @@ case object ThurloeDatabaseConnector extends DataAccess {
     val query = keyValuePairs.filter(constraint)
 
     for {
-      resultSequence <- database.run(query.result.transactionally)
-      tryResult = resultSequence map {
-        case (id, userId, key, value, iv) => Future.fromTry(databaseValuesToKeyValuePair(key, value, iv))
-      }
-      result <- Future.sequence(tryResult)
+      responseSequence <- database.run(query.result.transactionally)
+      result <- Future.sequence(interpretDatabaseResponse(responseSequence))
     } yield result
   }
 
@@ -70,31 +73,35 @@ case object ThurloeDatabaseConnector extends DataAccess {
     } yield UserKeyValuePairs(userId, results)
   }
 
-  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Future[Unit] = {
-
+  /**
+   * Writes the user key value pair to the database, with the exception of the 'value' which uses
+   * the encrypted version instead. The IV also comes from the encryption result.
+   */
+  private def databaseWrite(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[Unit] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
 
-    // Encrypt the value:
+    val action = keyValuePairs.insertOrUpdate(
+      None,
+      userKeyValuePair.userId,
+      userKeyValuePair.keyValuePair.key,
+      encryptedValue.base64CipherText,
+      encryptedValue.base64Iv
+    )
 
+    for {
+      affectedRowsCount <- database.run(action.transactionally)
+      _ <- if (affectedRowsCount == 1) {
+        Future.successful(())
+      } else {
+        Future.failed(InvalidDatabaseStateException(
+          s"Modified $affectedRowsCount rows in database (expected to modify 1)"))
+      }
+    } yield ()
+  }
+
+  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Future[Unit] = {
     Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
-      case Success(encryptedValue) =>
-        val action = keyValuePairs.insertOrUpdate(
-          None,
-          userKeyValuePair.userId,
-          userKeyValuePair.keyValuePair.key,
-          encryptedValue.base64CipherText,
-          encryptedValue.base64Iv
-          )
-
-        for {
-          affectedRowsCount <- database.run(action.transactionally)
-          _ <- if (affectedRowsCount == 1) {
-            Future.successful(())
-          } else {
-            Future.failed(InvalidDatabaseStateException(
-              s"Modified $affectedRowsCount rows in database (expected to modify 1)"))
-          }
-        } yield ()
+      case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
       case Failure(x) => Future.fromTry(Failure[Unit](x))
     }
   }
