@@ -29,7 +29,7 @@ libraryDependencies ++= Seq(
   "commons-codec" % "commons-codec" % "1.10",
   "mysql" % "mysql-connector-java" % "5.1.35",
   "org.liquibase" % "liquibase-core" % "3.3.5",
-  "com.h2database" % "h2" % "1.3.166",
+  "org.hsqldb" % "hsqldb" % "2.3.2",
   //---------- Test libraries -------------------//
   "io.spray" %% "spray-testkit" % sprayV % Test,
   "org.scalatest" %% "scalatest" % "2.2.5" % Test,

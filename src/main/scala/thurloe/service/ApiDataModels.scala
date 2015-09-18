@@ -9,5 +9,6 @@ object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
 }
 
 case class KeyValuePair(key: String, value: String)
+case class KeyValuePairWithId(id: Option[Int], keyValuePair: KeyValuePair)
 case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
 case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair])
