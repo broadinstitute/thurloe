@@ -28,7 +28,7 @@ sealed trait Encryption {
 
   final def encrypt(plainText: Array[Byte], secretKey: SecretKey): Try[EncryptedBytes] = {
     if(secretKey.key.length != keySize / 8) {
-      Failure(new IllegalArgumentException(s"Key size (${secretKey.key.length}) did not match required $keySize"))
+      Failure(new IllegalArgumentException(s"Key size (${secretKey.key.length}) did not match required ${keySize / 8}"))
     }
     else {
       // Generate an IV:
@@ -42,7 +42,10 @@ sealed trait Encryption {
 
   final def decrypt(encryptedBytes: EncryptedBytes, secretKey: SecretKey): Try[Array[Byte]] = {
     if(secretKey.key.length != keySize / 8) {
-      Failure(new IllegalArgumentException(s"Key size (${secretKey.key.length}) did not match required $keySize"))
+      Failure(new IllegalArgumentException(s"Key size (${secretKey.key.length}) did not match required ${keySize / 8}"))
+    }
+    else if(encryptedBytes.iv.length != blockSize / 8) {
+      Failure(new IllegalArgumentException(s"IV size (${encryptedBytes.iv.length}) did not match required ${blockSize / 8}"))
     }
     else {
       val cipher = init(Cipher.DECRYPT_MODE, secretKey.key, encryptedBytes.iv)
