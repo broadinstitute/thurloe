@@ -12,7 +12,7 @@ class DatabaseDataModels(val driver: JdbcProfile) {
 
   import driver.api._
 
-  class DbKeyValuePair(tag: Tag) extends Table[(Option[Int], String, String, String)](tag, "KEY_VALUE_PAIR") {
+  class DbKeyValuePair(tag: Tag) extends Table[(Option[Int], String, String, String, String)](tag, "KEY_VALUE_PAIR") {
     def id = column[Int]("KVP_ID", O.PrimaryKey, O.AutoInc)
 
     def userId = column[String]("USER_ID")
@@ -21,9 +21,11 @@ class DatabaseDataModels(val driver: JdbcProfile) {
 
     def value = column[String]("VALUE")
 
+    def iv = column[String]("IV")
+
     def idx = index("idx_a", (userId, key), unique = true)
 
-    def * = (id.?, userId, key, value)
+    def * = (id.?, userId, key, value, iv)
   }
 
 }

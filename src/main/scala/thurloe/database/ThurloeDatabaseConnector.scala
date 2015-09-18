@@ -1,39 +1,57 @@
 package thurloe.database
 
 import com.typesafe.config.ConfigFactory
+import thurloe.crypto.{EncryptedBytes, SecretKey, Aes256Cbc}
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
 import thurloe.service.{UserKeyValuePairs, UserKeyValuePair, KeyValuePair}
 
 import scala.concurrent.duration.Duration
+import org.apache.commons.codec.binary.{Base64, Hex}
+
 import scala.util.{Failure, Success, Try}
 
 case object ThurloeDatabaseConnector extends DataAccess {
 
-  val config = ConfigFactory.load().getConfig("database")
-  val databaseConfig = config.getConfig(config.getString("config"))
+  val configFile = ConfigFactory.load()
 
-  val dataModels = new DatabaseDataModels(databaseConfig.getString("slick.driver"))
+  // DB Config:
+  val dbConfig = configFile.getConfig("database")
+  val databaseInstanceConfig = dbConfig.getConfig(dbConfig.getString("config"))
+  val dataModels = new DatabaseDataModels(databaseInstanceConfig.getString("slick.driver"))
+
+  // Crypto Config:
+  val cryptoConfig = configFile.getConfig("crypto")
+  val secretKey = SecretKey(cryptoConfig.getString("key"))
 
   import dataModels._
   import dataModels.driver.api._
 
-  val database = Database.forConfig("", databaseConfig)
+  val database = Database.forConfig("", databaseInstanceConfig)
 
-  if (databaseConfig.hasPath("slick.createSchema") && databaseConfig.getBoolean("slick.createSchema"))
+  if (databaseInstanceConfig.hasPath("slick.createSchema") && databaseInstanceConfig.getBoolean("slick.createSchema"))
     setupInMemoryDatabase(database)
+
+  private def databaseValuesToKeyValuePair(key: String, value: String, iv: String): Try[KeyValuePair] = {
+    Aes256Cbc.decrypt(EncryptedBytes(value, iv), secretKey) map { decryptedBytes =>
+      KeyValuePair(key, new String(decryptedBytes, "UTF-8"))
+    }
+  }
+
+  private def interpretDatabaseResponse(resultSequence: Seq[(Option[Int], String, String, String, String)]): Seq[Future[KeyValuePair]] = {
+    resultSequence map {
+      case (id, userId, key, value, iv) => Future.fromTry(databaseValuesToKeyValuePair(key, value, iv))
+    }
+  }
 
   private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[KeyValuePair]] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
     val query = keyValuePairs.filter(constraint)
 
-    val futureResults = database.run(query.result.transactionally) map {
-      _ map {
-      case (id, userId, key, value) =>
-        KeyValuePair(key, value)
-    }}
-
-    futureResults
+    for {
+      responseSequence <- database.run(query.result.transactionally)
+      result <- Future.sequence(interpretDatabaseResponse(responseSequence))
+    } yield result
   }
 
   def keyLookup(userId: String, key: String): Future[KeyValuePair] = {
@@ -55,15 +73,20 @@ case object ThurloeDatabaseConnector extends DataAccess {
     } yield UserKeyValuePairs(userId, results)
   }
 
-  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Future[Unit] = {
-
+  /**
+   * Writes the user key value pair to the database, with the exception of the 'value' which uses
+   * the encrypted version instead. The IV also comes from the encryption result.
+   */
+  private def databaseWrite(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[Unit] = {
     val keyValuePairs = TableQuery[DbKeyValuePair]
 
     val action = keyValuePairs.insertOrUpdate(
       None,
       userKeyValuePair.userId,
       userKeyValuePair.keyValuePair.key,
-      userKeyValuePair.keyValuePair.value)
+      encryptedValue.base64CipherText,
+      encryptedValue.base64Iv
+    )
 
     for {
       affectedRowsCount <- database.run(action.transactionally)
@@ -74,6 +97,13 @@ case object ThurloeDatabaseConnector extends DataAccess {
           s"Modified $affectedRowsCount rows in database (expected to modify 1)"))
       }
     } yield ()
+  }
+
+  def setKeyValuePair(userKeyValuePair: UserKeyValuePair): Future[Unit] = {
+    Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
+      case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
+      case Failure(x) => Future.fromTry(Failure[Unit](x))
+    }
   }
 
   def deleteKeyValuePair(userId: String, key: String): Future[Unit] = {
