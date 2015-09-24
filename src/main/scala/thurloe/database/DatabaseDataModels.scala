@@ -27,7 +27,6 @@ class DatabaseDataModels(val driver: JdbcProfile) {
 
     def * = (id.?, userId, key, value, iv)
   }
-
 }
 
 object DatabaseDataModels {
@@ -42,3 +41,6 @@ object DatabaseDataModels {
     instance.asInstanceOf[T]
   }
 }
+
+// Collection class useful to pass all these values around as a group
+final case class DatabaseRow(id: Option[Int], userId: String, key: String, value: String, iv: String)

@@ -1,15 +1,16 @@
 package thurloe.database
 
-import thurloe.service.{UserKeyValuePairs, UserKeyValuePair, KeyValuePair}
+import thurloe.database.DatabaseOperation.DatabaseOperation
+import thurloe.service.{KeyValuePairWithId, UserKeyValuePairs, UserKeyValuePair}
 
 import scala.concurrent.Future
-import scala.util.Try
 
 trait DataAccess {
-  def setKeyValuePair(keyValuePair: UserKeyValuePair): Future[Unit]
-  def keyLookup(userId: String, key: String): Future[KeyValuePair]
-  def collectAll(userId: String): Future[UserKeyValuePairs]
-  def deleteKeyValuePair(userId: String, key: String): Future[Unit]
+
+  def set(keyValuePair: UserKeyValuePair): Future[DatabaseOperation]
+  def lookup(userId: String, key: String): Future[KeyValuePairWithId]
+  def lookup(userId: String): Future[UserKeyValuePairs]
+  def delete(userId: String, key: String): Future[Unit]
 }
 
 case class KeyNotFoundException(userId: String, key: String) extends Exception {
