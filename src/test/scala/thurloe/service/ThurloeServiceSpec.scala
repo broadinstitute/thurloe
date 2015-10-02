@@ -5,6 +5,7 @@ import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
 import thurloe.database.ThurloeDatabaseConnector
+import org.yaml.snakeyaml.Yaml
 
 class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
@@ -177,6 +178,19 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
           responseAs[String]
         }
         assertResult(StatusCodes.NotFound) {
+          status
+        }
+      }
+    }
+
+    it("should respond with valid YAML on the swagger endpoint") {
+      Get("/swagger/thurloe.yaml") ~> thurloeService.routes ~> check {
+        assertResult("2.0") {
+          new Yaml()
+          .loadAs(responseAs[String], classOf[java.util.Map[String, AnyRef]])
+          .get("swagger")
+        }
+        assertResult(StatusCodes.OK){
           status
         }
       }
