@@ -1,6 +1,6 @@
 # Thurloe
 
- simple service to store arbitrary key/value pairs
+A simple service to store arbitrary key/value pairs
 
 ## Installation
 
