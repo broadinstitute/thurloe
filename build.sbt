@@ -31,6 +31,7 @@ libraryDependencies ++= Seq(
   "org.liquibase" % "liquibase-core" % "3.3.5",
   "org.hsqldb" % "hsqldb" % "2.3.2",
   //---------- Test libraries -------------------//
+  "org.yaml" % "snakeyaml" % "1.16" % Test,
   "io.spray" %% "spray-testkit" % sprayV % Test,
   "org.scalatest" %% "scalatest" % "2.2.5" % Test,
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,

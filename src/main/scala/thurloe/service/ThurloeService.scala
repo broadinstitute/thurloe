@@ -20,6 +20,10 @@ trait ThurloeService extends HttpService {
   val dataAccess: DataAccess
   val thurloePrefix = "thurloe"
 
+  // TODO: Relies on swagger existing in resources/swagger/
+  val swaggerSite = path("swagger-site") { getFromResource("swagger/index.html") } ~ getFromResourceDirectory("swagger")
+  val apiSpecYaml = path("swagger" / "thurloe.yaml") { getFromResource("yaml/thurloe-api.yaml") }
+
   val getRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
     get {
       onComplete(dataAccess.lookup(userId, key)) {
@@ -122,5 +126,5 @@ trait ThurloeService extends HttpService {
     }
   }
 
-  val routes = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute
+  val routes = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute ~ apiSpecYaml ~ swaggerSite
 }
