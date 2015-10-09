@@ -1,14 +1,15 @@
 package thurloe.service
 
+import java.net.URLEncoder
+
 import spray.http.HttpHeaders.RawHeader
 import spray.http.MediaTypes._
-import spray.http.{HttpHeader, StatusCodes}
+import spray.http.StatusCodes
 import spray.json._
 import spray.routing.HttpService
 import thurloe.database.DatabaseOperation.DatabaseOperation
-import thurloe.database.{DatabaseOperation, DataAccess, KeyNotFoundException}
+import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
-import java.net.URLEncoder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
@@ -18,9 +19,12 @@ trait ThurloeService extends HttpService {
   import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
   val dataAccess: DataAccess
-  val thurloePrefix = "thurloe"
+  val ThurloePrefix = "thurloe"
+  val Yaml = "thurloe.yaml"
+  val Interjection = "Harumph!"
+  val Swagger = "swagger"
 
-  val getRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
+  val getRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
     get {
       onComplete(dataAccess.lookup(userId, key)) {
         case Success(keyValuePairWithId) =>
@@ -38,14 +42,14 @@ trait ThurloeService extends HttpService {
         case Failure(e) =>
           respondWithStatus(StatusCodes.InternalServerError) {
             complete {
-              s"Oops! $e"
+              s"$Interjection $e"
             }
           }
       }
     }
   }
 
-  val getAllRoute = path(thurloePrefix / Segment) { (userId) =>
+  val getAllRoute = path(ThurloePrefix / Segment) { (userId) =>
     get {
       onComplete(dataAccess.lookup(userId)) {
         case Success(userKeyValuePairs) =>
@@ -57,7 +61,7 @@ trait ThurloeService extends HttpService {
         case Failure(e) =>
           respondWithStatus(StatusCodes.InternalServerError) {
             complete {
-              s"Oops! $e"
+              s"$Interjection $e"
             }
           }
       }
@@ -72,10 +76,10 @@ trait ThurloeService extends HttpService {
   }
 
 
-  val setRoute = path(thurloePrefix) {
+  val setRoute = path(ThurloePrefix) {
     post {
       entity(as[UserKeyValuePair]) { keyValuePair =>
-        respondWithHeader(RawHeader("Location", s"/$thurloePrefix/${URLEncoder.encode(keyValuePair.userId, "UTF-8")}/${URLEncoder.encode(keyValuePair.keyValuePair.key, "UTF-8")}")) {
+        respondWithHeader(RawHeader("Location", s"/$ThurloePrefix/${URLEncoder.encode(keyValuePair.userId, "UTF-8")}/${URLEncoder.encode(keyValuePair.keyValuePair.key, "UTF-8")}")) {
           onComplete(dataAccess.set(keyValuePair)) {
             case Success(setKeyResponse) =>
               respondWithMediaType(`application/json`) {
@@ -88,7 +92,7 @@ trait ThurloeService extends HttpService {
             case Failure(e) =>
               respondWithStatus(StatusCodes.InternalServerError) {
                 complete {
-                  s"Oops! $e"
+                  s"$Interjection $e"
                 }
               }
           }
@@ -97,7 +101,7 @@ trait ThurloeService extends HttpService {
     }
   }
 
-  val deleteRoute = path(thurloePrefix / Segment / Segment) { (userId, key) =>
+  val deleteRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
     delete {
       onComplete(dataAccess.delete(userId, key)) {
         case Success(_) =>
@@ -115,12 +119,16 @@ trait ThurloeService extends HttpService {
         case Failure(e) =>
           respondWithStatus(StatusCodes.InternalServerError) {
             complete {
-              s"Oops! $e"
+              s"$Interjection $e"
             }
           }
       }
     }
   }
 
-  val routes = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute
+  def yamlRoute = path(Swagger / Yaml) {
+    getFromResource(s"$Swagger/$Yaml")
+  }
+
+  val keyValuePairRoutes = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute
 }

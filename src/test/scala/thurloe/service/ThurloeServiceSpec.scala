@@ -27,7 +27,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
   describe("The Thurloe Service") {
     it("should allow key/value pairs to be set") {
-      Post(uriPrefix, ukvp1) ~> thurloeService.routes ~> check {
+      Post(uriPrefix, ukvp1) ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
         }
@@ -36,7 +36,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
 
-      Post(uriPrefix, ukvp2) ~> thurloeService.routes ~> check {
+      Post(uriPrefix, ukvp2) ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
         }
@@ -47,7 +47,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("should return stored key value pairs when requested") {
-      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
+      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(ukvp1) {
           responseAs[UserKeyValuePair]
         }
@@ -55,7 +55,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
           status
         }
       }
-      Get(s"$uriPrefix/$username/${kvp2.key}") ~> thurloeService.routes ~> check {
+      Get(s"$uriPrefix/$username/${kvp2.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(ukvp2) {
           responseAs[UserKeyValuePair]
         }
@@ -68,7 +68,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
     it("should let different users use the same key for different values") {
       val differentUserKeyValuePair = UserKeyValuePair(username2, KeyValuePair(ukvp1.keyValuePair.key, "something completely different"))
 
-      Post(uriPrefix, differentUserKeyValuePair) ~> thurloeService.routes ~> check {
+      Post(uriPrefix, differentUserKeyValuePair) ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
         }
@@ -78,7 +78,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
       }
 
       // The original is unaffected:
-      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
+      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(ukvp1) {
           responseAs[UserKeyValuePair]
         }
@@ -88,7 +88,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
       }
 
       // The new user's data is available:
-      Get(s"$uriPrefix/$username2/${kvp1.key}") ~> thurloeService.routes ~> check {
+      Get(s"$uriPrefix/$username2/${kvp1.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(differentUserKeyValuePair) {
           responseAs[UserKeyValuePair]
         }
@@ -100,7 +100,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("should return all stored values on GET with no key supplied.") {
       // This one should return both of the key/value pairs we've stored:
-      Get(s"$uriPrefix/$username") ~> thurloeService.routes ~> check {
+      Get(s"$uriPrefix/$username") ~> thurloeService.keyValuePairRoutes ~> check {
         val resp = responseAs[UserKeyValuePairs]
         assert(resp.userId == username)
         assert(resp.keyValuePairs.size == 2)
@@ -113,7 +113,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("should allow a key/value pair to be updated") {
-      Post(uriPrefix, ukvp1Updated) ~> thurloeService.routes ~> check {
+      Post(uriPrefix, ukvp1Updated) ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
         }
@@ -121,7 +121,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
           status
         }
       }
-      Get(s"$uriPrefix/$username/${kvp1a.key}") ~> thurloeService.routes ~> check {
+      Get(s"$uriPrefix/$username/${kvp1a.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(ukvp1Updated) {
           responseAs[UserKeyValuePair]
         }
@@ -132,7 +132,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("should allow key-based deletion") {
-      Delete(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
+      Delete(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
         }
@@ -141,7 +141,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
 
-      Delete(s"$uriPrefix/$username/${kvp2.key}") ~> thurloeService.routes ~> check {
+      Delete(s"$uriPrefix/$username/${kvp2.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
         }
@@ -150,7 +150,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
 
-      Delete(s"$uriPrefix/$username2/${kvp1.key}") ~> thurloeService.routes ~> check {
+      Delete(s"$uriPrefix/$username2/${kvp1.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
         }
@@ -161,7 +161,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("should return an appropriate error code and message for a missing value during GET") {
-      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
+      Get(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(s"Key not found: ${kvp1.key}") {
           responseAs[String]
         }
@@ -172,7 +172,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("should return an appropriate error code and message for a missing value during DELETE") {
-      Delete(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.routes ~> check {
+      Delete(s"$uriPrefix/$username/${kvp1.key}") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(s"Key not found: ${kvp1.key}") {
           responseAs[String]
         }

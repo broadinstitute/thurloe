@@ -9,10 +9,19 @@ resolvers ++= Seq(
 )
 
 val sprayV = "1.3.3"
+
 val downgradedSprayV = "1.3.1"
+
 val akkaV = "2.3.12"
 
+val lenthallV = "0.13-eb2dd2d-SNAPSHOT"
+
+resolvers ++= Seq(
+  "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
+  "Broad Artifactory Snapshots" at "https://artifactory.broadinstitute.org/artifactory/libs-snapshot/")
+
 libraryDependencies ++= Seq(
+  "org.broadinstitute" %% "lenthall" % lenthallV,
   "org.scala-lang" % "scala-reflect" % "2.11.7",
   "org.webjars" % "swagger-ui" % "2.1.1",
   "io.spray" %% "spray-can" % sprayV,
@@ -38,6 +47,14 @@ libraryDependencies ++= Seq(
 )
 
 releaseSettings
+
+// The reason why -Xmax-classfile-name is set is because this will fail
+// to build on Docker otherwise.  The reason why it's 200 is because it
+// fails if the value is too close to 256 (even 254 fails).  For more info:
+//
+// https://github.com/sbt/sbt-assembly/issues/69
+// https://github.com/scala/pickling/issues/10
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmax-classfile-name", "200")
 
 shellPrompt := { state => "%s| %s> ".format(GitCommand.prompt.apply(state), version.value)}
 

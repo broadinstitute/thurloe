@@ -28,7 +28,7 @@ case object Aes256Cbc {
 
   final def validateLength(arrayName: String, array: Array[Byte], expectedBitLength: Int): Try[Unit] = {
     if (array.length * 8 == expectedBitLength) {
-      Success()
+      Success(())
     } else {
       Failure(new IllegalArgumentException(s"$arrayName size (${array.length * 8} bits) did not match the required length $expectedBitLength"))
     }
