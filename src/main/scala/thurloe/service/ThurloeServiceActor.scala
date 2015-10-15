@@ -1,40 +1,36 @@
 package thurloe.service
 
-import akka.actor.{ActorRefFactory, ActorLogging}
+import akka.actor.{Actor, ActorRefFactory, Props}
+import com.typesafe.config.Config
+import lenthall.spray.ConfigSwaggerUiHttpService
+import thurloe.database.ThurloeDatabaseConnector
 
-import spray.routing._
-import thurloe.database.{ThurloeDatabaseConnector, DataAccess}
-import scala.util.{Try, Success}
+
+object SwaggerService {
+  /*
+    Because of the implicit arg requirement apply() doesn't work here, so falling back to the less
+    idiomatic (but not unheard of) from().
+   */
+  def from(conf: Config)(implicit actorRefFactory: ActorRefFactory): SwaggerService = {
+    new SwaggerService(conf.getConfig("swagger"))
+  }
+}
+
+class SwaggerService(override val swaggerUiConfig: Config)
+                    (implicit val actorRefFactory: ActorRefFactory)
+  extends ConfigSwaggerUiHttpService {
+}
+
+object ThurloeServiceActor {
+  def props(swaggerService: SwaggerService) = Props(new ThurloeServiceActor(swaggerService))
+}
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class ThurloeServiceActor extends HttpServiceActor with ActorLogging {
+class ThurloeServiceActor(swaggerService: SwaggerService) extends Actor with ThurloeService {
+  override val dataAccess = ThurloeDatabaseConnector
+  override def actorRefFactory = context
 
-  val thurloeService = new ThurloeService {
-    val dataAccess = ThurloeDatabaseConnector
-    def actorRefFactory = context
-  }
-
-  // TODO: Relies on swagger existing in resources/swagger/
-  val swaggerSite = HostedResource("swagger/index.html", Option("swagger"), "swagger", context)
-
-  val apiSpecYaml = new HostedResource("yaml/thurloe-api.yaml", None, "thurloe-api", context)
-
-  // this actor only runs our route, but you could add
-  // other things here, like request stream processing
-  // or timeout handling
-  def receive = runRoute(thurloeService.routes ~ swaggerSite.routes ~ apiSpecYaml.routes)
-}
-
-case class HostedResource(
-      resource: String,
-      resourceDirectory: Option[String],
-      path: String,
-      actorRefFactoryImp: ActorRefFactory) extends HttpService {
-  implicit val actorRefFactory = actorRefFactoryImp
-  val routes = resourceDirectory match {
-    case Some(rd) => path(path) { getFromResource(resource) } ~ getFromResourceDirectory(rd)
-    case None => path(path) { getFromResource(resource) }
-  }
+  override def receive = runRoute(keyValuePairRoutes ~ yamlRoute ~ swaggerService.swaggerUiRoutes)
 }
 

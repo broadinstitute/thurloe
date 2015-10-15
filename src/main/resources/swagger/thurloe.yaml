@@ -1,7 +1,8 @@
 swagger: "2.0"
 info:
-  title: Thurloe Service
-  version: 0.1
+  title: Thurloe
+  description: All your key/value pairs are belong to us
+  version: 0.2
 paths:
   /thurloe:
     post:
@@ -37,6 +38,8 @@ paths:
               }
             }
           }
+      tags:
+        - Key/value pairs
       responses:
         200:
           description: OK
@@ -87,6 +90,8 @@ paths:
         500:
           description: Internal server error
           produces: text/plain
+      tags:
+        - Key/value pairs
   /thurloe/{userId}/{key}:
     get:
       operationId: getKvp
@@ -137,6 +142,8 @@ paths:
           description: Internal server error
           produces:
           - text/plain
+      tags:
+        - Key/value pairs
     delete:
       operationId: deleteKvp
       summary: Deletes a single key/value pair, referenced by key and userId.
@@ -160,3 +167,5 @@ paths:
           description: Key not found
         500:
           description: Internal server error
+      tags:
+        - Key/value pairs
