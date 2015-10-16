@@ -6,11 +6,11 @@
     <changeSet author="mcovarr" id="larger_fields">
 
         <modifyDataType columnName="USER_ID"
-                        newDataType="VARCHAR(200)"
+                        newDataType="VARCHAR(150)"
                         tableName="KEY_VALUE_PAIR"/>
 
         <modifyDataType columnName="KEY"
-                        newDataType="VARCHAR(400)"
+                        newDataType="VARCHAR(200)"
                         tableName="KEY_VALUE_PAIR"/>
     </changeSet>
 
