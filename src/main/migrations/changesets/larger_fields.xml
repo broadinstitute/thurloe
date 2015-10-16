@@ -10,7 +10,7 @@
                         tableName="KEY_VALUE_PAIR"/>
 
         <modifyDataType columnName="KEY"
-                        newDataType="VARCHAR(500)"
+                        newDataType="VARCHAR(400)"
                         tableName="KEY_VALUE_PAIR"/>
     </changeSet>
 
