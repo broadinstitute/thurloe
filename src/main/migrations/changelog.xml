@@ -5,4 +5,5 @@
 
     <include file="changesets/db_schema.xml" relativeToChangelogFile="true" />
     <include file="changesets/add_iv.xml" relativeToChangelogFile="true" />
+    <include file="changesets/larger_fields.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>
