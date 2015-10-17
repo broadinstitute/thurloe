@@ -13,6 +13,7 @@ val sprayV = "1.3.3"
 val downgradedSprayV = "1.3.1"
 
 val akkaV = "2.3.12"
+val slickV = "3.1.0"
 
 val lenthallV = "0.13-eb2dd2d-SNAPSHOT"
 
@@ -31,7 +32,8 @@ libraryDependencies ++= Seq(
   "io.spray" %% "spray-json" % downgradedSprayV,
   "com.typesafe.akka" %% "akka-actor" % akkaV,
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-  "com.typesafe.slick" %% "slick" % "3.0.2",
+  "com.typesafe.slick" %% "slick" % slickV,
+  "com.typesafe.slick" %% "slick-hikaricp" % slickV,
   "com.typesafe" % "config" % "1.3.0",
   "org.slf4j" % "slf4j-nop" % "1.6.4",
   "commons-io" % "commons-io" % "2.4",

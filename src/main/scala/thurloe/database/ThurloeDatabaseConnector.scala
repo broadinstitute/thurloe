@@ -1,6 +1,8 @@
 package thurloe.database
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
+import slick.backend.DatabaseConfig
+import slick.driver.JdbcProfile
 import thurloe.crypto.{EncryptedBytes, SecretKey, Aes256Cbc}
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -14,9 +16,12 @@ case object ThurloeDatabaseConnector extends DataAccess {
   val configFile = ConfigFactory.load()
 
   // DB Config:
-  val dbConfig = configFile.getConfig("database")
+  val dbConfigName =
+    if (configFile.hasPath("databaseSlickDriverConfigSwitch")) "databaseSlickDriverConfigSwitch" else "database"
+  val dbConfig = configFile.getConfig(dbConfigName)
   val databaseInstanceConfig = dbConfig.getConfig(dbConfig.getString("config"))
-  val dataModels = new DatabaseDataModels(databaseInstanceConfig.getString("slick.driver"))
+  val slickConfig = DatabaseConfig.forConfig[JdbcProfile]("", databaseInstanceConfig)
+  val dataModels = new DatabaseDataModels(slickConfig.driver)
 
   // Crypto Config:
   val cryptoConfig = configFile.getConfig("crypto")
@@ -25,7 +30,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
   import dataModels._
   import dataModels.driver.api._
 
-  val database = Database.forConfig("", databaseInstanceConfig)
+  val database = slickConfig.db
   val keyValuePairTable = TableQuery[DbKeyValuePair]
 
   if (databaseInstanceConfig.hasPath("slick.createSchema") && databaseInstanceConfig.getBoolean("slick.createSchema"))
