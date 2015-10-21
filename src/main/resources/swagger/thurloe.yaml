@@ -3,6 +3,7 @@ info:
   title: Thurloe
   description: All your key/value pairs are belong to us
   version: 0.2
+basePath: /api
 paths:
   /thurloe:
     post:

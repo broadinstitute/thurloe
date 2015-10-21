@@ -11,9 +11,8 @@ object Main extends App {
   // We need an ActorSystem to host our application in
   implicit val system = ActorSystem("thurloe")
 
-  val swaggerService = SwaggerService.from(ConfigFactory.load())
   // create and start our service actor
-  val service = system.actorOf(ThurloeServiceActor.props(swaggerService))
+  val service = system.actorOf(ThurloeServiceActor.props(ConfigFactory.load()))
 
   implicit val timeout = Timeout(5.seconds)
   import scala.concurrent.ExecutionContext.Implicits.global

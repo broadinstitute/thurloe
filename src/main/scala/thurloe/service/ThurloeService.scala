@@ -20,9 +20,7 @@ trait ThurloeService extends HttpService {
 
   val dataAccess: DataAccess
   val ThurloePrefix = "thurloe"
-  val Yaml = "thurloe.yaml"
   val Interjection = "Harumph!"
-  val Swagger = "swagger"
 
   val getRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
     get {
@@ -124,10 +122,6 @@ trait ThurloeService extends HttpService {
           }
       }
     }
-  }
-
-  def yamlRoute = path(Swagger / Yaml) {
-    getFromResource(s"$Swagger/$Yaml")
   }
 
   val keyValuePairRoutes = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute

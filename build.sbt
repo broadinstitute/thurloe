@@ -15,7 +15,7 @@ val downgradedSprayV = "1.3.1"
 val akkaV = "2.3.12"
 val slickV = "3.1.0"
 
-val lenthallV = "0.13-eb2dd2d-SNAPSHOT"
+val lenthallV = "0.14-6479841-SNAPSHOT"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
@@ -45,7 +45,8 @@ libraryDependencies ++= Seq(
   "io.spray" %% "spray-testkit" % sprayV % Test,
   "org.scalatest" %% "scalatest" % "2.2.5" % Test,
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
-  "org.liquibase" % "liquibase-core" % "3.3.5" % Test
+  "org.liquibase" % "liquibase-core" % "3.3.5" % Test,
+  "org.yaml" % "snakeyaml" % "1.16" % Test
 )
 
 releaseSettings
