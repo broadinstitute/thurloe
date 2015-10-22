@@ -1,5 +1,6 @@
 package thurloe.service
 
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{Matchers, FlatSpec, FunSpec}
 import org.yaml.snakeyaml.Yaml
 import spray.http.StatusCodes
@@ -185,10 +186,11 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
   }
 }
 
-class SwaggerServiceSpec extends FlatSpec with SwaggerService with ScalatestRouteTest with Matchers {
+class SwaggerServiceSpec extends FlatSpec with SwaggerService with ScalatestRouteTest with Matchers with
+TableDrivenPropertyChecks {
   def actorRefFactory = system
 
-  "Cromwell swagger docs" should "return 200" in {
+  "Thurloe swagger docs" should "return 200" in {
     Get("/swagger/thurloe.yaml") ~>
       swaggerUiResourceRoute ~>
       check {
@@ -202,17 +204,6 @@ class SwaggerServiceSpec extends FlatSpec with SwaggerService with ScalatestRout
         }
       }
 
-    Options("/swagger/thurloe.yaml") ~>
-      swaggerUiResourceRoute ~>
-      check {
-        assertResult(StatusCodes.OK) {
-          status
-        }
-        assertResult("OK") {
-          responseAs[String]
-        }
-      }
-
     Get("/swagger/index.html") ~>
       swaggerUiResourceRoute ~>
       check {
@@ -223,5 +214,23 @@ class SwaggerServiceSpec extends FlatSpec with SwaggerService with ScalatestRout
           responseAs[String].take(15)
         }
       }
+  }
+
+  "Thurloe swagger route" should "return 200 for all options" in {
+    val pathExamples = Table("path", "/", "/swagger", "/swagger/thurloe.yaml", "/swagger/index.html", "/api",
+      "/api/thurloe/", "/thurloe")
+
+    forAll(pathExamples) { path =>
+      Options(path) ~>
+        swaggerUiResourceRoute ~>
+        check {
+          assertResult(StatusCodes.OK) {
+            status
+          }
+          assertResult("OK") {
+            responseAs[String]
+          }
+        }
+    }
   }
 }

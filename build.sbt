@@ -15,7 +15,7 @@ val downgradedSprayV = "1.3.1"
 val akkaV = "2.3.12"
 val slickV = "3.1.0"
 
-val lenthallV = "0.14-6479841-SNAPSHOT"
+val lenthallV = "0.14-2ce072a-SNAPSHOT"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
