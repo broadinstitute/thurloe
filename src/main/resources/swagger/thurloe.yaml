@@ -48,6 +48,9 @@ paths:
           description: Bad request (e.g. invalid JSON input)
         500:
           description: Internal server error
+      security:
+        - google_oauth:
+            - openid
   /thurloe/{userId}:
     get:
       operationId: getAll
@@ -93,6 +96,9 @@ paths:
           produces: text/plain
       tags:
         - Key/value pairs
+      security:
+        - google_oauth:
+            - openid
   /thurloe/{userId}/{key}:
     get:
       operationId: getKvp
@@ -145,6 +151,9 @@ paths:
           - text/plain
       tags:
         - Key/value pairs
+      security:
+        - google_oauth:
+            - openid
     delete:
       operationId: deleteKvp
       summary: Deletes a single key/value pair, referenced by key and userId.
@@ -170,3 +179,13 @@ paths:
           description: Internal server error
       tags:
         - Key/value pairs
+      security:
+        - google_oauth:
+            - openid
+securityDefinitions:
+  google_oauth:
+    type: oauth2
+    authorizationUrl: 'https://accounts.google.com/o/oauth2/auth'
+    flow: implicit
+    scopes:
+      openid: open id authorization
