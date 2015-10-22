@@ -1,36 +1,28 @@
 package thurloe.service
 
-import akka.actor.{Actor, ActorRefFactory, Props}
+import akka.actor.{Actor, Props}
 import com.typesafe.config.Config
-import lenthall.spray.ConfigSwaggerUiHttpService
+import lenthall.config.ScalaConfig._
+import lenthall.spray.SwaggerUiResourceHttpService
+import lenthall.spray.WrappedRoute._
 import thurloe.database.ThurloeDatabaseConnector
 
+trait SwaggerService extends SwaggerUiResourceHttpService {
+  override def swaggerServiceName = "thurloe"
 
-object SwaggerService {
-  /*
-    Because of the implicit arg requirement apply() doesn't work here, so falling back to the less
-    idiomatic (but not unheard of) from().
-   */
-  def from(conf: Config)(implicit actorRefFactory: ActorRefFactory): SwaggerService = {
-    new SwaggerService(conf.getConfig("swagger"))
-  }
-}
-
-class SwaggerService(override val swaggerUiConfig: Config)
-                    (implicit val actorRefFactory: ActorRefFactory)
-  extends ConfigSwaggerUiHttpService {
+  override def swaggerUiVersion = "2.1.1"
 }
 
 object ThurloeServiceActor {
-  def props(swaggerService: SwaggerService) = Props(new ThurloeServiceActor(swaggerService))
+  def props(config: Config) = Props(classOf[ThurloeServiceActor], config)
 }
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class ThurloeServiceActor(swaggerService: SwaggerService) extends Actor with ThurloeService {
+class ThurloeServiceActor(config: Config) extends Actor with ThurloeService with SwaggerService {
   override val dataAccess = ThurloeDatabaseConnector
   override def actorRefFactory = context
 
-  override def receive = runRoute(keyValuePairRoutes ~ yamlRoute ~ swaggerService.swaggerUiRoutes)
+  override def receive = runRoute(keyValuePairRoutes.wrapped("api", config.getBooleanOr("api.routeUnwrapped")) ~
+    swaggerUiResourceRoute)
 }
-

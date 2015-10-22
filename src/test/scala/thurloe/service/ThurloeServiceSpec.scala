@@ -1,6 +1,7 @@
 package thurloe.service
 
-import org.scalatest.FunSpec
+import org.scalatest.{Matchers, FlatSpec, FunSpec}
+import org.yaml.snakeyaml.Yaml
 import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
@@ -181,5 +182,46 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
     }
+  }
+}
+
+class SwaggerServiceSpec extends FlatSpec with SwaggerService with ScalatestRouteTest with Matchers {
+  def actorRefFactory = system
+
+  "Cromwell swagger docs" should "return 200" in {
+    Get("/swagger/thurloe.yaml") ~>
+      swaggerUiResourceRoute ~>
+      check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+        assertResult("2.0") {
+          new Yaml()
+            .loadAs(responseAs[String], classOf[java.util.Map[String, AnyRef]])
+            .get("swagger")
+        }
+      }
+
+    Options("/swagger/thurloe.yaml") ~>
+      swaggerUiResourceRoute ~>
+      check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+        assertResult("OK") {
+          responseAs[String]
+        }
+      }
+
+    Get("/swagger/index.html") ~>
+      swaggerUiResourceRoute ~>
+      check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+        assertResult("<!DOCTYPE html>") {
+          responseAs[String].take(15)
+        }
+      }
   }
 }
