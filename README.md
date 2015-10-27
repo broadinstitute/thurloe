@@ -35,13 +35,13 @@ Then one can issue requests to `localhost`.
 
 ## HTTP API
 
-### POST /thurloe
+### POST /api/thurloe
 
 Adds a new key/value pair to Thurloe
 
 ```
-http --print=hbHB POST http://localhost:8000/thurloe < payload.json
-curl -X POST -d @payload.json http://localhost:8000/thurloe --header "Content-Type: application/json"
+http --print=hbHB POST http://localhost:8000/api/thurloe < payload.json
+curl -X POST -d @payload.json http://localhost:8000/api/thurloe --header "Content-Type: application/json"
 ```
 
 Where payload.json contains:
@@ -59,7 +59,7 @@ Where payload.json contains:
 Request:
 
 ```
-POST /thurloe HTTP/1.1
+POST /api/thurloe HTTP/1.1
 Accept: application/json
 Accept-Encoding: gzip, deflate
 Connection: keep-alive
@@ -79,11 +79,11 @@ User-Agent: HTTPie/0.9.2
 
 If the key already exists, a **406 Not Acceptable** will be returned.
 
-### GET /thurloe/:user_id/:key
+### GET /api/thurloe/:user_id/:key
 
 ```
-http --print=hbHB http://localhost:8000/thurloe/uid/k
-curl http://localhost:8000/thurloe/uid/k
+http --print=hbHB http://localhost:8000/api/thurloe/uid/k
+curl http://localhost:8000/api/thurloe/uid/k
 ```
 
 Response:
@@ -106,11 +106,11 @@ Server: spray-can/1.3.3
 
 If the key or user ID is not found, a **404 Not Found** will be returned.
 
-### GET /thurloe/:user_id
+### GET /api/thurloe/:user_id
 
 ```
-http --print=hbHB http://localhost:8000/thurloe/uid
-curl http://localhost:8000/thurloe/uid
+http --print=hbHB http://localhost:8000/api/thurloe/uid
+curl http://localhost:8000/api/thurloe/uid
 ```
 
 ```
@@ -137,11 +137,11 @@ Server: spray-can/1.3.3
 
 If the key or user ID is not found, a **404 Not Found** will be returned.
 
-### DELETE /thurloe/:user_id/:key
+### DELETE /api/thurloe/:user_id/:key
 
 ```
-http --print=hbHB DELETE http://localhost:8000/thurloe/uid/k2
-curl -X DELETE http://localhost:8000/thurloe/uid/k
+http --print=hbHB DELETE http://localhost:8000/api/thurloe/uid/k2
+curl -X DELETE http://localhost:8000/api/thurloe/uid/k
 ```
 
 If the key is not found, a 404 is returned:
