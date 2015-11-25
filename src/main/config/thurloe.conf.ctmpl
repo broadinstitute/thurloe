@@ -1,0 +1,26 @@
+{{with $environment := env "ENVIRONMENT"}}{{$keyname := printf "secret/dsde/%s/thurloe/thurloe.conf" $environment}}{{with vault $keyname}}
+
+include "application.conf"
+
+database {
+  config = mysql
+
+  mysql {
+    db {
+      url = "{{.Data.db_url}}"
+      user = "{{.Data.db_user}}"
+      password = "{{.Data.db_password}}"
+      driver = "com.mysql.jdbc.Driver"
+      connectionTimeout = 5000
+    }
+    driver = "slick.driver.MySQLDriver$"
+    connectionPool = disabled
+  }
+}
+
+crypto {
+  key = "{{.Data.crypto_key}}"
+}
+
+{{end}}
+{{end}}
