@@ -79,6 +79,37 @@ User-Agent: HTTPie/0.9.2
 
 If the key already exists, a **406 Not Acceptable** will be returned.
 
+### GET /api/thurloe?userId=:userId&key=:key&value=:value
+
+```
+http --print=hbHB http://localhost:8000/api/thurloe?userId=u&key=k&value=v
+curl http://localhost:8000/api/thurloe?userId=u&key=k&value=v
+```
+
+All parameters are optional. 
+They act as filters on the returned values in that everything returned must match any and all of the specified parameters.
+If any value is specified multiple times (e.g. `userId=aaa&userId=bbb`) then any matching values are returned.
+
+Response:
+
+```
+HTTP/1.1 200 OK
+Content-Length: 79
+Content-Type: application/json; charset=UTF-8
+Date: Tue, 15 Sep 2015 18:50:36 GMT
+Server: spray-can/1.3.3
+
+[
+    {
+        "keyValuePair": {
+            "key": "k",
+            "value": "v"
+        },
+        "userId": "u"
+    }
+]
+```
+
 ### GET /api/thurloe/:user_id/:key
 
 ```

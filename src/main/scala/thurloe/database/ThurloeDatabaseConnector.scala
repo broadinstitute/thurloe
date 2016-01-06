@@ -1,12 +1,12 @@
 package thurloe.database
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import slick.backend.DatabaseConfig
 import slick.driver.JdbcProfile
 import thurloe.crypto.{EncryptedBytes, SecretKey, Aes256Cbc}
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
-import thurloe.service.{KeyValuePairWithId, UserKeyValuePairs, UserKeyValuePair, KeyValuePair}
+import thurloe.service._
 
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
@@ -36,19 +36,19 @@ case object ThurloeDatabaseConnector extends DataAccess {
   if (databaseInstanceConfig.hasPath("slick.createSchema") && databaseInstanceConfig.getBoolean("slick.createSchema"))
     setupInMemoryDatabase(database)
 
-  private def databaseValuesToKeyValuePair(id: Option[Int], key: String, value: String, iv: String): Try[KeyValuePairWithId] = {
+  private def databaseValuesToUserKeyValuePair(id: Option[Int], userId: String, key: String, value: String, iv: String): Try[UserKeyValuePairWithId] = {
     Aes256Cbc.decrypt(EncryptedBytes(value, iv), secretKey) map { decryptedBytes =>
-      KeyValuePairWithId(id, KeyValuePair(key, new String(decryptedBytes, "UTF-8")))
+      UserKeyValuePairWithId(id, UserKeyValuePair(userId, KeyValuePair(key, new String(decryptedBytes, "UTF-8"))))
     }
   }
 
-  private def interpretDatabaseResponse(resultSequence: Seq[DatabaseRow]): Seq[Future[KeyValuePairWithId]] = {
+  private def interpretDatabaseResponse(resultSequence: Seq[DatabaseRow]): Seq[Future[UserKeyValuePairWithId]] = {
     resultSequence map {
-      case DatabaseRow(id, userId, key, value, iv) => Future.fromTry(databaseValuesToKeyValuePair(id, key, value, iv))
+      case DatabaseRow(id, userId, key, value, iv) => Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
     }
   }
 
-  private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[KeyValuePairWithId]] = {
+  private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[UserKeyValuePairWithId]] = {
     val query = keyValuePairTable.filter(constraint)
 
     for {
@@ -57,7 +57,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
     } yield result
   }
 
-  def lookup(userId: String, key: String): Future[KeyValuePairWithId] = {
+  def lookupIncludingDatabaseId(userId: String, key: String): Future[UserKeyValuePairWithId] = {
     for {
       results <- lookupWithConstraint(x => x.key === key && x.userId === userId)
       result <- if (results.isEmpty) {
@@ -70,10 +70,42 @@ case object ThurloeDatabaseConnector extends DataAccess {
     } yield result
   }
 
+  def lookup(userId: String, key: String): Future[UserKeyValuePair] = lookupIncludingDatabaseId(userId, key) map { _.userKeyValuePair }
+
   def lookup(userId: String): Future[UserKeyValuePairs] = {
     for {
       results <- lookupWithConstraint(x => x.userId === userId)
-    } yield UserKeyValuePairs(userId, results map { _.keyValuePair })
+    } yield UserKeyValuePairs(userId, results map { _.userKeyValuePair.keyValuePair })
+  }
+
+  def lookup(queryParameters: ThurloeQuery): Future[Seq[UserKeyValuePair]] = {
+    def userIdAndKeyConstraint(queryParameters: ThurloeQuery) = (x: DbKeyValuePair) => {
+      val include: Rep[Boolean] = true
+
+      val userIdFilter = queryParameters.userId.map { userIds =>
+        val userIdFilters = userIds map { userId => x.userId === userId }
+        userIdFilters.reduceLeft(_ || _)
+      }
+      val keyFilter = queryParameters.key.map { keys =>
+        val keyFilters = keys map { key => x.key === key }
+        keyFilters.reduceLeft(_ || _)
+      }
+
+      val optionalFilters = List(userIdFilter, keyFilter)
+      val filters = optionalFilters.map(_.getOrElse(include))
+      filters.reduceLeftOption(_ && _).getOrElse(include)
+    }
+
+    for {
+      filteredOnUserAndKey <- lookupWithConstraint(userIdAndKeyConstraint(queryParameters))
+      // We have to filter out values outside of the Slick access because the values are encrypted until now.
+      valueFilter = (userKeyValuePair: UserKeyValuePairWithId) => queryParameters.value map { values =>
+        val valueFilters = values map { value => value.equals(userKeyValuePair.userKeyValuePair.keyValuePair.value) }
+        valueFilters.reduceLeft(_ || _)
+      } getOrElse true
+      results = filteredOnUserAndKey filter valueFilter
+
+    } yield results map { _.userKeyValuePair }
   }
 
   import thurloe.database.DatabaseOperation.DatabaseOperation
@@ -85,7 +117,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
    */
   private def databaseWrite(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
 
-    val lookupExists = lookup(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
+    val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
     lookupExists flatMap { existingKvp => update(existingKvp, userKeyValuePair, encryptedValue) } recoverWith {
       case e: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
       case e => Future.failed(e)
@@ -107,7 +139,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
     } yield x
   }
 
-  private def update(oldKeyValuePair: KeyValuePairWithId, userKeyValuePair: UserKeyValuePair, newEncryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+  private def update(oldKeyValuePair: UserKeyValuePairWithId, userKeyValuePair: UserKeyValuePair, newEncryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
     // We've just looked up and found an entry, so this ID should never be None. However, belt and braces...
     oldKeyValuePair.id match {
       case None => Future.failed(new KeyNotFoundException(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key))
