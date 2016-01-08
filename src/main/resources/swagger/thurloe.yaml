@@ -6,6 +6,68 @@ info:
 basePath: /api
 paths:
   /thurloe:
+    get:
+      operationId: query
+      summary: Query the database using a custom subset of userId, key and value
+      parameters:
+        - name: userId
+          description: User ID of the owner of the key/value pair
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          in: query
+          description: >
+            Show only (User,(Key,Value)) items which are assigned to this user ID
+        - name: key
+          description: Key of the key/value pair
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          in: query
+          description: >
+            Show only (User,(Key,Value)) items which have this key
+        - name: value
+          description: Value of the key/value pair
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          in: query
+          description: >
+            Show only (User,(Key,Value)) items which have this value
+      tags:
+        - Key/value pairs
+      responses:
+        200:
+          description: OK
+          produces:
+          - application/json
+          schema:
+            type: array
+            items:
+              "type": "object"
+          examples:
+            application/json: |-
+              [{
+                "userId": "string",
+                "keyValuePair": {
+                  "key": "string",
+                  "value": "string"
+                }
+              }]
+        500:
+          description: Internal server error
+          produces: text/plain
+      tags:
+        - Key/value pairs
+      security:
+        - google_oauth:
+            - openid
     post:
       operationId: setKey
       summary: Adds or resets a single key/value pair to the database for a given user ID.

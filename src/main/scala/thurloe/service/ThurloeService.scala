@@ -12,6 +12,7 @@ import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 trait ThurloeService extends HttpService {
@@ -24,11 +25,12 @@ trait ThurloeService extends HttpService {
 
   val getRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
     get {
-      onComplete(dataAccess.lookup(userId, key)) {
-        case Success(keyValuePairWithId) =>
+      val query: Future[UserKeyValuePair] = dataAccess.lookup(userId, key)
+      onComplete(query) {
+        case Success(keyValuePair) =>
           respondWithMediaType(`application/json`) {
             complete {
-              UserKeyValuePair(userId, keyValuePairWithId.keyValuePair).toJson.prettyPrint
+              keyValuePair.toJson.prettyPrint
             }
           }
         case Failure(e: KeyNotFoundException) =>
@@ -43,6 +45,38 @@ trait ThurloeService extends HttpService {
               s"$Interjection $e"
             }
           }
+      }
+    }
+  }
+
+  val queryRoute = path(ThurloePrefix) {
+    parameterSeq { parameters =>
+      get {
+        val thurloeQuerySpec = ThurloeQuery(parameters)
+        thurloeQuerySpec.unrecognizedFilters match {
+          case Some(invalidFilters) =>
+            respondWithStatus(StatusCodes.BadRequest) {
+              complete {
+                "Bad query parameter(s): " + invalidFilters.mkString(",")
+              }
+            }
+          case None =>
+            val query: Future[Seq[UserKeyValuePair]] = dataAccess.lookup(ThurloeQuery(parameters))
+            onComplete(query) {
+              case Success(keyValuePairs: Seq[UserKeyValuePair]) =>
+                respondWithMediaType(`application/json`) {
+                  complete {
+                    keyValuePairs.toJson.prettyPrint
+                  }
+                }
+              case Failure(e) =>
+                respondWithStatus(StatusCodes.InternalServerError) {
+                  complete {
+                    s"$Interjection $e"
+                  }
+                }
+            }
+        }
       }
     }
   }
@@ -124,5 +158,5 @@ trait ThurloeService extends HttpService {
     }
   }
 
-  val keyValuePairRoutes = getRoute ~ getAllRoute ~ setRoute ~ deleteRoute
+  val keyValuePairRoutes = getRoute ~ getAllRoute ~ queryRoute ~ setRoute ~ deleteRoute
 }

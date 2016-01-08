@@ -1,15 +1,16 @@
 package thurloe.database
 
 import thurloe.database.DatabaseOperation.DatabaseOperation
-import thurloe.service.{KeyValuePairWithId, UserKeyValuePairs, UserKeyValuePair}
+import thurloe.service.{ThurloeQuery, KeyValuePairWithId, UserKeyValuePairs, UserKeyValuePair}
 
 import scala.concurrent.Future
 
 trait DataAccess {
 
   def set(keyValuePair: UserKeyValuePair): Future[DatabaseOperation]
-  def lookup(userId: String, key: String): Future[KeyValuePairWithId]
+  def lookup(userId: String, key: String): Future[UserKeyValuePair]
   def lookup(userId: String): Future[UserKeyValuePairs]
+  def lookup(query: ThurloeQuery): Future[Seq[UserKeyValuePair]]
   def delete(userId: String, key: String): Future[Unit]
 }
 
