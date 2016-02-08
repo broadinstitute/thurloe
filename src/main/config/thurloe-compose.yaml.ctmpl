@@ -23,5 +23,6 @@ proxy:
     PROXY_URL: http://app:8000/
     PROXY_URL2: http://app:8000/api
     SERVER_NAME: {{.Data.env_server_name}}
+    ENABLE_STACKDRIVER: 'yes'
 {{end}}
 {{end}}
