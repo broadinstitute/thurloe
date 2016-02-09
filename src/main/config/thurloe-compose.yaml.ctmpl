@@ -16,6 +16,7 @@ proxy:
   ports:
     - "80:80"
     - "443:443"
+    - "127.0.0.1:8888:8888"
   {{.Data.proxy_volumes}}
   environment:
     CALLBACK_URI: {{.Data.env_callback_uri}}
@@ -23,5 +24,6 @@ proxy:
     PROXY_URL: http://app:8000/
     PROXY_URL2: http://app:8000/api
     SERVER_NAME: {{.Data.env_server_name}}
+    ENABLE_STACKDRIVER: 'yes'
 {{end}}
 {{end}}
