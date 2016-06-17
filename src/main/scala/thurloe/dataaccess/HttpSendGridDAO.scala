@@ -1,6 +1,5 @@
 package thurloe.dataaccess
 
-import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import com.typesafe.config.ConfigFactory
 
@@ -18,7 +17,7 @@ class HttpSendGridDAO {
   val substitutionKey = sendGridConfig.getString("substitutionKey")
   val fromAddress = sendGridConfig.getString("defaultFromAddress")
 
-  def sendEmail(email: SendGrid.Email): Future[Boolean] = { //this should just take an Email
+  def sendEmail(email: SendGrid.Email): Future[Boolean] = {
     Future {
       println(s"DEBUG: email sent")
       val sendGrid = new SendGrid(apiKey)

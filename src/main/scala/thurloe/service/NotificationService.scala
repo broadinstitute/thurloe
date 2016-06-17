@@ -1,19 +1,12 @@
 package thurloe.service
 
-import java.net.URLEncoder
-
-import spray.http.HttpHeaders.RawHeader
 import spray.http.MediaTypes._
 import spray.http.StatusCodes
-import spray.json._
 import spray.routing.HttpService
-import thurloe.database.DatabaseOperation.DatabaseOperation
-import thurloe.database.{DataAccess, DatabaseOperation}
 import thurloe.service.ApiDataModelsJsonProtocol._
 import thurloe.dataaccess.HttpSendGridDAO
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 trait NotificationService extends HttpService {

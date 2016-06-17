@@ -262,7 +262,7 @@ paths:
               "contactEmail": {
                 "type": "string"
               },
-              "templateId": {
+              "notificationId": {
                 "type": "string"
               },
               "substitutions": {
@@ -281,10 +281,6 @@ paths:
           description: OK
           produces:
             - text/plain
-        404:
-          description: Key not found
-          produces:
-          - text/plain
         500:
           description: Internal server error
           produces:
