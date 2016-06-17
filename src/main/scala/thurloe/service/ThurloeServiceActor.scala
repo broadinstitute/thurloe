@@ -19,9 +19,11 @@ object ThurloeServiceActor {
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class ThurloeServiceActor(config: Config) extends Actor with ThurloeService with SwaggerService {
+class ThurloeServiceActor(config: Config) extends Actor with ThurloeService with NotificationService with SwaggerService {
   override val dataAccess = ThurloeDatabaseConnector
   override def actorRefFactory = context
+  override val ThurloePrefix = "thurloe"
+  override val Interjection = "Harumph!"
 
   override def receive = runRoute(keyValuePairRoutes.wrapped("api", config.getBooleanOr("api.routeUnwrapped")) ~
     swaggerUiResourceRoute)

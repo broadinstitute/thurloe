@@ -22,5 +22,9 @@ crypto {
   key = "{{.Data.crypto_key}}"
 }
 
+sendgrid {
+  apiKey = "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"
+}
+
 {{end}}
 {{end}}

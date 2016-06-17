@@ -244,6 +244,56 @@ paths:
       security:
         - google_oauth:
             - openid
+  /thurloe/notification:
+    post:
+      operationId: postNotification
+      summary: Sends a notification to the contact email with the templateId and unique parameters specified
+      parameters:
+      - name: body
+        in: body
+        description: The notification to send
+        required: true
+        type: string
+        schema:
+          {
+            "type": "object",
+            "required": ["contactEmail", "templateId"],
+            "properties": {
+              "contactEmail": {
+                "type": "string"
+              },
+              "templateId": {
+                "type": "string"
+              },
+              "uniqueArguments": {
+                "type": "object",
+                "properties": {
+                  "argumentName": {
+                    "type": "string",
+                    "default": "argumentValue"
+                  }
+                }
+              }
+            }
+          }
+      responses:
+        200:
+          description: OK
+          produces:
+            - text/plain
+        404:
+          description: Key not found
+          produces:
+          - text/plain
+        500:
+          description: Internal server error
+          produces:
+          - text/plain
+      tags:
+        - Notifications
+      security:
+        - google_oauth:
+            - openid
 securityDefinitions:
   google_oauth:
     type: oauth2

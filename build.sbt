@@ -1,5 +1,7 @@
 name := "thurloe"
+
 version := "0.1"
+
 organization := "org.broadinstitute"
 
 scalaVersion := "2.11.7"
@@ -41,6 +43,7 @@ libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.35",
   "org.liquibase" % "liquibase-core" % "3.3.5",
   "org.hsqldb" % "hsqldb" % "2.3.2",
+  "com.sendgrid" % "sendgrid-java" % "2.2.2",
   //---------- Test libraries -------------------//
   "io.spray" %% "spray-testkit" % sprayV % Test,
   "org.scalatest" %% "scalatest" % "2.2.5" % Test,
