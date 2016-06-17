@@ -22,9 +22,10 @@ object ThurloeServiceActor {
 class ThurloeServiceActor(config: Config) extends Actor with ThurloeService with NotificationService with SwaggerService {
   override val dataAccess = ThurloeDatabaseConnector
   override def actorRefFactory = context
-  override val ThurloePrefix = "thurloe"
-  override val Interjection = "Harumph!"
 
-  override def receive = runRoute(keyValuePairRoutes.wrapped("api", config.getBooleanOr("api.routeUnwrapped")) ~
-    swaggerUiResourceRoute)
+  override def receive = runRoute(
+      swaggerUiResourceRoute ~
+      pathPrefix("api") { keyValuePairRoutes } ~
+      pathPrefix("api") { notificationRoutes }
+    )
 }

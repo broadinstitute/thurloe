@@ -8,7 +8,7 @@ import spray.http.StatusCodes
 import spray.json._
 import spray.routing.HttpService
 import thurloe.database.DatabaseOperation.DatabaseOperation
-import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
+import thurloe.database.{DataAccess, DatabaseOperation}
 import thurloe.service.ApiDataModelsJsonProtocol._
 import thurloe.dataaccess.HttpSendGridDAO
 
@@ -20,40 +20,26 @@ trait NotificationService extends HttpService {
 
   import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
-  val dataAccess: DataAccess
-  val ThurloePrefix = "thurloe"
-  val Interjection = "Harumph!"
-
   val sendGridDAO = new HttpSendGridDAO
 
-
-  private def statusCode(setKeyResponse: DatabaseOperation) = {
-    setKeyResponse match {
-      case DatabaseOperation.Insert => StatusCodes.Created
-      case _ => StatusCodes.OK
-    }
-  }
-
-  val postRoute = path(ThurloePrefix) {
+  val postRoute = path("notification") {
     post {
       entity(as[Notification]) { notification =>
-        respondWithHeader(RawHeader("Location", s"/$ThurloePrefix/notification")) {
-          onComplete(sendGridDAO.sendEmail(notification.contactEmail, notification.notificationId)) {
-            case Success(setKeyResponse) =>
-              respondWithMediaType(`application/json`) {
-                respondWithStatus(statusCode(DatabaseOperation.Update)) {
-                  complete {
-                    ""
-                  }
-                }
-              }
-            case Failure(e) =>
-              respondWithStatus(StatusCodes.InternalServerError) {
+        onComplete(sendGridDAO.sendEmail(sendGridDAO.createEmail(notification.contactEmail, notification.notificationId, notification.substitutions))) {
+          case Success(response) =>
+            respondWithMediaType(`application/json`) {
+              respondWithStatus(StatusCodes.OK) {
                 complete {
-                  s"$Interjection $e"
+                  ""
                 }
               }
-          }
+            }
+          case Failure(e) =>
+            respondWithStatus(StatusCodes.InternalServerError) {
+              complete {
+                s"Unable to send notification! $e"
+              }
+            }
         }
       }
     }

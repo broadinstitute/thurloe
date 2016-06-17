@@ -244,7 +244,7 @@ paths:
       security:
         - google_oauth:
             - openid
-  /thurloe/notification:
+  /notification:
     post:
       operationId: postNotification
       summary: Sends a notification to the contact email with the templateId and unique parameters specified
@@ -257,7 +257,7 @@ paths:
         schema:
           {
             "type": "object",
-            "required": ["contactEmail", "templateId"],
+            "required": ["contactEmail", "notificationId"],
             "properties": {
               "contactEmail": {
                 "type": "string"
@@ -265,12 +265,12 @@ paths:
               "templateId": {
                 "type": "string"
               },
-              "uniqueArguments": {
+              "substitutions": {
                 "type": "object",
                 "properties": {
-                  "argumentName": {
+                  "key": {
                     "type": "string",
-                    "default": "argumentValue"
+                    "default": "value"
                   }
                 }
               }

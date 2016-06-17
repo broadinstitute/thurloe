@@ -4,6 +4,7 @@ import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import com.typesafe.config.ConfigFactory
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
@@ -14,41 +15,45 @@ class HttpSendGridDAO {
   val configFile = ConfigFactory.load()
   val sendGridConfig = configFile.getConfig("sendgrid")
   val apiKey = sendGridConfig.getString("apiKey")
+  val substitutionKey = sendGridConfig.getString("substitutionKey")
+  val fromAddress = sendGridConfig.getString("defaultFromAddress")
 
-  val templateIdReal = "7c99f04a-ac10-4e17-a46c-90465f30722f"
-  val fromAddress = "accounts@dev.test.firecloud.org" //configurate the shit out of all of this
+  def sendEmail(email: SendGrid.Email): Future[Boolean] = { //this should just take an Email
+    Future {
+      println(s"DEBUG: email sent")
+      val sendGrid = new SendGrid(apiKey)
 
-  def sendEmail(toAddress: String, templateId: String, uniqueArguments: Map[String, String] = Map.empty): Future[Response] = {
-    println(s"DEBUG: [${templateId}] email sent")
-
-
-    val sendGrid = new SendGrid(apiKey)
-    val email = createEmail(toAddress, templateIdReal, uniqueArguments)
-
-    val x = sendGrid.send(email) //handle failures
-    Future.successful(x)
+      val response = sendGrid.send(email)
+      if (response.getStatus) true else false //probably have a better return value than this
+    }
   }
 
-  def createEmail(toAddress: String, templateId: String, uniqueArguments: Map[String, String]): SendGrid.Email = {
+  /*
+    Note: email.setSubject and email.setText must be set even if their values
+    aren't used. Supposedly this will be fixed in a future version of SendGrid
+   */
+  def createEmail(toAddress: String, notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
     val email = new SendGrid.Email()
 
     email.addTo(toAddress)
     email.setFrom(fromAddress)
-    email.setTemplateId(templateIdReal)
+    email.setTemplateId(notificationId)
     email.setSubject(" ")
-    email.setText("")
-    addUniqueArguments(email, uniqueArguments)
+    email.setText(" ")
+    addSubstitutions(email, substitutions)
   }
 
   /*
-    Adds a set of unique arguments to an email template.
+    Adds a set of substitutions to an email template.
     For example, Map("workspaceName"->"TCGA_BRCA") added to the following email template:
     "You have been added to workspace <%workspaceName%>" will result in this substitution:
     "You have been added to workspace TCGA_BRCA"
    */
-  private def addUniqueArguments(email: SendGrid.Email, uniqueArguments: Map[String, String]): SendGrid.Email = {
-    uniqueArguments.foreach(argument => email.addUniqueArg(argument._1, argument._2))
+  private def addSubstitutions(email: SendGrid.Email, uniqueArguments: Map[String, String]): SendGrid.Email = {
+    uniqueArguments.foreach(argument => email.addSubstitution(wrapSubstitution(argument._1), Array(argument._2)))
     email
   }
+
+  private def wrapSubstitution(keyword: String): String = s"$substitutionKey$keyword$substitutionKey"
 
 }
