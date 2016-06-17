@@ -280,7 +280,7 @@ paths:
         200:
           description: OK
           produces:
-            - text/plain
+            - application/json
         500:
           description: Internal server error
           produces:

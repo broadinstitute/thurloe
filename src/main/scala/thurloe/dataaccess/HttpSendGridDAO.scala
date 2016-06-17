@@ -14,7 +14,7 @@ class HttpSendGridDAO {
   val configFile = ConfigFactory.load()
   val sendGridConfig = configFile.getConfig("sendgrid")
   val apiKey = sendGridConfig.getString("apiKey")
-  val substitutionKey = sendGridConfig.getString("substitutionKey")
+  val substitutionChar = sendGridConfig.getString("substitutionChar")
   val fromAddress = sendGridConfig.getString("defaultFromAddress")
 
   def sendEmail(email: SendGrid.Email): Future[Boolean] = {
@@ -45,7 +45,7 @@ class HttpSendGridDAO {
   /*
     Adds a set of substitutions to an email template.
     For example, Map("workspaceName"->"TCGA_BRCA") added to the following email template:
-    "You have been added to workspace <%workspaceName%>" will result in this substitution:
+    "You have been added to workspace %workspaceName%" will result in this substitution:
     "You have been added to workspace TCGA_BRCA"
    */
   private def addSubstitutions(email: SendGrid.Email, uniqueArguments: Map[String, String]): SendGrid.Email = {
@@ -53,6 +53,6 @@ class HttpSendGridDAO {
     email
   }
 
-  private def wrapSubstitution(keyword: String): String = s"$substitutionKey$keyword$substitutionKey"
+  private def wrapSubstitution(keyword: String): String = s"$substitutionChar$keyword$substitutionChar"
 
 }
