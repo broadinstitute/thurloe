@@ -18,8 +18,8 @@ trait NotificationService extends HttpService {
   val postRoute = path("notification") {
     post {
       entity(as[Notification]) { notification =>
-        onComplete(sendGridDAO.sendEmail(sendGridDAO.createEmail(notification.contactEmail, notification.notificationId, notification.substitutions))) {
-          case Success(response) =>
+        onComplete(sendGridDAO.sendNotification(notification)) {
+          case Success(_) =>
             respondWithMediaType(`application/json`) {
               respondWithStatus(StatusCodes.OK) {
                 complete {
@@ -30,7 +30,7 @@ trait NotificationService extends HttpService {
           case Failure(e) =>
             respondWithStatus(StatusCodes.InternalServerError) {
               complete {
-                s"Unable to send notification! $e"
+                s"Unable to send notification: ${e}"
               }
             }
         }

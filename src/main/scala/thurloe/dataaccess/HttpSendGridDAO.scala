@@ -1,10 +1,15 @@
 package thurloe.dataaccess
 
+import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import com.typesafe.config.ConfigFactory
+import spray.http.{StatusCodes, StatusCode}
+import thurloe.database.{ThurloeDatabaseConnector, DataAccess, DatabaseOperation, KeyNotFoundException}
+import thurloe.service.Notification
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Try, Success}
 
 /**
  * Created by mbemis on 6/16/16.
@@ -17,13 +22,12 @@ class HttpSendGridDAO {
   val substitutionChar = sendGridConfig.getString("substitutionChar")
   val fromAddress = sendGridConfig.getString("defaultFromAddress")
 
-  def sendEmail(email: SendGrid.Email): Future[Boolean] = {
-    Future {
-      println(s"DEBUG: email sent")
-      val sendGrid = new SendGrid(apiKey)
+  val dataAccess = ThurloeDatabaseConnector
 
-      val response = sendGrid.send(email)
-      if (response.getStatus) true else false //probably have a better return value than this
+  def sendNotification(notification: Notification): Future[Response] = {
+    lookupPreferredEmail(notification.userId) flatMap { preferredEmail =>
+      val email = createEmail(preferredEmail, notification.notificationId, notification.substitutions)
+      sendEmail(email)
     }
   }
 
@@ -42,6 +46,20 @@ class HttpSendGridDAO {
     addSubstitutions(email, substitutions)
   }
 
+  def sendEmail(email: SendGrid.Email): Future[Response] = {
+    val sendGrid = new SendGrid(apiKey)
+    Future {
+      sendGrid.send(email)
+    }
+  }
+
+  def lookupPreferredEmail(userId: String): Future[String] = {
+    for {
+      contactEmail <- dataAccess.lookup(userId, "contactEmail")
+      email <- dataAccess.lookup(userId, "email")
+    } yield if(contactEmail.keyValuePair.value.isEmpty) email.keyValuePair.value else contactEmail.keyValuePair.value
+  }
+
   /*
     Adds a set of substitutions to an email template.
     For example, Map("workspaceName"->"TCGA_BRCA") added to the following email template:
@@ -54,5 +72,9 @@ class HttpSendGridDAO {
   }
 
   private def wrapSubstitution(keyword: String): String = s"$substitutionChar$keyword$substitutionChar"
+
+  case class NotificationException() extends Exception {
+    override def getMessage = s"Unable to send notification"
+  }
 
 }
