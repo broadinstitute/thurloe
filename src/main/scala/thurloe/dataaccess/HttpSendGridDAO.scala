@@ -3,13 +3,11 @@ package thurloe.dataaccess
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import com.typesafe.config.ConfigFactory
-import spray.http.{StatusCodes, StatusCode}
-import thurloe.database.{ThurloeDatabaseConnector, DataAccess, DatabaseOperation, KeyNotFoundException}
+import thurloe.database.ThurloeDatabaseConnector
 import thurloe.service.Notification
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Try, Success}
 
 /**
  * Created by mbemis on 6/16/16.
@@ -48,8 +46,11 @@ class HttpSendGridDAO {
 
   def sendEmail(email: SendGrid.Email): Future[Response] = {
     val sendGrid = new SendGrid(apiKey)
+
     Future {
-      sendGrid.send(email)
+      val response = sendGrid.send(email)
+      if(response.getStatus) response
+      else throw new NotificationException
     }
   }
 
@@ -66,8 +67,8 @@ class HttpSendGridDAO {
     "You have been added to workspace %workspaceName%" will result in this substitution:
     "You have been added to workspace TCGA_BRCA"
    */
-  private def addSubstitutions(email: SendGrid.Email, uniqueArguments: Map[String, String]): SendGrid.Email = {
-    uniqueArguments.foreach(argument => email.addSubstitution(wrapSubstitution(argument._1), Array(argument._2)))
+  private def addSubstitutions(email: SendGrid.Email, substitution: Map[String, String]): SendGrid.Email = {
+    substitution.foreach(sub => email.addSubstitution(wrapSubstitution(sub._1), Array(sub._2)))
     email
   }
 

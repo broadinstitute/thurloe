@@ -24,7 +24,7 @@ crypto {
 
 sendgrid {
   apiKey = "{{.Data.sendgrid_apiKey}}"
-  defaultFromAddress = "changethis@dev.test.firecloud.org"
+  defaultFromAddress = "{{.Data.sendgrid_defaultFromAddress}}"
   substitutionChar = "%"
 }
 

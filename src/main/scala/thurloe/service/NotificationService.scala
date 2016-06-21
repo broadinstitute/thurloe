@@ -27,10 +27,10 @@ trait NotificationService extends HttpService {
                 }
               }
             }
-          case Failure(e) =>
+          case Failure(_) =>
             respondWithStatus(StatusCodes.InternalServerError) {
               complete {
-                s"Unable to send notification: ${e}"
+                s"Unable to send notification [${notification.notificationId}] to user [${notification.userId}]"
               }
             }
         }

@@ -247,7 +247,7 @@ paths:
   /notification:
     post:
       operationId: postNotification
-      summary: Sends a notification to the contact email with the templateId and unique parameters specified
+      summary: Sends a notification to the sepcified user with the templateId and unique parameters specified
       parameters:
       - name: body
         in: body
@@ -257,9 +257,9 @@ paths:
         schema:
           {
             "type": "object",
-            "required": ["contactEmail", "notificationId"],
+            "required": ["userId", "notificationId"],
             "properties": {
-              "contactEmail": {
+              "userId": {
                 "type": "string"
               },
               "notificationId": {
