@@ -247,7 +247,7 @@ paths:
   /notification:
     post:
       operationId: postNotification
-      summary: Sends a notification to the sepcified user with the templateId and unique parameters specified
+      summary: Sends a notification to the specified user with the templateId and substitutions specified
       parameters:
       - name: body
         in: body
