@@ -76,7 +76,7 @@ class HttpSendGridDAO {
   private def wrapSubstitution(keyword: String): String = s"$substitutionChar$keyword$substitutionChar"
 
   case class NotificationException(recipients: Array[String], notificationId: String) extends Exception {
-    override def getMessage = s"Unable to send notification [$notificationId] to recipients [${recipients.mkString(",")]}"
+    override def getMessage = s"Unable to send notification [$notificationId] to recipients [${recipients.mkString(",")}]"
   }
 
 }
