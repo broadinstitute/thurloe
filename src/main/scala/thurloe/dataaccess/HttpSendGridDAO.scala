@@ -49,8 +49,6 @@ class HttpSendGridDAO {
   def sendEmail(email: SendGrid.Email): Future[Response] = {
     val sendGrid = new SendGrid(apiKey)
 
-    println(email.getFilters)
-
     Future {
       val response = sendGrid.send(email)
       if(response.getStatus) response
