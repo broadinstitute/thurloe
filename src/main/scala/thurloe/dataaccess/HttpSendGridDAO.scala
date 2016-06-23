@@ -3,6 +3,7 @@ package thurloe.dataaccess
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import com.typesafe.config.ConfigFactory
+import org.json.JSONObject
 import thurloe.database.ThurloeDatabaseConnector
 import thurloe.service.Notification
 
@@ -42,15 +43,18 @@ class HttpSendGridDAO {
     email.setSubject(" ")
     email.setText(" ")
     addSubstitutions(email, substitutions)
+    email
   }
 
   def sendEmail(email: SendGrid.Email): Future[Response] = {
     val sendGrid = new SendGrid(apiKey)
 
+    println(email.getFilters)
+
     Future {
       val response = sendGrid.send(email)
       if(response.getStatus) response
-      else throw new NotificationException
+      else throw new NotificationException(email.getTos, email.getFilters.getJSONObject("templates").getJSONObject("settings").get("template_id").toString)
     }
   }
 
@@ -67,15 +71,14 @@ class HttpSendGridDAO {
     "You have been added to workspace %workspaceName%" will result in this substitution:
     "You have been added to workspace TCGA_BRCA"
    */
-  private def addSubstitutions(email: SendGrid.Email, substitution: Map[String, String]): SendGrid.Email = {
+  private def addSubstitutions(email: SendGrid.Email, substitution: Map[String, String]): Unit = {
     substitution.foreach(sub => email.addSubstitution(wrapSubstitution(sub._1), Array(sub._2)))
-    email
   }
 
   private def wrapSubstitution(keyword: String): String = s"$substitutionChar$keyword$substitutionChar"
 
-  case class NotificationException() extends Exception {
-    override def getMessage = s"Unable to send notification"
+  case class NotificationException(recipients: Array[String], notificationId: String) extends Exception {
+    override def getMessage = s"Unable to send notification [$notificationId] to recipients [${recipients.mkString(",")]}"
   }
 
 }

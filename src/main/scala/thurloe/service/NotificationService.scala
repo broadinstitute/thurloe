@@ -20,14 +20,9 @@ trait NotificationService extends HttpService {
       entity(as[Notification]) { notification =>
         onComplete(sendGridDAO.sendNotification(notification)) {
           case Success(_) =>
-            respondWithMediaType(`application/json`) {
-              respondWithStatus(StatusCodes.OK) {
-                complete {
-                  ""
-                }
-              }
-            }
-          case Failure(_) =>
+            complete(StatusCodes.OK)
+          case Failure(e) =>
+            println(e)
             respondWithStatus(StatusCodes.InternalServerError) {
               complete {
                 s"Unable to send notification [${notification.notificationId}] to user [${notification.userId}]"

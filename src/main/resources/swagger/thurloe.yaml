@@ -9,6 +9,9 @@ paths:
     get:
       operationId: query
       summary: Query the database using a custom subset of userId, key and value
+      produces:
+        - text/plain
+        - application/json
       parameters:
         - name: userId
           description: User ID of the owner of the key/value pair
@@ -71,6 +74,9 @@ paths:
     post:
       operationId: setKey
       summary: Adds or resets a single key/value pair to the database for a given user ID.
+      produces:
+        - text/plain
+        - application/json
       consumes:
       - application/json
       parameters:
@@ -117,6 +123,9 @@ paths:
     get:
       operationId: getAll
       summary: Returns a list of all keys and values stored in Thurloe for the specified user ID.
+      produces:
+        - text/plain
+        - application/json
       parameters:
       - name: userId
         in: path
@@ -165,6 +174,9 @@ paths:
     get:
       operationId: getKvp
       summary: Returns a single key/value pair, looked up by key and userId.
+      produces:
+        - text/plain
+        - application/json
       parameters:
       - name: userId
         in: path
@@ -220,6 +232,9 @@ paths:
       operationId: deleteKvp
       summary: Deletes a single key/value pair, referenced by key and userId.
       produces:
+        - text/plain
+        - application/json
+      produces:
       - text/plain
       parameters:
       - name: userId
@@ -248,6 +263,8 @@ paths:
     post:
       operationId: postNotification
       summary: Sends a notification to the specified user with the templateId and substitutions specified
+      produces:
+        - text/plain
       parameters:
       - name: body
         in: body
@@ -280,7 +297,7 @@ paths:
         200:
           description: OK
           produces:
-            - application/json
+            - text/plain
         500:
           description: Internal server error
           produces:
