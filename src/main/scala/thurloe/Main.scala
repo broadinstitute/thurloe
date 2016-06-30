@@ -19,5 +19,5 @@ object Main extends App {
 
   // Start a new HTTP server on port 8000 with our service actor as the handler.
   service.bindOrShutdown(interface = "0.0.0.0", port = 8000) onSuccess {
-    case _ => system.log.info("Thurloe now available for all your key/value pair needs.")
+    case _ => system.log.info("Thurloe now available for all your key/value pair and notification needs.")
   }}
