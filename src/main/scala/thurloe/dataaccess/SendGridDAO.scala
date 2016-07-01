@@ -37,7 +37,7 @@ trait SendGridDAO {
     email.setFrom(fromAddress)
     email.setTemplateId(notificationId)
     email.setSubject(" ")
-    email.setText(" ")
+    email.setHtml(" ")
     addSubstitutions(email, substitutions)
     email
   }
