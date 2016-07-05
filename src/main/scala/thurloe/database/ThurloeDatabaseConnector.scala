@@ -191,17 +191,14 @@ case object ThurloeDatabaseConnector extends DataAccess {
 
   def getStatusCode(): Future[Unit] = {
     val action = sql"select version ()".as[String]
-//    val action = sql"-- select h2version ()".as[String]
-    for {
-      version <- database.run(action.transactionally)
-//      print (count)
-      _ <- if (version != "") {
-        print(version)
-        Future.successful(())
-      } else {
+    val versionFuture: Future[Vector[String]] = database.run(action.transactionally)
+
+    versionFuture map { _ =>
+      ()
+    } recoverWith {
+      case _ =>
         Future.failed(DatabaseConnectionException())
-      }
-    } yield ()
+    }
   }
 }
 

@@ -3,6 +3,7 @@ package thurloe.service
 import java.net.URLEncoder
 
 import spray.http.HttpHeaders.RawHeader
+
 import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.json._
@@ -160,7 +161,7 @@ trait ThurloeService extends HttpService {
 
   val getStatus = path(ThurloePrefix / "status") {
     get {
-      onComplete(dataAccess.getStatusCode()) {
+      onComplete(dataAccess.status()) {
         case Success(_) =>
           respondWithStatus(StatusCodes.OK) {
             complete {
@@ -170,7 +171,7 @@ trait ThurloeService extends HttpService {
         case Failure(e) =>
           respondWithStatus(StatusCodes.InternalServerError) {
             complete {
-              s"oops! $e.getMessage"
+              s"$Interjection $e.getMessage()"
             }
           }
       }
