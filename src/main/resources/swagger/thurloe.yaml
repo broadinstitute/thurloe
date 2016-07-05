@@ -137,6 +137,7 @@ paths:
           description: OK
           produces:
           - application/json
+          - text/plain
           schema:
             {
               "properties": {
