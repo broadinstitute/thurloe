@@ -188,6 +188,21 @@ case object ThurloeDatabaseConnector extends DataAccess {
     val setup = DBIO.seq(keyValuePairTable.schema.create)
     Await.result(database.run(setup), Duration.Inf)
   }
+
+  def getStatusCode(): Future[Unit] = {
+    val action = sql"select version ()".as[String]
+//    val action = sql"-- select h2version ()".as[String]
+    for {
+      version <- database.run(action.transactionally)
+//      print (count)
+      _ <- if (version != "") {
+        print(version)
+        Future.successful(())
+      } else {
+        Future.failed(DatabaseConnectionException())
+      }
+    } yield ()
+  }
 }
 
 object DatabaseOperation extends Enumeration {

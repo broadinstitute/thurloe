@@ -119,6 +119,18 @@ paths:
       security:
         - google_oauth:
             - openid
+  /thurloe/status:
+    get:
+      operationId: status
+      summary: Returns the current timestamp if connection to database is successful.
+      produces:
+      - application/json
+      parameters:
+      responses:
+        200:
+          description: Success
+        500:
+          description: Internal Error
   /thurloe/{userId}:
     get:
       operationId: getAll
