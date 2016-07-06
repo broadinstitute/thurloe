@@ -24,5 +24,7 @@ case class InvalidDatabaseStateException(message: String) extends Exception {
 }
 
 case class DatabaseConnectionException() extends Exception {
-  override def getMessage = s"Connection to database was unsuccessful"
+  override def getMessage = {
+    s"Connection to database was unsuccessful"
+  }
 }

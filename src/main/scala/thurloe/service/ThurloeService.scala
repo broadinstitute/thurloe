@@ -167,11 +167,11 @@ trait ThurloeService extends HttpService {
             complete {
               ""
             }
-          }
+          } 
         case Failure(e) =>
           respondWithStatus(StatusCodes.InternalServerError) {
             complete {
-              s"$Interjection $e.getMessage()"
+              s"$Interjection ${e.getMessage()}"
             }
           }
       }

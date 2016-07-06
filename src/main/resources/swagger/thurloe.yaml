@@ -122,15 +122,14 @@ paths:
   /thurloe/status:
     get:
       operationId: status
-      summary: Returns the current timestamp if connection to database is successful.
+      summary: Returns status code for connection to database.
       produces:
-      - application/json
-      parameters:
+      - text/plain
       responses:
         200:
-          description: Success
+          description: OK
         500:
-          description: Internal Error
+          description: Internal server error
   /thurloe/{userId}:
     get:
       operationId: getAll
