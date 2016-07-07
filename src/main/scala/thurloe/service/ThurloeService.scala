@@ -159,7 +159,7 @@ trait ThurloeService extends HttpService {
     }
   }
 
-  val getStatus = path(ThurloePrefix / "status") {
+  val getStatus = path("status") {
     get {
       onComplete(dataAccess.status()) {
         case Success(_) =>

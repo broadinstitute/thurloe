@@ -119,9 +119,11 @@ paths:
       security:
         - google_oauth:
             - openid
-  /thurloe/status:
+  /status:
     get:
       operationId: status
+      tags:
+      - Status
       summary: Returns status code for connection to database.
       produces:
       - text/plain
