@@ -12,7 +12,7 @@ trait DataAccess {
   def lookup(userId: String): Future[UserKeyValuePairs]
   def lookup(query: ThurloeQuery): Future[Seq[UserKeyValuePair]]
   def delete(userId: String, key: String): Future[Unit]
-  def getStatusCode(): Future[Unit]
+  def status(): Future[Unit]
 }
 
 case class KeyNotFoundException(userId: String, key: String) extends Exception {

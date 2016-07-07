@@ -189,7 +189,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
     Await.result(database.run(setup), Duration.Inf)
   }
 
-  def getStatusCode(): Future[Unit] = {
+  def status(): Future[Unit] = {
     val action = sql"select version ()".as[String]
     val versionFuture: Future[Vector[String]] = database.run(action.transactionally)
 

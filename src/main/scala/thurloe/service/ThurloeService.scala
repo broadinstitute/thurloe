@@ -167,7 +167,7 @@ trait ThurloeService extends HttpService {
             complete {
               ""
             }
-          } 
+          }
         case Failure(e) =>
           respondWithStatus(StatusCodes.InternalServerError) {
             complete {
