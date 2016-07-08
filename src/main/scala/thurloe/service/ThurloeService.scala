@@ -159,23 +159,5 @@ trait ThurloeService extends HttpService {
     }
   }
 
-  val getStatus = path("status") {
-    get {
-      onComplete(dataAccess.status()) {
-        case Success(_) =>
-          respondWithStatus(StatusCodes.OK) {
-            complete {
-              ""
-            }
-          }
-        case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"$Interjection ${e.getMessage()}"
-            }
-          }
-      }
-    }
-  }
-  val keyValuePairRoutes = getStatus ~ getRoute ~ getAllRoute ~ queryRoute ~ setRoute ~ deleteRoute
+  val keyValuePairRoutes = getRoute ~ getAllRoute ~ queryRoute ~ setRoute ~ deleteRoute
 }

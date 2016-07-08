@@ -313,17 +313,6 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
     }
-
-    ignore("should return successful status code") {
-      // test database is weird -- get an error trying to select version ()
-      // java.sql.SQLSyntaxErrorException: user lacks privilege or object not found: VERSION
-      Get(s"$uriPrefix/status") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(StatusCodes.OK) {
-          status
-        }
-
-      }
-    }
   }
 }
 
