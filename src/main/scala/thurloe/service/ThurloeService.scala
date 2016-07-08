@@ -3,7 +3,6 @@ package thurloe.service
 import java.net.URLEncoder
 
 import spray.http.HttpHeaders.RawHeader
-
 import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.json._
