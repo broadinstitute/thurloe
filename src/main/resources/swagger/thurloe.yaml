@@ -119,6 +119,19 @@ paths:
       security:
         - google_oauth:
             - openid
+  /status:
+    get:
+      operationId: status
+      tags:
+      - Status
+      summary: Returns status code for connection to database.
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal server error
   /thurloe/{userId}:
     get:
       operationId: getAll

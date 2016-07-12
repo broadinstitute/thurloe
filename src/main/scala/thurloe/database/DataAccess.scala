@@ -12,12 +12,9 @@ trait DataAccess {
   def lookup(userId: String): Future[UserKeyValuePairs]
   def lookup(query: ThurloeQuery): Future[Seq[UserKeyValuePair]]
   def delete(userId: String, key: String): Future[Unit]
+  def status(): Future[Unit]
 }
 
-case class KeyNotFoundException(userId: String, key: String) extends Exception {
-  override def getMessage = s"Key '$key' not found for user '$userId'"
-}
+case class KeyNotFoundException(userId: String, key: String) extends Exception(s"Key '$key' not found for user '$userId'")
 
-case class InvalidDatabaseStateException(message: String) extends Exception {
-  override def getMessage = message
-}
+case class InvalidDatabaseStateException(message: String) extends Exception(message)
