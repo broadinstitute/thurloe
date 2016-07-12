@@ -126,7 +126,7 @@ paths:
       - Status
       summary: Returns status code for connection to database.
       produces:
-      - text/plain
+      - application/json
       responses:
         200:
           description: OK

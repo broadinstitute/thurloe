@@ -20,13 +20,16 @@ class StatusServiceSpec extends FunSpec with ScalatestRouteTest {
         assertResult(StatusCodes.OK) {
           status
         }
+        assertResult(s"""{"status": "up"}""") {
+          responseAs[String]
+        }
 
       }
     }
     it ("should return internal server error") {
       // This shouldn't really pass, but test database is weird so select version () fails
       Get(s"/status") ~> statusService.statusRoutes~> check {
-        assertResult(s"Connection to database was unsuccessful") {
+        assertResult(s"""{"status": "down", "error": "user lacks privilege or object not found: VERSION"}""") {
           responseAs[String]
         }
         assertResult(StatusCodes.InternalServerError) {

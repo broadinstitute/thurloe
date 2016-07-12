@@ -190,17 +190,9 @@ case object ThurloeDatabaseConnector extends DataAccess {
   }
 
   def status(): Future[Unit] = {
-    // Check database connection by selecting version; if it's successful return successful future
-    // Otherwise, return a failed future
+    // Check database connection by selecting version
     val action = sql"select version ()".as[String]
-    val versionFuture: Future[Vector[String]] = database.run(action.transactionally)
-
-    versionFuture map { _ =>
-      ()
-    } recoverWith {
-      case _ =>
-        Future.failed(DatabaseConnectionException())
-    }
+    database.run(action.transactionally) map { _ => Unit }
   }
 }
 

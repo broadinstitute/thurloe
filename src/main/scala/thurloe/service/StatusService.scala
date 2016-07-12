@@ -1,5 +1,6 @@
 package thurloe.service
 
+import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.routing.HttpService
 import thurloe.database.DataAccess
@@ -14,15 +15,19 @@ trait StatusService extends HttpService {
     get {
       onComplete(dataAccess.status()) {
         case Success(_) =>
-          respondWithStatus(StatusCodes.OK) {
-            complete {
-              ""
+          respondWithMediaType(`application/json`) {
+            respondWithStatus(StatusCodes.OK) {
+              complete {
+                 """{"status": "up"}"""
+              }
             }
           }
         case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"${e.getMessage()}"
+          respondWithMediaType(`application/json`) {
+            respondWithStatus(StatusCodes.InternalServerError) {
+              complete {
+                s"""{"status": "down", "error": "${e.getMessage()}"}"""
+              }
             }
           }
       }
@@ -30,3 +35,4 @@ trait StatusService extends HttpService {
   }
   val statusRoutes = getStatus
 }
+

@@ -15,16 +15,6 @@ trait DataAccess {
   def status(): Future[Unit]
 }
 
-case class KeyNotFoundException(userId: String, key: String) extends Exception {
-  override def getMessage = s"Key '$key' not found for user '$userId'"
-}
+case class KeyNotFoundException(userId: String, key: String) extends Exception(s"Key '$key' not found for user '$userId'")
 
-case class InvalidDatabaseStateException(message: String) extends Exception {
-  override def getMessage = message
-}
-
-case class DatabaseConnectionException() extends Exception {
-  override def getMessage = {
-    s"Connection to database was unsuccessful"
-  }
-}
+case class InvalidDatabaseStateException(message: String) extends Exception(message)
