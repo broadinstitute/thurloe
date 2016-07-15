@@ -3,9 +3,21 @@ info:
   title: Thurloe
   description: All your key/value pairs are belong to us
   version: 0.2
-basePath: /api
 paths:
-  /thurloe:
+  /status:
+    get:
+      operationId: status
+      tags:
+      - Status
+      summary: Returns status code for connection to database.
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal server error
+  /api/thurloe:
     get:
       operationId: query
       summary: Query the database using a custom subset of userId, key and value
@@ -119,20 +131,7 @@ paths:
       security:
         - google_oauth:
             - openid
-  /status:
-    get:
-      operationId: status
-      tags:
-      - Status
-      summary: Returns status code for connection to database.
-      produces:
-      - application/json
-      responses:
-        200:
-          description: OK
-        500:
-          description: Internal server error
-  /thurloe/{userId}:
+  /api/thurloe/{userId}:
     get:
       operationId: getAll
       summary: Returns a list of all keys and values stored in Thurloe for the specified user ID.
@@ -183,7 +182,7 @@ paths:
       security:
         - google_oauth:
             - openid
-  /thurloe/{userId}/{key}:
+  /api/thurloe/{userId}/{key}:
     get:
       operationId: getKvp
       summary: Returns a single key/value pair, looked up by key and userId.
@@ -272,7 +271,7 @@ paths:
       security:
         - google_oauth:
             - openid
-  /notification:
+  /api/notification:
     post:
       operationId: postNotification
       summary: Sends a notification to the specified user with the templateId and substitutions specified

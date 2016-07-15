@@ -33,6 +33,6 @@ trait StatusService extends HttpService {
       }
     }
   }
-  val statusRoutes = getStatus
+  val statusRoute = getStatus
 }
 
