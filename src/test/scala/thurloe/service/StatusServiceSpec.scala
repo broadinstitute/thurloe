@@ -16,7 +16,7 @@ class StatusServiceSpec extends FunSpec with ScalatestRouteTest {
     ignore ("should return successful status code") {
       // test database is weird -- get an error trying to select version ()
       // java.sql.SQLSyntaxErrorException: user lacks privilege or object not found: VERSION
-      Get(s"/status") ~> statusService.statusRoutes~> check {
+      Get(s"/status") ~> statusService.statusRoute~> check {
         assertResult(StatusCodes.OK) {
           status
         }
@@ -28,7 +28,7 @@ class StatusServiceSpec extends FunSpec with ScalatestRouteTest {
     }
     it ("should return internal server error") {
       // This shouldn't really pass, but test database is weird so select version () fails
-      Get(s"/status") ~> statusService.statusRoutes~> check {
+      Get(s"/status") ~> statusService.statusRoute~> check {
         assertResult(s"""{"status": "down", "error": "user lacks privilege or object not found: VERSION"}""") {
           responseAs[String]
         }

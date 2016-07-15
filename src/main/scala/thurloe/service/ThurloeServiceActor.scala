@@ -29,6 +29,6 @@ class ThurloeServiceActor(config: Config) extends Actor with ThurloeService with
       swaggerUiResourceRoute ~
       pathPrefix("api") { keyValuePairRoutes } ~
       pathPrefix("api") { notificationRoutes } ~
-      pathPrefix("api") { statusRoutes }
+      statusRoute
     )
 }
