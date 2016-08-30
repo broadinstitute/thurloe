@@ -18,17 +18,15 @@ object ThurloeServiceActor {
   def props(config: Config) = Props(classOf[ThurloeServiceActor], config)
 }
 
-// we don't implement our route structure directly in the service actor because
-// we want to be able to test it independently, without having to spin up an actor
-class ThurloeServiceActor(config: Config) extends Actor with ThurloeService with NotificationService with StatusService with SwaggerService {
+class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedServices with StatusService with SwaggerService {
   override val dataAccess = ThurloeDatabaseConnector
   override def actorRefFactory = context
   override val sendGridDAO = new HttpSendGridDAO
 
   override def receive = runRoute(
       swaggerUiResourceRoute ~
-      pathPrefix("api") { keyValuePairRoutes } ~
-      pathPrefix("api") { notificationRoutes } ~
+      fireCloudProtectedRoutes ~
       statusRoute
     )
+
 }

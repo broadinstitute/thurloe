@@ -4,6 +4,8 @@ A simple service to store arbitrary key/value pairs
 
 ## Installation
 
+Install the Java Cryptography Extension (for java 8) as described in this [SO post](https://stackoverflow.com/questions/6481627/java-security-illegal-key-size-or-default-parameters). Tests will fail without it.
+
 Make sure [sbt](http://www.scala-sbt.org/) is installed.  Then start a server with:
 
 ```
