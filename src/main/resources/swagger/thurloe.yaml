@@ -25,6 +25,11 @@ paths:
         - text/plain
         - application/json
       parameters:
+        - name: X-FireCloud-Id
+          in: header
+          description: FireCloud ID Token to be passed as a header
+          required: true
+          type: string
         - name: userId
           description: User ID of the owner of the key/value pair
           required: false
@@ -75,6 +80,8 @@ paths:
                   "value": "string"
                 }
               }]
+        400:
+          description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
           produces: text/plain
@@ -92,6 +99,11 @@ paths:
       consumes:
       - application/json
       parameters:
+      - name: X-FireCloud-Id
+        in: header
+        description: FireCloud ID Token to be passed as a header
+        required: true
+        type: string
       - name: body
         in: body
         description: The Key/Value pair to add to the system
@@ -125,7 +137,7 @@ paths:
         200:
           description: OK
         400:
-          description: Bad request (e.g. invalid JSON input)
+          description: Bad request (e.g. invalid JSON input, missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
       security:
@@ -139,6 +151,11 @@ paths:
         - text/plain
         - application/json
       parameters:
+      - name: X-FireCloud-Id
+        in: header
+        description: FireCloud ID Token to be passed as a header
+        required: true
+        type: string
       - name: userId
         in: path
         description: The user ID whose data is being requested
@@ -174,6 +191,8 @@ paths:
               "type": "object",
               "required": [ "userId", "keyValuePairs" ]
             }
+        400:
+          description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
           produces: text/plain
@@ -190,6 +209,11 @@ paths:
         - text/plain
         - application/json
       parameters:
+      - name: X-FireCloud-Id
+        in: header
+        description: FireCloud ID Token to be passed as a header
+        required: true
+        type: string
       - name: userId
         in: path
         description: The user ID whose data is being requested
@@ -227,6 +251,8 @@ paths:
                 }
               }
             }
+        400:
+          description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         404:
           description: Key not found
           produces:
@@ -249,6 +275,11 @@ paths:
       produces:
       - text/plain
       parameters:
+      - name: X-FireCloud-Id
+        in: header
+        description: FireCloud ID Token to be passed as a header
+        required: true
+        type: string
       - name: userId
         in: path
         description: The user ID whose data is being deleted
@@ -262,6 +293,8 @@ paths:
       responses:
         200:
           description: OK
+        400:
+          description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         404:
           description: Key not found
         500:
@@ -278,6 +311,11 @@ paths:
       produces:
         - text/plain
       parameters:
+      - name: X-FireCloud-Id
+        in: header
+        description: FireCloud ID Token to be passed as a header
+        required: true
+        type: string
       - name: body
         in: body
         description: The notification to send
@@ -310,6 +348,8 @@ paths:
           description: OK
           produces:
             - text/plain
+        400:
+          description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
           produces:
