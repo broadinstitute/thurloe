@@ -329,6 +329,9 @@ paths:
               "userId": {
                 "type": "string"
               },
+              "fromAddress": {
+                "type": "string"
+              },
               "notificationId": {
                 "type": "string"
               },

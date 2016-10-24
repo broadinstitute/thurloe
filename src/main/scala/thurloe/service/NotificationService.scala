@@ -16,14 +16,14 @@ trait NotificationService extends HttpService {
 
   val postRoute = path("notification") {
     post {
-      entity(as[Notification]) { notification =>
-        onComplete(sendGridDAO.sendNotification(notification)) {
+      entity(as[List[Notification]]) { notifications =>
+        onComplete(sendGridDAO.sendNotifications(notifications)) {
           case Success(_) =>
             complete(StatusCodes.OK)
-          case Failure(_) =>
+          case Failure(err) =>
             respondWithStatus(StatusCodes.InternalServerError) {
               complete {
-                s"Unable to send notification [${notification.notificationId}] to user [${notification.userId}]"
+                s"Unable to send notifications: ${err.getMessage}"
               }
             }
         }
