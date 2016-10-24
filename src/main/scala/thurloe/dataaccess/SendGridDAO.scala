@@ -22,7 +22,7 @@ trait SendGridDAO {
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
     Future.sequence(notifications.map { notification =>
       lookupPreferredEmail(notification.userId) flatMap { preferredEmail =>
-        val email = createEmail(preferredEmail, notification.fromAddress.getOrElse(defaultFromAddress) ,notification.notificationId, notification.substitutions)
+        val email = createEmail(preferredEmail, notification.fromAddress.getOrElse(defaultFromAddress), notification.notificationId, notification.substitutions)
         sendEmail(email)
       }
     })
