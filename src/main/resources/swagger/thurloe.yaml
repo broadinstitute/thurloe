@@ -329,7 +329,7 @@ paths:
               "userId": {
                 "type": "string"
               },
-              "fromAddress": {
+              "replyTo": {
                 "type": "string"
               },
               "notificationId": {
