@@ -329,6 +329,9 @@ paths:
               "userId": {
                 "type": "string"
               },
+              "replyTo": {
+                "type": "string"
+              },
               "notificationId": {
                 "type": "string"
               },

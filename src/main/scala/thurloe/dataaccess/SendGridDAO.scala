@@ -14,29 +14,32 @@ trait SendGridDAO {
   val sendGridConfig = configFile.getConfig("sendgrid")
   val apiKey = sendGridConfig.getString("apiKey")
   val substitutionChar = sendGridConfig.getString("substitutionChar")
-  val fromAddress = sendGridConfig.getString("defaultFromAddress")
+  val defaultFromAddress = sendGridConfig.getString("defaultFromAddress")
 
   def sendEmail(email: SendGrid.Email): Future[Response]
   def lookupPreferredEmail(userId: String): Future[String]
 
-  def sendNotification(notification: Notification): Future[Response] = {
-    lookupPreferredEmail(notification.userId) flatMap { preferredEmail =>
-      val email = createEmail(preferredEmail, notification.notificationId, notification.substitutions)
-      sendEmail(email)
-    }
+  def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
+    Future.sequence(notifications.map { notification =>
+      lookupPreferredEmail(notification.userId) flatMap { preferredEmail =>
+        val email = createEmail(preferredEmail, notification.replyTo, notification.notificationId, notification.substitutions)
+        sendEmail(email)
+      }
+    })
   }
 
   /*
     Note: email.setSubject and email.setText must be set even if their values
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
-  def createEmail(toAddress: String, notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
+  def createEmail(toAddress: String, replyTo: Option[String], notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
     val email = new SendGrid.Email()
 
     email.addTo(toAddress)
-    email.setFrom(fromAddress)
+    email.setFrom(defaultFromAddress)
     email.setTemplateId(notificationId)
     email.setSubject(" ")
+    replyTo.map(email.setReplyTo)
     email.setHtml(" ")
     addSubstitutions(email, substitutions)
     email
