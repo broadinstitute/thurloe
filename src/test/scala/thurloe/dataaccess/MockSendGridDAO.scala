@@ -21,7 +21,7 @@ class MockSendGridDAO extends SendGridDAO {
     val usedId = email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")
     email match {
       case e if validNotificationIds.contains(e.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")) => ok
-      case _ => throw new NotificationException(Seq("a_user_id"), usedId)
+      case _ => throw new NotificationException("invalid notification id", Seq("a_user_id"), usedId)
     }
   }
 

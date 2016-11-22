@@ -25,7 +25,6 @@ trait SendGridDAO {
         Future.successful(notification.userEmail.getOrElse(throw new NotificationException("No recipient specified", Seq.empty, notification.notificationId)))
 
       toAddressFuture flatMap { toAddress =>
-        println(toAddress)
         val email = createEmail(toAddress, notification.replyTo, notification.notificationId, notification.substitutions)
         sendEmail(email)
       }
