@@ -4,7 +4,7 @@ import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.routing.HttpService
 import thurloe.service.ApiDataModelsJsonProtocol._
-import thurloe.dataaccess.{SendGridDAO, HttpSendGridDAO}
+import thurloe.dataaccess.{NotificationException, SendGridDAO, HttpSendGridDAO}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
@@ -20,6 +20,12 @@ trait NotificationService extends HttpService {
         onComplete(sendGridDAO.sendNotifications(notifications)) {
           case Success(_) =>
             complete(StatusCodes.OK)
+          case Failure(err: NotificationException) =>
+            respondWithStatus(err.statusCode) {
+              complete {
+                s"Unable to send notifications: ${err.getMessage}"
+              }
+            }
           case Failure(err) =>
             respondWithStatus(StatusCodes.InternalServerError) {
               complete {

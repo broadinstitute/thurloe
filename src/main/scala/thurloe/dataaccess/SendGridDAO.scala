@@ -3,6 +3,7 @@ package thurloe.dataaccess
 import com.sendgrid.SendGrid
 import com.sendgrid.SendGrid.Response
 import com.typesafe.config.ConfigFactory
+import spray.http.{StatusCodes, StatusCode}
 import thurloe.service.Notification
 
 import scala.concurrent.Future
@@ -23,7 +24,7 @@ trait SendGridDAO {
     Future.sequence(notifications.map { notification =>
       val toAddressFuture = notification.userEmail.map(Future.successful(_))
         .getOrElse(notification.userId.map(lookupPreferredEmail)
-          .getOrElse(throw new NotificationException("No recipient specified", Seq.empty, notification.notificationId)))
+          .getOrElse(Future.failed(new NotificationException(StatusCodes.BadRequest, "No recipient specified", Seq.empty, notification.notificationId))))
 
       toAddressFuture flatMap { toAddress =>
         val email = createEmail(toAddress, notification.replyTo, notification.notificationId, notification.substitutions)
@@ -61,7 +62,8 @@ trait SendGridDAO {
 
   private def wrapSubstitution(keyword: String): String = s"$substitutionChar$keyword$substitutionChar"
 
-  case class NotificationException(message: String, recipients: Seq[String], notificationId: String) extends Exception {
-    override def getMessage = s"Error message: [${message}], recipients: [${recipients.mkString(",")}], notificationId: [${notificationId}]"
-  }
+}
+
+case class NotificationException(statusCode: StatusCode, message: String, recipients: Seq[String], notificationId: String) extends Exception {
+  override def getMessage = s"Error message: [${message}], recipients: [${recipients.mkString(",")}], notificationId: [${notificationId}]"
 }
