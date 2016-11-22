@@ -21,8 +21,9 @@ trait SendGridDAO {
 
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
     Future.sequence(notifications.map { notification =>
-      val toAddressFuture = notification.userId map (lookupPreferredEmail) getOrElse
-        Future.successful(notification.userEmail.getOrElse(throw new NotificationException("No recipient specified", Seq.empty, notification.notificationId)))
+      val toAddressFuture = notification.userEmail.map(Future.successful(_))
+        .getOrElse(notification.userId.map(lookupPreferredEmail)
+          .getOrElse(throw new NotificationException("No recipient specified", Seq.empty, notification.notificationId)))
 
       toAddressFuture flatMap { toAddress =>
         val email = createEmail(toAddress, notification.replyTo, notification.notificationId, notification.substitutions)
