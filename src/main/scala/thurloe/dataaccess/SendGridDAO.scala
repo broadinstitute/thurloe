@@ -61,6 +61,6 @@ trait SendGridDAO {
   private def wrapSubstitution(keyword: String): String = s"$substitutionChar$keyword$substitutionChar"
 
   case class NotificationException(message: String, recipients: Seq[String], notificationId: String) extends Exception {
-    override def getMessage = s"Error message: [${message}], recipients: [${recipients}], notificationId: [${notificationId}]"
+    override def getMessage = s"Error message: [${message}], recipients: [${recipients.mkString(",")}], notificationId: [${notificationId}]"
   }
 }
