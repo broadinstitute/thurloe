@@ -320,13 +320,16 @@ paths:
         in: body
         description: The notification to send
         required: true
-        type: string
+        type: array
         schema:
           {
             "type": "object",
-            "required": ["userId", "notificationId"],
+            "required": ["notificationId"],
             "properties": {
               "userId": {
+                "type": "string"
+              },
+              "userEmail": {
                 "type": "string"
               },
               "replyTo": {
