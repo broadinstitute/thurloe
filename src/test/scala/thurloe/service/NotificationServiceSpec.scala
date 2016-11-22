@@ -81,8 +81,8 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("send a valid notification to an external user with no contact settings") {
-      Post("/notification", List(validNotification.copy(userId = Some("a_user_id3"), userEmail = Some("foo@example.com")))) ~> notificationService.notificationRoutes ~> check {
-        assertResult(StatusCodes.InternalServerError) {
+      Post("/notification", List(validNotification.copy(userId = None, userEmail = Some("foo@example.com")))) ~> notificationService.notificationRoutes ~> check {
+        assertResult(StatusCodes.OK) {
           status
         }
       }
