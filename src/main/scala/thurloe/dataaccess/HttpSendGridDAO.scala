@@ -19,7 +19,7 @@ class HttpSendGridDAO extends SendGridDAO {
     Future {
       val response = sendGrid.send(email)
       if(response.getStatus) response
-      else throw new NotificationException(email.getTos, email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id"))
+      else throw new NotificationException("Unable to send notification", email.getTos, email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id"))
     }
   }
 

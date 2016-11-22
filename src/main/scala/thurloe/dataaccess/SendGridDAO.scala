@@ -21,8 +21,12 @@ trait SendGridDAO {
 
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
     Future.sequence(notifications.map { notification =>
-      lookupPreferredEmail(notification.userId) flatMap { preferredEmail =>
-        val email = createEmail(preferredEmail, notification.replyTo, notification.notificationId, notification.substitutions)
+      val toAddressFuture = notification.userId map (lookupPreferredEmail) getOrElse
+        Future.successful(notification.userEmail.getOrElse(throw new NotificationException("No recipient specified", Seq.empty, notification.notificationId)))
+
+      toAddressFuture flatMap { toAddress =>
+        println(toAddress)
+        val email = createEmail(toAddress, notification.replyTo, notification.notificationId, notification.substitutions)
         sendEmail(email)
       }
     })
@@ -57,7 +61,7 @@ trait SendGridDAO {
 
   private def wrapSubstitution(keyword: String): String = s"$substitutionChar$keyword$substitutionChar"
 
-  case class NotificationException(recipients: Seq[String], notificationId: String) extends Exception {
-    override def getMessage = s"Unable to send notification [$notificationId] to recipients [${recipients.mkString(",")}]"
+  case class NotificationException(message: String, recipients: Seq[String], notificationId: String) extends Exception {
+    override def getMessage = s"Error message: [${message}], recipients: [${recipients}], notificationId: [${notificationId}]"
   }
 }
