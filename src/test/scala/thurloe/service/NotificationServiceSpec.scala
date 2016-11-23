@@ -47,7 +47,7 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("should not send an invalid notification to a user") {
       Post("/notification", List(invalidNotification)) ~> notificationService.notificationRoutes ~> check {
-        assertResult(StatusCodes.InternalServerError) {
+        assertResult(StatusCodes.BadRequest) {
           status
         }
       }
@@ -55,7 +55,7 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("should not send an invalid notification to a user in a list with a valid notification") {
       Post("/notification", List(invalidNotification, validNotification)) ~> notificationService.notificationRoutes ~> check {
-        assertResult(StatusCodes.InternalServerError) {
+        assertResult(StatusCodes.BadRequest) {
           status
         }
       }
@@ -90,7 +90,7 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("throw an exception when sending a notification with no userId or userEmail set") {
       Post("/notification", List(validNotification.copy(userId = None))) ~> notificationService.notificationRoutes ~> check {
-        assertResult(StatusCodes.InternalServerError) {
+        assertResult(StatusCodes.BadRequest) {
           status
         }
       }

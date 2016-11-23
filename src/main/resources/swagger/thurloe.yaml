@@ -324,6 +324,7 @@ paths:
         schema:
           {
             "type": "object",
+            "required": ["notificationId"],
             "properties": {
               "userId": {
                 "type": "string"
