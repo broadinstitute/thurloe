@@ -324,9 +324,12 @@ paths:
         schema:
           {
             "type": "object",
-            "required": ["userId", "notificationId"],
+            "required": ["notificationId"],
             "properties": {
               "userId": {
+                "type": "string"
+              },
+              "userEmail": {
                 "type": "string"
               },
               "replyTo": {

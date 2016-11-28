@@ -13,9 +13,9 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol._
 
-  val validNotification = Notification("a_user_id", None, "valid_notification_id1", Map.empty)
-  val validNotification2 = Notification("a_user_id", Some("foo@bar.com"), "valid_notification_id1", Map.empty)
-  val invalidNotification = Notification("a_user_id", None, "invalid_notification_id1", Map.empty)
+  val validNotification = Notification(Some("a_user_id"), None, None, "valid_notification_id1", Map.empty)
+  val validNotification2 = Notification(Some("a_user_id"), None, Some("foo@bar.com"), "valid_notification_id1", Map.empty)
+  val invalidNotification = Notification(Some("a_user_id"), None, None, "invalid_notification_id1", Map.empty)
 
   def notificationService = new NotificationService {
     val sendGridDAO = new MockSendGridDAO
@@ -47,7 +47,7 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("should not send an invalid notification to a user") {
       Post("/notification", List(invalidNotification)) ~> notificationService.notificationRoutes ~> check {
-        assertResult(StatusCodes.InternalServerError) {
+        assertResult(StatusCodes.BadRequest) {
           status
         }
       }
@@ -55,14 +55,14 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("should not send an invalid notification to a user in a list with a valid notification") {
       Post("/notification", List(invalidNotification, validNotification)) ~> notificationService.notificationRoutes ~> check {
-        assertResult(StatusCodes.InternalServerError) {
+        assertResult(StatusCodes.BadRequest) {
           status
         }
       }
     }
 
     it("should send a valid notification to a user with no contactEmail set") {
-      Post("/notification", List(validNotification.copy(userId = "a_user_id2"))) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification", List(validNotification.copy(userId = Some("a_user_id2")))) ~> notificationService.notificationRoutes ~> check {
         assertResult("OK") {
           responseAs[String]
         }
@@ -73,13 +73,28 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("throw an exception when sending a valid notification to a user with no contact settings") {
-      Post("/notification", List(validNotification.copy(userId = "a_user_id3"))) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification", List(validNotification.copy(userId = Some("a_user_id3")))) ~> notificationService.notificationRoutes ~> check {
         assertResult(StatusCodes.InternalServerError) {
           status
         }
       }
     }
 
+    it("send a valid notification to an external user with no contact settings") {
+      Post("/notification", List(validNotification.copy(userId = None, userEmail = Some("foo@example.com")))) ~> notificationService.notificationRoutes ~> check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+    }
+
+    it("throw an exception when sending a notification with no userId or userEmail set") {
+      Post("/notification", List(validNotification.copy(userId = None))) ~> notificationService.notificationRoutes ~> check {
+        assertResult(StatusCodes.BadRequest) {
+          status
+        }
+      }
+    }
 
   }
 }

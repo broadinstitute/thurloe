@@ -2,6 +2,7 @@ package thurloe.dataaccess
 
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
+import spray.http.StatusCodes
 import thurloe.database.ThurloeDatabaseConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,7 +20,7 @@ class HttpSendGridDAO extends SendGridDAO {
     Future {
       val response = sendGrid.send(email)
       if(response.getStatus) response
-      else throw new NotificationException(email.getTos, email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id"))
+      else throw new NotificationException(StatusCodes.InternalServerError, "Unable to send notification", email.getTos, email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id"))
     }
   }
 
