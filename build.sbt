@@ -46,6 +46,7 @@ libraryDependencies ++= Seq(
   "org.liquibase" % "liquibase-core" % "3.3.5",
   "org.hsqldb" % "hsqldb" % "2.3.2",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
+  "ch.qos.logback" % "logback-classic" % "1.1.6",
   //---------- Test libraries -------------------//
   "io.spray" %% "spray-testkit" % sprayV % Test,
   "org.scalatest" %% "scalatest" % "2.2.5" % Test,
