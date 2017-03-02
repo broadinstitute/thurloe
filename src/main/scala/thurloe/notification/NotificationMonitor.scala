@@ -42,7 +42,7 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollInterv
   override def receive = {
     case Init => init pipeTo self
     case Start => for(i <- 1 to workerCount) startOne()
-    case Status.Failure(t) => logger.error("error initializing google group sync monitor", t)
+    case Status.Failure(t) => logger.error("error initializing notification monitor", t)
   }
 
   def init = {
@@ -60,7 +60,7 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollInterv
   override val supervisorStrategy =
     OneForOneStrategy() {
       case e => {
-        logger.error("error syncing google group", e)
+        logger.error("error sending notification", e)
         // start one to replace the error, stop the errored child so that we also drop its mailbox (i.e. restart not good enough)
         startOne()
         Stop

@@ -37,7 +37,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
     import scala.concurrent.ExecutionContext.Implicits.global
     system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO))
 
-    // GoogleGroupSyncMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
+    // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
     val testNotifications = (for (i <- 0 until workerCount * 4) yield Notification(None, Option(s"$i@foo.com"), None, "valid_notification_id1", Map("x" -> i.toString)))
 
