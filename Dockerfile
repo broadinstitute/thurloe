@@ -1,15 +1,13 @@
-FROM broadinstitute/scala-baseimage
+FROM openjdk:8
 
 # Thurloe's HTTP Port
 EXPOSE 8000
 
-# Install Thurloe
-ADD . /thurloe
-RUN ["/bin/bash", "-c", "/thurloe/docker/install.sh /thurloe"]
+RUN mkdir /thurloe
+COPY ./thurloe*.jar /thurloe
 
-# Add Thurloe as a service (it will start when the container starts)
-RUN mkdir /etc/service/thurloe && \
-    cp /thurloe/docker/run.sh /etc/service/thurloe/run
+# Start up Thurloe
+CMD java $JAVA_OPTS -jar $(find /rawls -name 'thurloe*.jar')
 
 # These next 4 commands are for enabling SSH to the container.
 # id_rsa.pub is referenced below, but this should be any public key
