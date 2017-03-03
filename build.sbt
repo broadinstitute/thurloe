@@ -18,7 +18,7 @@ val akkaV = "2.3.12"
 val slickV = "3.1.0"
 
 val lenthallV = "0.14-2ce072a-SNAPSHOT"
-val workbenchGoogleV = "0.1-423530f-SNAP"
+val workbenchV = "0.1-3178fd9-SNAP"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
@@ -26,7 +26,8 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.broadinstitute" %% "lenthall" % lenthallV,
-  "org.broadinstitute.dsde" %%  "workbench-google"  % workbenchGoogleV,
+  "org.broadinstitute.dsde" %%  "rawls-model"  % workbenchV,
+  "org.broadinstitute.dsde" %%  "workbench-google"  % workbenchV,
   "org.scala-lang" % "scala-reflect" % "2.11.7",
   "org.webjars" % "swagger-ui" % "2.1.1",
   "io.spray" %% "spray-can" % sprayV,

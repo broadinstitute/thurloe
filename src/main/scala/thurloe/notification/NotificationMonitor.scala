@@ -9,8 +9,7 @@ import org.broadinstitute.dsde.rawls.google.GooglePubSubDAO.PubSubMessage
 import thurloe.dataaccess.SendGridDAO
 import thurloe.notification.NotificationMonitor.StartMonitorPass
 import thurloe.notification.NotificationMonitorSupervisor._
-import thurloe.service.Notification
-import thurloe.service.ApiDataModelsJsonProtocol.notificationFormat
+import org.broadinstitute.dsde.rawls.model.Notifications._
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration.FiniteDuration
@@ -29,12 +28,12 @@ object NotificationMonitorSupervisor {
   case object Init extends NotificationMonitorSupervisorMessage
   case object Start extends NotificationMonitorSupervisorMessage
 
-  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO)(implicit executionContext: ExecutionContext): Props = {
-    Props(new NotificationMonitorSupervisor(pollInterval, pollIntervalJitter, pubSubDao, pubSubTopicName, pubSubSubscriptionName, workerCount, sendGridDAO))
+  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext): Props = {
+    Props(new NotificationMonitorSupervisor(pollInterval, pollIntervalJitter, pubSubDao, pubSubTopicName, pubSubSubscriptionName, workerCount, sendGridDAO, templateIdsByType, fireCloudPortalUrl))
   }
 }
 
-class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
+class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
   import context._
 
   self ! Init
@@ -54,7 +53,7 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollInterv
 
   def startOne(): Unit = {
     logger.info("starting NotificationMonitorActor")
-    actorOf(NotificationMonitor.props(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO))
+    actorOf(NotificationMonitor.props(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl))
   }
 
   override val supervisorStrategy =
@@ -72,12 +71,12 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollInterv
 object NotificationMonitor {
   case object StartMonitorPass
 
-  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO)(implicit executionContext: ExecutionContext): Props = {
-    Props(new NotificationMonitorActor(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO))
+  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext): Props = {
+    Props(new NotificationMonitorActor(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl))
   }
 }
 
-class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
+class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
   import context._
 
   self ! StartMonitorPass
@@ -94,7 +93,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
 
     case Some(message: PubSubMessage) =>
       val notification = message.contents.parseJson.convertTo[Notification]
-      sendGridDAO.sendNotifications(List(notification)).map(responses => (responses.head, message)) pipeTo self
+      sendGridDAO.sendNotifications(List(toThurloeNotification(notification))).map(responses => (responses.head, message)) pipeTo self
 
     case None =>
       // there was no message so wait and try again
@@ -113,6 +112,34 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
 
     case ReceiveTimeout =>
       throw new Exception("NotificationMonitorActor has received no messages for too long")
+  }
+
+  def workspacePortalUrl(namespace: String, name: String): String = s"$fireCloudPortalUrl/#workspaces/$namespace:$name"
+
+  def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
+    val templateId = templateIdsByType(notification.getClass.getSimpleName)
+    notification match {
+      case ActivationNotification(recipentUserId) => thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty)
+
+      case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceNamespace, workspaceName, ownerEmail) =>
+        thurloe.service.Notification(Option(recipientUserId), None, Option(ownerEmail), templateId,
+          Map("accessLevel" -> accessLevel,
+            "namespace" -> workspaceNamespace,
+            "name" -> workspaceName,
+            "wsUrl" -> workspacePortalUrl(workspaceNamespace, workspaceName),
+            "originEmail" -> ownerEmail))
+
+      case WorkspaceInvitedNotification(recipientUserEmail, originEmail) =>
+        thurloe.service.Notification(None, Option(recipientUserEmail), Option(originEmail), templateId, Map("originEmail" -> originEmail))
+
+      case WorkspaceRemovedNotification(recipientUserId, accessLevel, workspaceNamespace, workspaceName, ownerEmail) =>
+        thurloe.service.Notification(Option(recipientUserId), None, Option(ownerEmail), templateId,
+          Map("accessLevel" -> accessLevel,
+            "namespace" -> workspaceNamespace,
+            "name" -> workspaceName,
+            "wsUrl" -> workspacePortalUrl(workspaceNamespace, workspaceName),
+            "originEmail" -> ownerEmail))
+    }
   }
 
   override val supervisorStrategy =
