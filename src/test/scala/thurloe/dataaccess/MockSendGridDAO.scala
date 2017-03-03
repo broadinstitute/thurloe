@@ -1,9 +1,11 @@
 package thurloe.dataaccess
 
+import java.util
+import java.util.Collections
+
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import spray.http.StatusCodes
-import thurloe.database.ThurloeDatabaseConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -18,10 +20,14 @@ class MockSendGridDAO extends SendGridDAO {
 
   val validNotificationIds = Seq("valid_notification_id1", "valid_notification_id2")
 
+  val emails = Collections.synchronizedList(new util.ArrayList[SendGrid.Email]())
+
   override def sendEmail(email: SendGrid.Email): Future[Response] = Future {
     val usedId = email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")
     email match {
-      case e if validNotificationIds.contains(e.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")) => ok
+      case e if validNotificationIds.contains(e.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")) =>
+        emails.add(e)
+        ok
       case _ => throw new NotificationException(StatusCodes.BadRequest, "invalid notification id", Seq("a_user_id"), usedId)
     }
   }
