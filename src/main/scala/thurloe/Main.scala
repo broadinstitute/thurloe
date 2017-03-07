@@ -15,6 +15,7 @@ import org.broadinstitute.dsde.rawls.util
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.JavaConversions._
 
 object Main extends App {
   // We need an ActorSystem to host our application in
@@ -39,7 +40,10 @@ object Main extends App {
     gcsConfig.getString("notificationMonitor.topicName"),
     gcsConfig.getString("notificationMonitor.subscriptionName"),
     gcsConfig.getInt("notificationMonitor.workerCount"),
-    new HttpSendGridDAO))
+    new HttpSendGridDAO,
+    config.getConfig("notification.templateIds").entrySet().map(entry => entry.getKey -> entry.getValue.unwrapped().toString).toMap,
+    config.getString("notification.fireCloudPortalUrl")
+  ))
 
   // create and start our service actor
   val service = system.actorOf(ThurloeServiceActor.props(ConfigFactory.load()))

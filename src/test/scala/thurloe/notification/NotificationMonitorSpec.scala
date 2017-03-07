@@ -3,11 +3,10 @@ package thurloe.notification
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import org.broadinstitute.dsde.rawls.google.MockGooglePubSubDAO
+import org.broadinstitute.dsde.rawls.model.Notifications.{NotificationFormat, WorkspaceInvitedNotification}
 import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import spray.json._
 import thurloe.dataaccess.MockSendGridDAO
-import thurloe.service.Notification
-import thurloe.service.ApiDataModelsJsonProtocol.notificationFormat
 
 import scala.collection.convert.decorateAsScala._
 import scala.concurrent.Await
@@ -35,16 +34,19 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
     val workerCount = 10
     val sendGridDAO = new MockSendGridDAO
     import scala.concurrent.ExecutionContext.Implicits.global
-    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO))
+    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceInvitedNotification" -> "valid_notification_id1"), "foo"))
 
     // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
-    val testNotifications = (for (i <- 0 until workerCount * 4) yield Notification(None, Option(s"$i@foo.com"), None, "valid_notification_id1", Map("x" -> i.toString)))
+    val testNotifications = (for (i <- 0 until workerCount * 4) yield WorkspaceInvitedNotification(s"foo$i", s"bar$i"))
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
-    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(_.toJson.compactPrint)), Duration.Inf)
-    awaitAssert(assertResult(testNotifications.map(n => n.userEmail.get).toSet) {
+    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)), Duration.Inf)
+    awaitAssert(assertResult(testNotifications.map(n => n.recipientUserEmail).toSet) {
       sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet
+    }, 10 seconds)
+    awaitAssert(assertResult(testNotifications.map(n => n.originEmail).toSet) {
+      sendGridDAO.emails.asScala.map(email => email.getReplyTo).toSet
     }, 10 seconds)
     awaitAssert(assertResult(testNotifications.size) { pubsubDao.acks.size() }, 10 seconds)
   }
