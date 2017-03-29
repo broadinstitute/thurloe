@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigFactory
 import lenthall.spray.SprayCanHttpService._
 import org.broadinstitute.dsde.rawls.google.HttpGooglePubSubDAO
 import thurloe.dataaccess.HttpSendGridDAO
+import thurloe.database.ThurloeDatabaseConnector
 import thurloe.notification.NotificationMonitorSupervisor
 import thurloe.service.{SwaggerService, ThurloeServiceActor}
 import org.broadinstitute.dsde.rawls.util
@@ -42,7 +43,8 @@ object Main extends App {
     gcsConfig.getInt("notificationMonitor.workerCount"),
     new HttpSendGridDAO,
     config.getConfig("notification.templateIds").entrySet().map(entry => entry.getKey -> entry.getValue.unwrapped().toString).toMap,
-    config.getString("notification.fireCloudPortalUrl")
+    config.getString("notification.fireCloudPortalUrl"),
+    ThurloeDatabaseConnector
   ))
 
   // create and start our service actor
