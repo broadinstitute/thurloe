@@ -17,6 +17,8 @@ function make_jar()
 
 function docker_cmd()
 {
+    DOCKER_CMD=$1
+    REPO=$2
     if [ $DOCKER_CMD="build" ] || [ $DOCKER_CMD="push" ]; then
         echo "building docker image..."
         GIT_SHA=$(git rev-parse ${GIT_BRANCH})
@@ -33,15 +35,13 @@ function docker_cmd()
 }
 
 # parse command line options
-DOCKER_CMD=
+PROJECT=${PROJECT:-thurloe}
 GIT_BRANCH=${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}  # default to current branch
 while [ "$1" != "" ]; do
     case $1 in
         jar) make_jar ;;
         -d | --docker) shift
-                       echo $1
-                       DOCKER_CMD=$1
-                       docker_cmd
+                       docker_cmd $1 broadinstitute/$PROJECT
                        ;;
     esac
     shift
