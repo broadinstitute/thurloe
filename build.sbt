@@ -18,7 +18,7 @@ val akkaV = "2.3.12"
 val slickV = "3.1.0"
 
 val lenthallV = "0.14-2ce072a-SNAPSHOT"
-val workbenchV = "0.1-f17e99d-SNAP"
+val workbenchV = "0.1-e09cf41-SNAP"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
@@ -63,7 +63,7 @@ releaseSettings
 //
 // https://github.com/sbt/sbt-assembly/issues/69
 // https://github.com/scala/pickling/issues/10
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmax-classfile-name", "200")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-Xmax-classfile-name", "200")
 
 shellPrompt := { state => "%s| %s> ".format(GitCommand.prompt.apply(state), version.value)}
 
