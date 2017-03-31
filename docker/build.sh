@@ -18,7 +18,7 @@ function make_jar()
 function docker_cmd()
 {
     DOCKER_CMD=$1
-    REPO=$2
+    REPO=broadinstitute/$PROJECT
     if [ $DOCKER_CMD="build" ] || [ $DOCKER_CMD="push" ]; then
         echo "building docker image..."
         GIT_SHA=$(git rev-parse ${GIT_BRANCH})
@@ -41,7 +41,7 @@ while [ "$1" != "" ]; do
     case $1 in
         jar) make_jar ;;
         -d | --docker) shift
-                       docker_cmd $1 broadinstitute/$PROJECT
+                       docker_cmd $1
                        ;;
     esac
     shift
