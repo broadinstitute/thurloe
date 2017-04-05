@@ -110,24 +110,22 @@ trait ThurloeService extends HttpService {
 
   val setRoute = path(ThurloePrefix) {
     post {
-      entity(as[UserKeyValuePair]) { keyValuePair =>
-        respondWithHeader(RawHeader("Location", s"/$ThurloePrefix/${URLEncoder.encode(keyValuePair.userId, "UTF-8")}/${URLEncoder.encode(keyValuePair.keyValuePair.key, "UTF-8")}")) {
-          onComplete(dataAccess.set(keyValuePair)) {
-            case Success(setKeyResponse) =>
-              respondWithMediaType(`application/json`) {
-                respondWithStatus(statusCode(setKeyResponse)) {
-                  complete {
-                    ""
-                  }
-                }
-              }
-            case Failure(e) =>
-              respondWithStatus(StatusCodes.InternalServerError) {
+      entity(as[UserKeyValuePairs]) { keyValuePairs =>
+        onComplete(dataAccess.set(keyValuePairs)) {
+          case Success(setKeyResponse) =>
+            respondWithMediaType(`application/json`) {
+              respondWithStatus(statusCode(setKeyResponse)) {
                 complete {
-                  s"$Interjection $e"
+                  ""
                 }
               }
-          }
+            }
+          case Failure(e) =>
+            respondWithStatus(StatusCodes.InternalServerError) {
+              complete {
+                s"$Interjection $e"
+              }
+            }
         }
       }
     }

@@ -45,5 +45,7 @@ case class KeyValuePair(key: String, value: String)
 case class KeyValuePairWithId(id: Option[Int], keyValuePair: KeyValuePair)
 case class UserKeyValuePairWithId(id: Option[Int], userKeyValuePair: UserKeyValuePair)
 case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
-case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair])
+case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair]) {
+  def toCompleteKeyValuePairs: Seq[UserKeyValuePair] = keyValuePairs.map(UserKeyValuePair(userId, _))
+}
 case class Notification(userId: Option[String], userEmail: Option[String], replyTo: Option[String], notificationId: String, substitutions: Map[String, String])

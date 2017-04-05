@@ -7,7 +7,7 @@ import scala.concurrent.Future
 
 trait DataAccess {
 
-  def set(keyValuePair: UserKeyValuePair): Future[DatabaseOperation]
+  def set(keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation]
   def lookup(userId: String, key: String): Future[UserKeyValuePair]
   def lookup(userId: String): Future[UserKeyValuePairs]
   def lookup(query: ThurloeQuery): Future[Seq[UserKeyValuePair]]
