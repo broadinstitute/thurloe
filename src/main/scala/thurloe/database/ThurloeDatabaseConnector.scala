@@ -115,32 +115,24 @@ case object ThurloeDatabaseConnector extends DataAccess {
    *
    * @return The type of operation which was carried out (as a Future)
    */
-//  private def databaseWrite(userKeyValuePairs: UserKeyValuePairs, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
-//
-//    val lookups = DBIO.sequence(userKeyValuePairs.keyValuePairs.map(userKeyValuePair => lookupIncludingDatabaseId(userKeyValuePairs.userId, userKeyValuePair.key)).toSeq)
-//
-//    val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
-//    lookupExists flatMap { existingKvp => update(existingKvp, userKeyValuePair, encryptedValue) } recoverWith {
-//      case e: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
-//      case e => Future.failed(e)
-//    }
-//  }
+  private def databaseWrite(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
 
-  private def databaseWrite(kvPairsWithEncryptedValue: Map[UserKeyValuePair, EncryptedBytes]): Future[DatabaseOperation] = {
-    lookupIncludingDatabaseId()
+
+    val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
+    lookupExists flatMap { existingKvp => update(existingKvp, userKeyValuePair, encryptedValue) } recoverWith {
+      case e: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
+      case e => Future.failed(e)
+    }
   }
 
-  private def batchInsert(userKeyValuePairs: Map[UserKeyValuePair, EncryptedBytes]): Future[DatabaseOperation] = {
-    val tuplesToInsert = userKeyValuePairs.map { case (userKeyValuePair, encryptedValue) => (
+  private def insert(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+    val action = keyValuePairTable += (
       None,
       userKeyValuePair.userId,
       userKeyValuePair.keyValuePair.key,
       encryptedValue.base64CipherText,
       encryptedValue.base64Iv
-      )
-    }
-
-    val action = (keyValuePairTable ++= tuplesToInsert).map(x => 0)
+    )
 
     for {
       affectedRowsCount <- database.run(action.transactionally)
@@ -167,29 +159,18 @@ case object ThurloeDatabaseConnector extends DataAccess {
     if (affectedRowsCount == 1) {
       Future.successful(op)
     } else {
-      println("it failed nooooo")
       Future.failed(InvalidDatabaseStateException(
         s"Modified $affectedRowsCount rows in database (expected to modify 1)"))
     }
   }
 
-  def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] = {
-//    Future.sequence(userKeyValuePairs.toCompleteKeyValuePairs.map { userKeyValuePair =>
-//      Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
-//        case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
-//        case Failure(x) => Future.failed(x)
-//      }
-//    }).map { x => x.head }
-
-    val userId = userKeyValuePairs.userId
-    val kvPairsWithEncryptedValue = userKeyValuePairs.keyValuePairs.map(userKeyValuePair => userKeyValuePair -> Aes256Cbc.encrypt(userKeyValuePair.value.getBytes("UTF-8"), secretKey))
-
-    val encryptionFailures = kvPairsWithEncryptedValue.collect { case (_, Failure(ev)) => ev }
-
-    if(encryptionFailures.isEmpty) {
-      databaseWrite(kvPairsWithEncryptedValue)
-    } else Future.failed(encryptionFailures.head)
-
+  def set(userKeyValuePairs: UserKeyValuePairs): Future[Seq[DatabaseOperation]] = {
+    Future.sequence(userKeyValuePairs.toCompleteKeyValuePairs.map { userKeyValuePair =>
+      Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
+        case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
+        case Failure(x) => Future.failed(x)
+      }
+    })
   }
 
   def delete(userId: String, key: String): Future[Unit] = {

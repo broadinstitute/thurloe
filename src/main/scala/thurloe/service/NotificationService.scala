@@ -27,7 +27,6 @@ trait NotificationService extends HttpService {
                 s"Unable to send notifications: ${err.getMessage}"
               }
             }
-
           case Failure(err) =>
             respondWithStatus(StatusCodes.InternalServerError) {
               complete {
