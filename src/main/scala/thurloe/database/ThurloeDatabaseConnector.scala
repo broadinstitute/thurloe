@@ -125,13 +125,14 @@ case object ThurloeDatabaseConnector extends DataAccess {
   }
 
   private def insert(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
-    val action = keyValuePairTable += (
-      None,
-      userKeyValuePair.userId,
-      userKeyValuePair.keyValuePair.key,
-      encryptedValue.base64CipherText,
-      encryptedValue.base64Iv
-    )
+    val action =
+      keyValuePairTable += (
+        None,
+        userKeyValuePair.userId,
+        userKeyValuePair.keyValuePair.key,
+        encryptedValue.base64CipherText,
+        encryptedValue.base64Iv
+      )
 
     for {
       affectedRowsCount <- database.run(action.transactionally)
