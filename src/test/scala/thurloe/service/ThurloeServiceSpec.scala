@@ -74,7 +74,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("should return stored key value pairs when requested") {
       Get(s"$uriPrefix/$user1/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1.toCompleteKeyValuePairs.head) {
+        assertResult(u1k1v1.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -82,7 +82,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
       Get(s"$uriPrefix/$user1/${k2v2.key}") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k2v2.toCompleteKeyValuePairs.head) {
+        assertResult(u1k2v2.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -111,7 +111,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
       // The original is unaffected:
       Get(s"$uriPrefix/$user1/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1.toCompleteKeyValuePairs.head) {
+        assertResult(u1k1v1.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -121,7 +121,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
       // The new user's data is available:
       Get(s"$uriPrefix/$user2/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u2k1v2.toCompleteKeyValuePairs.head) {
+        assertResult(u2k1v2.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -245,7 +245,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
       Get(s"$uriPrefix/$user1/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1a.toCompleteKeyValuePairs.head) {
+        assertResult(u1k1v1a.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {

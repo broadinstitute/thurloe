@@ -165,7 +165,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
   }
 
   def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] = {
-    Future.sequence(userKeyValuePairs.toCompleteKeyValuePairs.map { userKeyValuePair =>
+    Future.sequence(userKeyValuePairs.toKeyValueSeq.map { userKeyValuePair =>
       Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
         case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
         case Failure(t) => Future.failed(t)
