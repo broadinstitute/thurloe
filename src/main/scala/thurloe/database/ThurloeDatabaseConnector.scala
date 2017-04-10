@@ -170,7 +170,10 @@ case object ThurloeDatabaseConnector extends DataAccess {
         case Failure(t) => Future.failed(t)
       }
     }).map { operations =>
-      DatabaseOperation.BatchUpsert
+      operations.distinct match {
+        case Seq(op) => op
+        case _ => DatabaseOperation.BatchUpsert
+      }
     }
   }
 

@@ -103,6 +103,7 @@ trait ThurloeService extends HttpService {
   private def statusCode(setKeyResponse: DatabaseOperation) = {
     setKeyResponse match {
       case DatabaseOperation.Insert => StatusCodes.Created
+      case DatabaseOperation.BatchUpsert => StatusCodes.Created
       case _ => StatusCodes.OK
     }
   }

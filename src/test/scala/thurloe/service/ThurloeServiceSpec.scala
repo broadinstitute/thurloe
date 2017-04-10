@@ -32,14 +32,14 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
   val k2v1 = KeyValuePair(key2, value1)
   val k1v2 = KeyValuePair(key1, value2)
 
-  val u1k1v1 = UserKeyValuePair(user1, k1v1)
-  val u1k1v1a = UserKeyValuePair(user1, k1v1a)
-  val u1k2v2 = UserKeyValuePair(user1, k2v2)
+  val u1k1v1 = UserKeyValuePairs(user1, Seq(k1v1))
+  val u1k1v1a = UserKeyValuePairs(user1, Seq(k1v1a))
+  val u1k2v2 = UserKeyValuePairs(user1, Seq(k2v2))
 
-  val u2k1v2 = UserKeyValuePair(user2, k1v2)
-  val u2k2v1 = UserKeyValuePair(user2, k2v1)
+  val u2k1v2 = UserKeyValuePairs(user2, Seq(k1v2))
+  val u2k2v1 = UserKeyValuePairs(user2, Seq(k2v1))
 
-  val u3k3v3 = UserKeyValuePair("NEVER FOUND", KeyValuePair("NEvER", "FOUND"))
+  val u3k3v3 = UserKeyValuePairs("NEVER FOUND", Seq(KeyValuePair("NEvER", "FOUND")))
 
   describe("The Thurloe Service") {
     it("should allow key/value pairs to be set") {
@@ -74,7 +74,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
     it("should return stored key value pairs when requested") {
       Get(s"$uriPrefix/$user1/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1) {
+        assertResult(u1k1v1.toCompleteKeyValuePairs.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -82,7 +82,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
       Get(s"$uriPrefix/$user1/${k2v2.key}") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k2v2) {
+        assertResult(u1k2v2.toCompleteKeyValuePairs.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -111,7 +111,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
       // The original is unaffected:
       Get(s"$uriPrefix/$user1/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1) {
+        assertResult(u1k1v1.toCompleteKeyValuePairs.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -121,7 +121,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
       // The new user's data is available:
       Get(s"$uriPrefix/$user2/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u2k1v2) {
+        assertResult(u2k1v2.toCompleteKeyValuePairs.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -245,7 +245,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
       Get(s"$uriPrefix/$user1/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1a) {
+        assertResult(u1k1v1a.toCompleteKeyValuePairs.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
