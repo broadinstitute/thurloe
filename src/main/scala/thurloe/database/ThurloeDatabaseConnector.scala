@@ -3,8 +3,9 @@ package thurloe.database
 import com.typesafe.config.ConfigFactory
 import slick.backend.DatabaseConfig
 import slick.driver.JdbcProfile
-import thurloe.crypto.{EncryptedBytes, SecretKey, Aes256Cbc}
-import scala.concurrent.{Future, Await}
+import thurloe.crypto.{Aes256Cbc, EncryptedBytes, SecretKey}
+
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import thurloe.service._
 
@@ -116,8 +117,6 @@ case object ThurloeDatabaseConnector extends DataAccess {
    * @return The type of operation which was carried out (as a Future)
    */
   private def databaseWrite(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
-
-
     val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
     lookupExists flatMap { existingKvp => update(existingKvp, userKeyValuePair, encryptedValue) } recoverWith {
       case e: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
@@ -164,13 +163,15 @@ case object ThurloeDatabaseConnector extends DataAccess {
     }
   }
 
-  def set(userKeyValuePairs: UserKeyValuePairs): Future[Seq[DatabaseOperation]] = {
+  def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] = {
     Future.sequence(userKeyValuePairs.toCompleteKeyValuePairs.map { userKeyValuePair =>
       Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
         case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
-        case Failure(x) => Future.failed(x)
+        case Failure(t) => Future.failed(t)
       }
-    })
+    }).map { operations =>
+      DatabaseOperation.BatchUpsert
+    }
   }
 
   def delete(userId: String, key: String): Future[Unit] = {
@@ -201,5 +202,5 @@ case object ThurloeDatabaseConnector extends DataAccess {
 
 object DatabaseOperation extends Enumeration {
   type DatabaseOperation = Value
-  val Insert, Update = Value
+  val Insert, Update, BatchUpsert = Value
 }
