@@ -173,7 +173,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
     }).map { operations =>
       operations.distinct match {
         case Seq(op) => op
-        case _ => DatabaseOperation.BatchUpsert
+        case _ => DatabaseOperation.Upsert
       }
     }
   }
@@ -206,5 +206,5 @@ case object ThurloeDatabaseConnector extends DataAccess {
 
 object DatabaseOperation extends Enumeration {
   type DatabaseOperation = Value
-  val Insert, Update, BatchUpsert = Value
+  val Insert, Update, Upsert = Value
 }
