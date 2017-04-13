@@ -35,6 +35,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
   val u1k1v1 = UserKeyValuePairs(user1, Seq(k1v1))
   val u1k1v1a = UserKeyValuePairs(user1, Seq(k1v1a))
   val u1k2v2 = UserKeyValuePairs(user1, Seq(k2v2))
+  val u1batch = UserKeyValuePairs(user1, Seq(k1v1, k2v2))
 
   val u2k1v2 = UserKeyValuePairs(user2, Seq(k1v2))
   val u2k2v1 = UserKeyValuePairs(user2, Seq(k2v1))
@@ -67,6 +68,27 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
           responseAs[String]
         }
         assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+    }
+
+    it("should allow multiple key/value pairs to be set") {
+      Post(uriPrefix, u1batch) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+
+      // We post this one but it should never be found in the queries
+      Get(s"$uriPrefix/$user1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1batch) {
+          responseAs[UserKeyValuePairs]
+        }
+        assertResult(StatusCodes.OK) {
           status
         }
       }
@@ -317,7 +339,7 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 }
 
 class SwaggerServiceSpec extends FlatSpec with SwaggerService with ScalatestRouteTest with Matchers with
-TableDrivenPropertyChecks {
+  TableDrivenPropertyChecks {
   def actorRefFactory = system
 
   "Thurloe swagger docs" should "return 200" in {
