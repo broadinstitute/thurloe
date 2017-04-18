@@ -68,7 +68,7 @@ paths:
           schema:
             type: array
             items:
-              "type": "object"
+              type: "object"
           examples:
             application/json: |-
               [{
@@ -108,23 +108,23 @@ paths:
         type: string
         schema:
           {
-            "type": "object",
-            "required": ["key", "value"],
-            "properties": {
-              "userId": {
+            type: "object",
+            required: ["key", "value"],
+            properties: {
+              userId: {
                 type: "string"
               },
-              "keyValuePairs": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "required": [ "key", "value" ],
-                  "properties": {
-                    "key": {
-                      "type": "string"
+              keyValuePairs: {
+                type: "array",
+                items: {
+                  type: "object",
+                  required: [ "key", "value" ],
+                  properties: {
+                    key: {
+                      type: "string"
                     },
-                    "value": {
-                      "type": "string"
+                    value: {
+                      type: "string"
                     }
                   }
                 }
@@ -166,28 +166,28 @@ paths:
           description: OK
           schema:
             {
-              "properties": {
-                "userId": {
+              properties: {
+                userId: {
                   type: "string"
                 },
-                "keyValuePairs": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": [ "key", "value" ],
-                    "properties": {
-                      "key": {
-                        "type": "string"
+                keyValuePairs": {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    required: [ "key", "value" ],
+                    properties: {
+                      key: {
+                        type: "string"
                       },
-                      "value": {
-                        "type": "string"
+                      value: {
+                        type: "string"
                       }
                     }
                   }
                 }
               },
-              "type": "object",
-              "required": [ "userId", "keyValuePairs" ]
+              type: "object",
+              required: [ "userId", "keyValuePairs" ]
             }
         400:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
@@ -226,21 +226,21 @@ paths:
           description: OK
           schema:
             {
-              "type": "object",
-              "required": ["key", "value"],
-              "properties": {
-                "userId": {
-                  "type": "string"
+              type: "object",
+              required: ["key", "value"],
+              properties: {
+                userId: {
+                  type: "string"
                 },
-                "keyValuePair": {
-                  "type": "object",
-                  "required": [ "key", "value" ],
-                  "properties": {
-                    "key": {
-                      "type": "string"
+                keyValuePair": {
+                  type: "object",
+                  required: [ "key", "value" ],
+                  properties: {
+                    key: {
+                      type: "string"
                     },
-                    "value": {
-                      "type": "string"
+                    value: {
+                      type: "string"
                     }
                   }
                 }
@@ -314,27 +314,27 @@ paths:
         type: string
         schema:
           {
-            "type": "object",
-            "required": ["notificationId"],
-            "properties": {
-              "userId": {
-                "type": "string"
+            type: "object",
+            required: ["notificationId"],
+            properties: {
+              userId: {
+                type: "string"
               },
-              "userEmail": {
-                "type": "string"
+              userEmail: {
+                type: "string"
               },
-              "replyTo": {
-                "type": "string"
+              replyTo: {
+                type: "string"
               },
-              "notificationId": {
-                "type": "string"
+              notificationId: {
+                type: "string"
               },
-              "substitutions": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "type": "string",
-                    "default": "value"
+              substitutions: {
+                type: "object",
+                properties: {
+                  key: {
+                    type: "string",
+                    default: "value"
                   }
                 }
               }
