@@ -4,6 +4,8 @@ A simple service to store arbitrary key/value pairs
 
 ## Installation
 
+### Locally
+
 Install the Java Cryptography Extension (for java 8) as described in this [SO post](https://stackoverflow.com/questions/6481627/java-security-illegal-key-size-or-default-parameters). Tests will fail without it.
 
 Make sure [sbt](http://www.scala-sbt.org/) is installed.  Then start a server with:
@@ -18,17 +20,22 @@ To create a stand-alone JAR in the `target/scala-2.11` directory:
 $ sbt assembly
 ```
 
-To build a [Docker](http://docker.io) container that runs Thurloe, run:
-
+### With Docker
+Does not require having sbt installed.  To build the JAR and move it to the working directory, run:
 ```
-$ docker build .
+$ ./docker/build.sh jar
 ```
 
-When it finishes, the last line will give the image id (e.g. `Successfully built 68479c00212d`).  To start the server:
-
+To build a docker container from the jar, run:
 ```
-$ docker run -p 8000:8000 -d 68479c00212d
-61769b08ec8d190fbe5d2726d6aaa4a7ac43d544154fa45065e2e35e2b33d8bf
+$ ./docker/build.sh -d build
+```
+
+Note that you can also run `build.sh` once with both commands.
+
+To run the docker image:
+```
+$ docker run -p 8000:8000 -d broadinsitute/thurloe:${GIT_SHA:0:12}
 ```
 
 Then one can issue requests to `localhost`.
