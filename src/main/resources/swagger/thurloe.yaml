@@ -65,12 +65,10 @@ paths:
       responses:
         200:
           description: OK
-          produces:
-          - application/json
           schema:
             type: array
             items:
-              "type": "object"
+              type: "object"
           examples:
             application/json: |-
               [{
@@ -84,7 +82,6 @@ paths:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
-          produces: text/plain
       tags:
         - Key/value pairs
       security:
@@ -92,7 +89,7 @@ paths:
             - openid
     post:
       operationId: setKey
-      summary: Adds or resets a single key/value pair to the database for a given user ID.
+      summary: Adds or resets a list of key/value pair to the database for a given user ID.
       produces:
         - text/plain
         - application/json
@@ -111,21 +108,24 @@ paths:
         type: string
         schema:
           {
-            "type": "object",
-            "required": ["key", "value"],
-            "properties": {
-              "userId": {
-                "type": "string"
+            type: "object",
+            required: ["key", "value"],
+            properties: {
+              userId: {
+                type: "string"
               },
-              "keyValuePair": {
-                "type": "object",
-                "required": [ "key", "value" ],
-                "properties": {
-                  "key": {
-                    "type": "string"
-                  },
-                  "value": {
-                    "type": "string"
+              keyValuePairs: {
+                type: "array",
+                items: {
+                  type: "object",
+                  required: [ "key", "value" ],
+                  properties: {
+                    key: {
+                      type: "string"
+                    },
+                    value: {
+                      type: "string"
+                    }
                   }
                 }
               }
@@ -164,38 +164,35 @@ paths:
       responses:
         200:
           description: OK
-          produces:
-          - application/json
           schema:
             {
-              "properties": {
-                "userId": {
+              properties: {
+                userId: {
                   type: "string"
                 },
-                "keyValuePairs": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": [ "key", "value" ],
-                    "properties": {
-                      "key": {
-                        "type": "string"
+                keyValuePairs": {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    required: [ "key", "value" ],
+                    properties: {
+                      key: {
+                        type: "string"
                       },
-                      "value": {
-                        "type": "string"
+                      value: {
+                        type: "string"
                       }
                     }
                   }
                 }
               },
-              "type": "object",
-              "required": [ "userId", "keyValuePairs" ]
+              type: "object",
+              required: [ "userId", "keyValuePairs" ]
             }
         400:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
-          produces: text/plain
       tags:
         - Key/value pairs
       security:
@@ -227,25 +224,23 @@ paths:
       responses:
         200:
           description: OK
-          produces:
-            - application/json
           schema:
             {
-              "type": "object",
-              "required": ["key", "value"],
-              "properties": {
-                "userId": {
-                  "type": "string"
+              type: "object",
+              required: ["key", "value"],
+              properties: {
+                userId: {
+                  type: "string"
                 },
-                "keyValuePair": {
-                  "type": "object",
-                  "required": [ "key", "value" ],
-                  "properties": {
-                    "key": {
-                      "type": "string"
+                keyValuePair": {
+                  type: "object",
+                  required: [ "key", "value" ],
+                  properties: {
+                    key: {
+                      type: "string"
                     },
-                    "value": {
-                      "type": "string"
+                    value: {
+                      type: "string"
                     }
                   }
                 }
@@ -255,12 +250,8 @@ paths:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         404:
           description: Key not found
-          produces:
-          - text/plain
         500:
           description: Internal server error
-          produces:
-          - text/plain
       tags:
         - Key/value pairs
       security:
@@ -323,27 +314,27 @@ paths:
         type: string
         schema:
           {
-            "type": "object",
-            "required": ["notificationId"],
-            "properties": {
-              "userId": {
-                "type": "string"
+            type: "object",
+            required: ["notificationId"],
+            properties: {
+              userId: {
+                type: "string"
               },
-              "userEmail": {
-                "type": "string"
+              userEmail: {
+                type: "string"
               },
-              "replyTo": {
-                "type": "string"
+              replyTo: {
+                type: "string"
               },
-              "notificationId": {
-                "type": "string"
+              notificationId: {
+                type: "string"
               },
-              "substitutions": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "type": "string",
-                    "default": "value"
+              substitutions: {
+                type: "object",
+                properties: {
+                  key: {
+                    type: "string",
+                    default: "value"
                   }
                 }
               }
@@ -352,14 +343,10 @@ paths:
       responses:
         200:
           description: OK
-          produces:
-            - text/plain
         400:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
-          produces:
-          - text/plain
       tags:
         - Notifications
       security:
