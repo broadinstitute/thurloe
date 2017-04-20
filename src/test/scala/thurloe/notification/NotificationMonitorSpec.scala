@@ -3,12 +3,12 @@ package thurloe.notification
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import org.broadinstitute.dsde.rawls.google.MockGooglePubSubDAO
-import org.broadinstitute.dsde.rawls.model.Notifications.{WorkspaceAddedNotification, WorkspaceRemovedNotification, NotificationFormat, WorkspaceInvitedNotification}
+import org.broadinstitute.dsde.rawls.model.Notifications.{NotificationFormat, WorkspaceAddedNotification, WorkspaceInvitedNotification, WorkspaceRemovedNotification}
 import org.broadinstitute.dsde.rawls.model.WorkspaceName
 import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import thurloe.dataaccess.MockSendGridDAO
 import thurloe.database.ThurloeDatabaseConnector
-import thurloe.service.{KeyValuePair, UserKeyValuePair}
+import thurloe.service.{KeyValuePair, UserKeyValuePair, UserKeyValuePairs}
 
 import scala.collection.convert.decorateAsScala._
 import scala.concurrent.Await
@@ -69,7 +69,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
     val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "foo@bar.com")
     val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "foo@bar.com")
 
-    Await.result(ThurloeDatabaseConnector.set(UserKeyValuePair(userId, KeyValuePair(addedNotification.key, "false"))), Duration.Inf)
+    Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))), Duration.Inf)
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(removedNotification, addedNotification)
@@ -96,7 +96,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
     val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "foo@bar.com")
     val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "foo@bar.com")
 
-    Await.result(ThurloeDatabaseConnector.set(UserKeyValuePair(userId, KeyValuePair(NotificationMonitor.notificationsOffKey, "true"))), Duration.Inf)
+    Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))), Duration.Inf)
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(removedNotification, addedNotification)
