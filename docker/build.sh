@@ -9,6 +9,8 @@
 # Jenkins build job should run with all options, for example,
 #   ./docker/build.sh jar -d push
 
+set -ex
+
 function make_jar()
 {
 	echo "building thurloe jar..."
