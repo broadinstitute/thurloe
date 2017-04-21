@@ -7,7 +7,7 @@ RUN mkdir /thurloe
 COPY ./thurloe*.jar /thurloe
 
 # Start up Thurloe
-CMD java $JAVA_OPTS -jar $(find /rawls -name 'thurloe*.jar')
+CMD java $JAVA_OPTS -jar $(find /thurloe -name 'thurloe*.jar')
 
 # These next 4 commands are for enabling SSH to the container.
 # id_rsa.pub is referenced below, but this should be any public key
