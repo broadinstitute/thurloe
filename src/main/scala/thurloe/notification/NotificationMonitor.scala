@@ -153,7 +153,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
     }
   }
 
-  def workspacePortalUrl(workspaceName: WorkspaceName): String = s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}:${workspaceName.name}"
+  def workspacePortalUrl(workspaceName: WorkspaceName): String = s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
 
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
