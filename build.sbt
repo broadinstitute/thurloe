@@ -18,7 +18,7 @@ val akkaV = "2.3.12"
 val slickV = "3.1.0"
 
 val lenthallV = "0.14-2ce072a-SNAPSHOT"
-val workbenchV = "0.1-e09cf41-SNAP"
+val workbenchV = "0.1-cf4230bd-SNAP"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/",
