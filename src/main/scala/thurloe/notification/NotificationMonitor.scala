@@ -180,7 +180,9 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
             "originEmail" -> ownerEmail))
 
       case WorkspaceChangedNotification(recipientUserId, workspaceName) =>
-        thurloe.service.Notification(Option(recipientUserId), None, None, templateId, Map("wsName" -> workspaceName.name))
+        thurloe.service.Notification(Option(recipientUserId), None, None, templateId,
+          Map("wsName" -> workspaceName.name,
+            "wsUrl" -> workspacePortalUrl(workspaceName)))
     }
   }
 
