@@ -1,0 +1,22 @@
+language: scala
+
+scala:
+  - 2.11.7
+
+jdk:
+  - oraclejdk8
+
+build_image: broadinstitute/scala-baseimage
+
+script:
+  - sbt clean coverage test
+
+after_script:
+#  - sbt coveralls
+  - mkdir -p shippable/codecoverage
+  - mkdir -p shippable/testresults
+  - mv target/scala-2.11/coverage-report/cobertura.xml $PWD/shippable/codecoverage/
+  - mv target/scala-2.11/test-reports/*.xml $PWD/shippable/codecoverage/
+
+notifications:
+  email: false
