@@ -154,6 +154,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
   }
 
   def workspacePortalUrl(workspaceName: WorkspaceName): String = s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
+  def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
 
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
@@ -183,6 +184,13 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
         thurloe.service.Notification(Option(recipientUserId), None, None, templateId,
           Map("wsName" -> workspaceName.name,
             "wsUrl" -> workspacePortalUrl(workspaceName)))
+
+      case GroupAccessRequestNotification(recipientUserId, groupName, originEmail) =>
+        thurloe.service.Notification(Option(recipientUserId), None, None, templateId,
+          Map("groupName" -> groupName,
+            "groupUrl" -> groupManagementUrl(groupName),
+            "originEmail" -> originEmail)
+        )
     }
   }
 
