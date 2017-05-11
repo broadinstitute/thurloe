@@ -14,7 +14,7 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
   import ApiDataModelsJsonProtocol._
 
   val validNotification = Notification(Some("a_user_id"), None, None, "valid_notification_id1", Map.empty)
-  val validNotification2 = Notification(Some("a_user_id"), None, Some("foo@bar.com"), "valid_notification_id1", Map.empty)
+  val validNotification2 = Notification(Some("a_user_id"), None, Some(List("foo@bar.com")), "valid_notification_id1", Map.empty)
   val invalidNotification = Notification(Some("a_user_id"), None, None, "invalid_notification_id1", Map.empty)
 
   def notificationService = new NotificationService {
