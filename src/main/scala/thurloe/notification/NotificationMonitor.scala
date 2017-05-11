@@ -162,7 +162,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
       case ActivationNotification(recipentUserId) => thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty)
 
       case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceName, ownerEmail) =>
-        thurloe.service.Notification(Option(recipientUserId), None, Option(ownerEmail), templateId,
+        thurloe.service.Notification(Option(recipientUserId), None, Option(List(ownerEmail)), templateId,
           Map("accessLevel" -> accessLevel,
             "namespace" -> workspaceName.namespace,
             "name" -> workspaceName.name,
@@ -170,10 +170,10 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
             "originEmail" -> ownerEmail))
 
       case WorkspaceInvitedNotification(recipientUserEmail, originEmail) =>
-        thurloe.service.Notification(None, Option(recipientUserEmail), Option(originEmail), templateId, Map("originEmail" -> originEmail))
+        thurloe.service.Notification(None, Option(recipientUserEmail), Option(List(originEmail)), templateId, Map("originEmail" -> originEmail))
 
       case WorkspaceRemovedNotification(recipientUserId, accessLevel, workspaceName, ownerEmail) =>
-        thurloe.service.Notification(Option(recipientUserId), None, Option(ownerEmail), templateId,
+        thurloe.service.Notification(Option(recipientUserId), None, Option(List(ownerEmail)), templateId,
           Map("accessLevel" -> accessLevel,
             "namespace" -> workspaceName.namespace,
             "name" -> workspaceName.name,
@@ -185,8 +185,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
           Map("wsName" -> workspaceName.name,
             "wsUrl" -> workspacePortalUrl(workspaceName)))
 
-      case GroupAccessRequestNotification(recipientUserId, groupName, originEmail) =>
-        thurloe.service.Notification(Option(recipientUserId), None, None, templateId,
+      case GroupAccessRequestNotification(recipientUserId, groupName, adminsEmail, originEmail) =>
+        thurloe.service.Notification(Option(recipientUserId), None, Option(List(originEmail, adminsEmail)), templateId,
           Map("groupName" -> groupName,
             "groupUrl" -> groupManagementUrl(groupName),
             "originEmail" -> originEmail)

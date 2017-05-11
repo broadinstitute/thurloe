@@ -48,4 +48,4 @@ case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
 case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair]) {
   def toKeyValueSeq: Seq[UserKeyValuePair] = keyValuePairs.map(UserKeyValuePair(userId, _))
 }
-case class Notification(userId: Option[String], userEmail: Option[String], replyTo: Option[String], notificationId: String, substitutions: Map[String, String])
+case class Notification(userId: Option[String], userEmail: Option[String], replyTos: Option[List[String]], notificationId: String, substitutions: Map[String, String])

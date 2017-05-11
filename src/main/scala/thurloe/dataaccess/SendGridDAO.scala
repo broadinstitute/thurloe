@@ -27,7 +27,7 @@ trait SendGridDAO {
           .getOrElse(Future.failed(new NotificationException(StatusCodes.BadRequest, "No recipient specified", Seq.empty, notification.notificationId))))
 
       toAddressFuture flatMap { toAddress =>
-        val email = createEmail(toAddress, notification.replyTo, notification.notificationId, notification.substitutions)
+        val email = createEmail(toAddress, notification.replyTos, notification.notificationId, notification.substitutions)
         sendEmail(email)
       }
     })
@@ -37,14 +37,14 @@ trait SendGridDAO {
     Note: email.setSubject and email.setText must be set even if their values
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
-  def createEmail(toAddress: String, replyTo: Option[String], notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
+  def createEmail(toAddress: String, replyTos: Option[List[String]], notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
     val email = new SendGrid.Email()
 
     email.addTo(toAddress)
     email.setFrom(defaultFromAddress)
     email.setTemplateId(notificationId)
     email.setSubject(" ")
-    replyTo.map(email.setReplyTo)
+    replyTos.map(addrs => email.addHeader("Reply-To", addrs.mkString(", ")))
     email.setHtml(" ")
     addSubstitutions(email, substitutions)
     email
