@@ -65,8 +65,8 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
-    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "foo@bar.com")
-    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "foo@bar.com")
+    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "a_user_id2")
+    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "a_user_id2")
 
     Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))), Duration.Inf)
 
@@ -92,8 +92,8 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
-    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "foo@bar.com")
-    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "foo@bar.com")
+    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "a_user_id2")
+    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "a_user_id2")
 
     Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))), Duration.Inf)
 
