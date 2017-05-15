@@ -37,7 +37,7 @@ trait SendGridDAO {
     Note: email.setSubject and email.setText must be set even if their values
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
-  def createEmail(toAddress: String, replyTos: Option[List[String]], notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
+  def createEmail(toAddress: String, replyTos: Option[Set[String]], notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
     val email = new SendGrid.Email()
 
     email.addTo(toAddress)
