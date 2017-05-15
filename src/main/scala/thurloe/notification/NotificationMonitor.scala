@@ -123,14 +123,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
 
     lookupShouldNotify(notification) flatMap { shouldNotify =>
       if (shouldNotify) {
-        val rawNotification = toThurloeNotification(notification)
-        rawNotification.replyTos match {
-          case None => sendGridDAO.sendNotifications(List(rawNotification)).map(_.headOption)
-          case Some(userIds) =>
-            Future.traverse(userIds)(sendGridDAO.lookupPreferredEmail).flatMap { replyToEmails =>
-              sendGridDAO.sendNotifications(List(rawNotification.copy(replyTos = Option(replyToEmails)))).map(_.headOption)
-            }
-        }
+        sendGridDAO.sendNotifications(List(toThurloeNotification(notification))).map(_.headOption)
       } else {
         Future.successful(None)
       }

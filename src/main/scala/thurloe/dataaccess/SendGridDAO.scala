@@ -22,13 +22,20 @@ trait SendGridDAO {
 
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
     Future.sequence(notifications.map { notification =>
-      val toAddressFuture = notification.userEmail.map(Future.successful(_))
+      val toAddressFuture = notification.userEmail.map(Future.successful)
         .getOrElse(notification.userId.map(lookupPreferredEmail)
           .getOrElse(Future.failed(new NotificationException(StatusCodes.BadRequest, "No recipient specified", Seq.empty, notification.notificationId))))
 
+      val replyTosFuture = notification.replyTos.map {
+        Future.traverse(_)(lookupPreferredEmail).map { replyToEmails =>
+          Option(replyToEmails)
+        }
+      } getOrElse Future.successful(None)
+
       toAddressFuture flatMap { toAddress =>
-        val email = createEmail(toAddress, notification.replyTos, notification.notificationId, notification.substitutions)
-        sendEmail(email)
+        replyTosFuture flatMap { replyTos =>
+          sendEmail(createEmail(toAddress, replyTos, notification.notificationId, notification.substitutions))
+        }
       }
     })
   }
