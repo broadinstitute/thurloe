@@ -44,11 +44,10 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)), Duration.Inf)
-    awaitAssert(assertResult(testNotifications.map(n => n.recipientUserEmail).toSet) {
-      sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet
-    }, 10 seconds)
+    awaitAssert(testNotifications.map(n => n.recipientUserEmail).toSet should contain theSameElementsAs(sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet), 10 seconds)
+
     awaitAssert(assertResult(testNotifications.map(n => n.originEmail).toSet) {
-      sendGridDAO.emails.asScala.map(email => email.getReplyTo).toSet
+      sendGridDAO.emails.asScala.map(email => email.getHeaders.get("Reply-To")).toSet
     }, 10 seconds)
     awaitAssert(assertResult(testNotifications.size) { pubsubDao.acks.size() }, 10 seconds)
   }
@@ -66,8 +65,8 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
-    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "foo@bar.com")
-    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "foo@bar.com")
+    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "a_user_id2")
+    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "a_user_id2")
 
     Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))), Duration.Inf)
 
@@ -93,8 +92,8 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
-    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "foo@bar.com")
-    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "foo@bar.com")
+    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "a_user_id2")
+    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "a_user_id2")
 
     Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))), Duration.Inf)
 
