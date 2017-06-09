@@ -2,6 +2,7 @@ package thurloe.dataaccess
 
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
+import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
 import spray.http.StatusCodes
 import thurloe.database.ThurloeDatabaseConnector
 
@@ -24,10 +25,10 @@ class HttpSendGridDAO extends SendGridDAO {
     }
   }
 
-  override def lookupPreferredEmail(userId: String): Future[String] = {
+  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] = {
     for {
-      contactEmail <- dataAccess.lookup(userId, "contactEmail")
-      email <- dataAccess.lookup(userId, "email")
-    } yield if(contactEmail.keyValuePair.value.isEmpty) email.keyValuePair.value else contactEmail.keyValuePair.value
+      contactEmail <- dataAccess.lookup(userId.value, "contactEmail")
+      email <- dataAccess.lookup(userId.value, "email")
+    } yield if(contactEmail.keyValuePair.value.isEmpty) RawlsUserEmail(email.keyValuePair.value) else RawlsUserEmail(contactEmail.keyValuePair.value)
   }
 }

@@ -6,19 +6,17 @@ import com.sendgrid.SendGrid.Response
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.rawls.google.GooglePubSubDAO
 import org.broadinstitute.dsde.rawls.google.GooglePubSubDAO.PubSubMessage
-import org.broadinstitute.dsde.rawls.model.WorkspaceName
+import org.broadinstitute.dsde.rawls.model.{RawlsUserSubjectId, WorkspaceName}
 import thurloe.dataaccess.SendGridDAO
-import thurloe.database.{ThurloeDatabaseConnector, KeyNotFoundException, DataAccess}
+import thurloe.database.{DataAccess, KeyNotFoundException, ThurloeDatabaseConnector}
 import thurloe.notification.NotificationMonitor.StartMonitorPass
 import thurloe.notification.NotificationMonitorSupervisor._
 import org.broadinstitute.dsde.rawls.model.Notifications._
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration._
-
 import akka.pattern._
-
 import spray.json._
 import spray.json.DefaultJsonProtocol._
 
@@ -144,8 +142,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
     }
   }
 
-  def booleanLookup(userId: String, key: String, defaultValue: Boolean): Future[Boolean] = {
-    dataAccess.lookup(userId, key).map { kvp =>
+  def booleanLookup(userId: RawlsUserSubjectId, key: String, defaultValue: Boolean): Future[Boolean] = {
+    dataAccess.lookup(userId.value, key).map { kvp =>
       kvp.keyValuePair.value.toBoolean
     }.recover {
       case notFound: KeyNotFoundException => defaultValue

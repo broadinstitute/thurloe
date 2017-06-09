@@ -3,7 +3,8 @@ package thurloe.dataaccess
 import com.sendgrid.SendGrid
 import com.sendgrid.SendGrid.Response
 import com.typesafe.config.ConfigFactory
-import spray.http.{StatusCodes, StatusCode}
+import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import spray.http.{StatusCode, StatusCodes}
 import thurloe.service.Notification
 
 import scala.concurrent.Future
@@ -18,7 +19,7 @@ trait SendGridDAO {
   val defaultFromAddress = sendGridConfig.getString("defaultFromAddress")
 
   def sendEmail(email: SendGrid.Email): Future[Response]
-  def lookupPreferredEmail(userId: String): Future[String]
+  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail]
 
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
     Future.sequence(notifications.map { notification =>
@@ -34,7 +35,7 @@ trait SendGridDAO {
 
       val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions) {
         case (key, id) => lookupPreferredEmail(id).map { email =>
-          key -> email
+          key -> email.value
         }
       }
 
@@ -51,14 +52,17 @@ trait SendGridDAO {
     Note: email.setSubject and email.setText must be set even if their values
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
-  def createEmail(toAddress: String, replyTos: Option[Set[String]], notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
+  def createEmail(toAddress: RawlsUserEmail, replyTos: Option[Set[RawlsUserEmail]], notificationId: String, substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
     val email = new SendGrid.Email()
 
-    email.addTo(toAddress)
+    email.addTo(toAddress.value)
     email.setFrom(defaultFromAddress)
     email.setTemplateId(notificationId)
     email.setSubject(" ")
-    replyTos.map(addrs => email.addHeader("Reply-To", addrs.mkString(", ")))
+    replyTos.map { rawlsAddrs =>
+      val addrs = rawlsAddrs.map(_.value)
+      email.addHeader("Reply-To", addrs.mkString(", "))
+    }
     email.setHtml(" ")
     addSubstitutions(email, substitutions)
     email
