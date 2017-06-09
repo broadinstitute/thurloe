@@ -46,7 +46,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
     Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)), Duration.Inf)
     awaitAssert(testNotifications.map(n => n.recipientUserEmail).toSet should contain theSameElementsAs(sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet), 10 seconds)
 
-    awaitAssert(assertResult(testNotifications.map(n => n.originEmail).toSet) {
+    awaitAssert(assertResult(testNotifications.map(n => n.requesterId).toSet) {
       sendGridDAO.emails.asScala.map(email => email.getHeaders.get("Reply-To")).toSet
     }, 10 seconds)
     awaitAssert(assertResult(testNotifications.size) { pubsubDao.acks.size() }, 10 seconds)
