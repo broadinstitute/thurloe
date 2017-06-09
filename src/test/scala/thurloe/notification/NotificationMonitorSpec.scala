@@ -44,9 +44,9 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)), Duration.Inf)
-    awaitAssert(testNotifications.map(n => n.recipientUserEmail).toSet should contain theSameElementsAs(sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet), 10 seconds)
+    awaitAssert(testNotifications.map(n => n.recipientUserEmail.value).toSet should contain theSameElementsAs(sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet), 10 seconds)
 
-    awaitAssert(assertResult(testNotifications.map(n => n.requesterId).toSet) {
+    awaitAssert(assertResult(testNotifications.map(n => n.requesterId.value).toSet) {
       sendGridDAO.emails.asScala.map(email => email.getHeaders.get("Reply-To")).toSet
     }, 10 seconds)
     awaitAssert(assertResult(testNotifications.size) { pubsubDao.acks.size() }, 10 seconds)
