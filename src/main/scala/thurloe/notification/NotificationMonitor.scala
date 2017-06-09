@@ -159,37 +159,37 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
     notification match {
-      case ActivationNotification(recipentUserId) => thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty)
+      case ActivationNotification(recipentUserId) => thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty)
 
-      case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceName, ownerEmail) =>
-        thurloe.service.Notification(Option(recipientUserId), None, Option(Set(ownerEmail)), templateId,
+      case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
+        thurloe.service.Notification(Option(recipientUserId), None, Option(Set(workspaceOwnerId)), templateId,
           Map("accessLevel" -> accessLevel,
             "namespace" -> workspaceName.namespace,
             "name" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName),
-            "originEmail" -> ownerEmail))
+            "wsUrl" -> workspacePortalUrl(workspaceName)),
+          Map("originEmail" -> workspaceOwnerId))
 
-      case WorkspaceInvitedNotification(recipientUserEmail, originEmail) =>
-        thurloe.service.Notification(None, Option(recipientUserEmail), Option(Set(originEmail)), templateId, Map("originEmail" -> originEmail))
+      case WorkspaceInvitedNotification(recipientUserEmail, requesterId) =>
+        thurloe.service.Notification(None, Option(recipientUserEmail), Option(Set(requesterId)), templateId, Map.empty, Map("originEmail" -> requesterId))
 
-      case WorkspaceRemovedNotification(recipientUserId, accessLevel, workspaceName, ownerEmail) =>
-        thurloe.service.Notification(Option(recipientUserId), None, Option(Set(ownerEmail)), templateId,
+      case WorkspaceRemovedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
+        thurloe.service.Notification(Option(recipientUserId), None, Option(Set(workspaceOwnerId)), templateId,
           Map("accessLevel" -> accessLevel,
             "namespace" -> workspaceName.namespace,
             "name" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName),
-            "originEmail" -> ownerEmail))
+            "wsUrl" -> workspacePortalUrl(workspaceName)),
+          Map("originEmail" -> workspaceOwnerId))
 
       case WorkspaceChangedNotification(recipientUserId, workspaceName) =>
         thurloe.service.Notification(Option(recipientUserId), None, None, templateId,
           Map("wsName" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName)))
+            "wsUrl" -> workspacePortalUrl(workspaceName)), Map.empty)
 
-      case GroupAccessRequestNotification(recipientUserId, groupName, replyTos, originEmail) =>
+      case GroupAccessRequestNotification(recipientUserId, groupName, replyTos, requesterId) =>
         thurloe.service.Notification(Option(recipientUserId), None, Option(replyTos), templateId,
           Map("groupName" -> groupName,
-            "groupUrl" -> groupManagementUrl(groupName),
-            "originEmail" -> originEmail)
+            "groupUrl" -> groupManagementUrl(groupName)),
+          Map("originEmail" -> requesterId)
         )
     }
   }

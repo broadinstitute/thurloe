@@ -32,11 +32,18 @@ trait SendGridDAO {
         }
       } getOrElse Future.successful(None)
 
-      toAddressFuture flatMap { toAddress =>
-        replyTosFuture flatMap { replyTos =>
-          sendEmail(createEmail(toAddress, replyTos, notification.notificationId, notification.substitutions))
+      val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions) {
+        case (key, id) => lookupPreferredEmail(id).map { email =>
+          key -> email
         }
       }
+
+      for {
+        toAddress <- toAddressFuture
+        replyTos <- replyTosFuture
+        emailSubstitutions <- emailSubstitutionsFuture
+        response <- sendEmail(createEmail(toAddress, replyTos, notification.notificationId, notification.substitutions ++ emailSubstitutions))
+      } yield response
     })
   }
 
