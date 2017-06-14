@@ -1,6 +1,9 @@
 package thurloe.service
 
+import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import org.broadinstitute.dsde.rawls.model.UserModelJsonSupport.{RawlsUserSubjectIdFormat, RawlsUserEmailFormat}
 import spray.json.DefaultJsonProtocol
+
 import scala.language.postfixOps
 
 object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
@@ -48,4 +51,4 @@ case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
 case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair]) {
   def toKeyValueSeq: Seq[UserKeyValuePair] = keyValuePairs.map(UserKeyValuePair(userId, _))
 }
-case class Notification(userId: Option[String], userEmail: Option[String], replyTos: Option[Set[String]], notificationId: String, substitutions: Map[String, String], emailLookupSubstitutions: Map[String, String])
+case class Notification(userId: Option[RawlsUserSubjectId], userEmail: Option[RawlsUserEmail], replyTos: Option[Set[RawlsUserSubjectId]], notificationId: String, substitutions: Map[String, String], emailLookupSubstitutions: Map[String, RawlsUserSubjectId])

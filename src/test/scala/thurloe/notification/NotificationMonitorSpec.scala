@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import org.broadinstitute.dsde.rawls.google.MockGooglePubSubDAO
 import org.broadinstitute.dsde.rawls.model.Notifications.{NotificationFormat, WorkspaceAddedNotification, WorkspaceInvitedNotification, WorkspaceRemovedNotification}
-import org.broadinstitute.dsde.rawls.model.WorkspaceName
+import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId, WorkspaceName}
 import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 import thurloe.dataaccess.MockSendGridDAO
 import thurloe.database.ThurloeDatabaseConnector
@@ -40,13 +40,13 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
-    val testNotifications = (for (i <- 0 until workerCount * 4) yield WorkspaceInvitedNotification(s"foo$i", s"bar$i"))
+    val testNotifications = (for (i <- 0 until workerCount * 4) yield WorkspaceInvitedNotification(RawlsUserEmail(s"foo$i"), RawlsUserSubjectId(s"bar$i")))
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)), Duration.Inf)
-    awaitAssert(testNotifications.map(n => n.recipientUserEmail).toSet should contain theSameElementsAs(sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet), 10 seconds)
+    awaitAssert(testNotifications.map(n => n.recipientUserEmail.value).toSet should contain theSameElementsAs(sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet), 10 seconds)
 
-    awaitAssert(assertResult(testNotifications.map(n => n.requesterId).toSet) {
+    awaitAssert(assertResult(testNotifications.map(n => n.requesterId.value).toSet) {
       sendGridDAO.emails.asScala.map(email => email.getHeaders.get("Reply-To")).toSet
     }, 10 seconds)
     awaitAssert(assertResult(testNotifications.size) { pubsubDao.acks.size() }, 10 seconds)
@@ -65,8 +65,8 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
-    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "a_user_id2")
-    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "a_user_id2")
+    val removedNotification = WorkspaceRemovedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+    val addedNotification = WorkspaceAddedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
 
     Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))), Duration.Inf)
 
@@ -92,8 +92,8 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
-    val removedNotification = WorkspaceRemovedNotification(userId, "foo", workspaceName, "a_user_id2")
-    val addedNotification = WorkspaceAddedNotification(userId, "foo", workspaceName, "a_user_id2")
+    val removedNotification = WorkspaceRemovedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+    val addedNotification = WorkspaceAddedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
 
     Await.result(ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))), Duration.Inf)
 

@@ -5,6 +5,7 @@ import java.util.Collections
 
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
+import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
 import spray.http.StatusCodes
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,9 +50,9 @@ class MockSendGridDAO extends SendGridDAO {
   val preferredEmailMap = Map(testUserId1 -> (testUserEmail1, testUserContactEmail),
     testUserId2 -> (testUserEmail2, testUserContactEmail2)) ++ notificationMonitorPreferredEmails
 
-  override def lookupPreferredEmail(userId: String): Future[String] = Future {
-    preferredEmailMap get userId match {
-      case Some((email, contactEmail)) => if(contactEmail.isEmpty) email else contactEmail
+  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] = Future {
+    preferredEmailMap get userId.value match {
+      case Some((email, contactEmail)) => if(contactEmail.isEmpty) RawlsUserEmail(email) else RawlsUserEmail(contactEmail)
       case _ => throw new Exception("Not Found")
     }
   }
