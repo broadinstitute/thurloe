@@ -59,6 +59,7 @@ trait SendGridDAO {
     email.setFrom(defaultFromAddress)
     email.setTemplateId(notificationId)
     email.setSubject(" ")
+    email.setFromName("Help")
     replyTos.map { rawlsAddrs =>
       val addrs = rawlsAddrs.map(_.value)
       email.addHeader("Reply-To", addrs.mkString(", "))
