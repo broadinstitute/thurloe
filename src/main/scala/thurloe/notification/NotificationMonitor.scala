@@ -167,8 +167,10 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
             "wsUrl" -> workspacePortalUrl(workspaceName)),
           Map("originEmail" -> workspaceOwnerId))
 
-      case WorkspaceInvitedNotification(recipientUserEmail, requesterId) =>
-        thurloe.service.Notification(None, Option(recipientUserEmail), Option(Set(requesterId)), templateId, Map.empty, Map("originEmail" -> requesterId))
+      case WorkspaceInvitedNotification(recipientUserEmail, requesterId, workspaceName) =>
+        thurloe.service.Notification(None, Option(recipientUserEmail), Option(Set(requesterId)), templateId,
+          Map("wsUrl" -> workspacePortalUrl(workspaceName)),
+          Map("originEmail" -> requesterId))
 
       case WorkspaceRemovedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
         thurloe.service.Notification(Option(recipientUserId), None, Option(Set(workspaceOwnerId)), templateId,
