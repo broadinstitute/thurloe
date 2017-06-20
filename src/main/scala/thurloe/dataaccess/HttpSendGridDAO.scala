@@ -31,4 +31,11 @@ class HttpSendGridDAO extends SendGridDAO {
       email <- dataAccess.lookup(userId.value, "email")
     } yield if(contactEmail.keyValuePair.value.isEmpty) RawlsUserEmail(email.keyValuePair.value) else RawlsUserEmail(contactEmail.keyValuePair.value)
   }
+
+  def lookupUserName(userId: RawlsUserSubjectId): Future[String] = {
+    for {
+      firstName <- dataAccess.lookup(userId.value, "firstName")
+      lastName <- dataAccess.lookup(userId.value, "lastName")
+    } yield s"${firstName.keyValuePair.value} ${lastName.keyValuePair.value}"
+  }
 }

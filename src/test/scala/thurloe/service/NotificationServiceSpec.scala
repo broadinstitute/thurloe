@@ -14,9 +14,9 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol._
 
-  val validNotification = Notification(Some(RawlsUserSubjectId("a_user_id")), None, None, "valid_notification_id1", Map.empty, Map.empty)
-  val validNotification2 = Notification(Some(RawlsUserSubjectId("a_user_id")), None, Option(Set(RawlsUserSubjectId("a_user_id"))), "valid_notification_id1", Map.empty, Map.empty)
-  val invalidNotification = Notification(Some(RawlsUserSubjectId("a_user_id")), None, None, "invalid_notification_id1", Map.empty, Map.empty)
+  val validNotification = Notification(Some(RawlsUserSubjectId("a_user_id")), None, None, "valid_notification_id1", Map.empty, Map.empty, Map.empty)
+  val validNotification2 = Notification(Some(RawlsUserSubjectId("a_user_id")), None, Option(Set(RawlsUserSubjectId("a_user_id"))), "valid_notification_id1", Map.empty, Map.empty, Map.empty)
+  val invalidNotification = Notification(Some(RawlsUserSubjectId("a_user_id")), None, None, "invalid_notification_id1", Map.empty, Map.empty, Map.empty)
 
   def notificationService = new NotificationService {
     val sendGridDAO = new MockSendGridDAO

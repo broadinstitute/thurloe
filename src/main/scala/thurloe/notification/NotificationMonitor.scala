@@ -153,11 +153,12 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
 
   def workspacePortalUrl(workspaceName: WorkspaceName): String = s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
   def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
+  def bucketUrl(bucketName: String): String = s"https://console.cloud.google.com/storage/browser/${bucketName}"
 
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
     notification match {
-      case ActivationNotification(recipentUserId) => thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty)
+      case ActivationNotification(recipentUserId) => thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
 
       case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
         thurloe.service.Notification(Option(recipientUserId), None, Option(Set(workspaceOwnerId)), templateId,
@@ -165,12 +166,17 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
             "namespace" -> workspaceName.namespace,
             "name" -> workspaceName.name,
             "wsUrl" -> workspacePortalUrl(workspaceName)),
-          Map("originEmail" -> workspaceOwnerId))
+          Map("originEmail" -> workspaceOwnerId),
+          Map("userNameFL" -> workspaceOwnerId))
 
-      case WorkspaceInvitedNotification(recipientUserEmail, requesterId, workspaceName) =>
+      case WorkspaceInvitedNotification(recipientUserEmail, requesterId, workspaceName, bucketName) =>
         thurloe.service.Notification(None, Option(recipientUserEmail), Option(Set(requesterId)), templateId,
-          Map("wsUrl" -> workspacePortalUrl(workspaceName)),
-          Map("originEmail" -> requesterId))
+          Map("wsName" -> workspaceName.name,
+            "wsUrl" -> workspacePortalUrl(workspaceName),
+            "bucketName" -> bucketName,
+            "bucketUrl" -> bucketUrl(bucketName)),
+          Map("originEmail" -> requesterId),
+          Map("userNameFL" -> requesterId))
 
       case WorkspaceRemovedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
         thurloe.service.Notification(Option(recipientUserId), None, Option(Set(workspaceOwnerId)), templateId,
@@ -178,18 +184,22 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
             "namespace" -> workspaceName.namespace,
             "name" -> workspaceName.name,
             "wsUrl" -> workspacePortalUrl(workspaceName)),
-          Map("originEmail" -> workspaceOwnerId))
+          Map("originEmail" -> workspaceOwnerId),
+          Map("userNameFL" -> workspaceOwnerId))
 
       case WorkspaceChangedNotification(recipientUserId, workspaceName) =>
         thurloe.service.Notification(Option(recipientUserId), None, None, templateId,
           Map("wsName" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName)), Map.empty)
+            "wsUrl" -> workspacePortalUrl(workspaceName)),
+          Map.empty,
+          Map.empty)
 
       case GroupAccessRequestNotification(recipientUserId, groupName, replyTos, requesterId) =>
         thurloe.service.Notification(Option(recipientUserId), None, Option(replyTos), templateId,
           Map("groupName" -> groupName,
             "groupUrl" -> groupManagementUrl(groupName)),
-          Map("originEmail" -> requesterId)
+          Map("originEmail" -> requesterId),
+          Map("userNameFL" -> requesterId)
         )
     }
   }
