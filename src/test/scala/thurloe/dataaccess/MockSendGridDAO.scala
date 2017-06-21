@@ -53,7 +53,9 @@ class MockSendGridDAO extends SendGridDAO {
   val preferredEmailMap = Map(testUserId1 -> (testUserEmail1, testUserContactEmail),
     testUserId2 -> (testUserEmail2, testUserContactEmail2)) ++ notificationMonitorPreferredEmails
 
-  val nameMap = Map(testUserId1 -> testUserName1, testUserId2 -> testUserName2, testUserId3 -> testUserName3)
+  val notificationMonitorUserNames = (for (i <- 0 until 10 * 4) yield (s"bar$i" -> (s"First$i", s"Last$i")))
+
+  val nameMap = Map(testUserId1 -> testUserName1, testUserId2 -> testUserName2, testUserId3 -> testUserName3) ++ notificationMonitorUserNames
 
   def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] = Future {
     preferredEmailMap get userId.value match {
