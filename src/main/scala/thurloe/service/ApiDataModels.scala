@@ -10,7 +10,7 @@ object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
   implicit val keyValuePairFormat = jsonFormat2(KeyValuePair)
   implicit val userKeyValuePairFormat = jsonFormat2(UserKeyValuePair)
   implicit val userKeyValuePairsFormat = jsonFormat2(UserKeyValuePairs)
-  implicit val notificationFormat = jsonFormat6(Notification)
+  implicit val notificationFormat = jsonFormat7(Notification)
 }
 
 object ThurloeQuery {
@@ -51,4 +51,4 @@ case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
 case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair]) {
   def toKeyValueSeq: Seq[UserKeyValuePair] = keyValuePairs.map(UserKeyValuePair(userId, _))
 }
-case class Notification(userId: Option[RawlsUserSubjectId], userEmail: Option[RawlsUserEmail], replyTos: Option[Set[RawlsUserSubjectId]], notificationId: String, substitutions: Map[String, String], emailLookupSubstitutions: Map[String, RawlsUserSubjectId])
+case class Notification(userId: Option[RawlsUserSubjectId], userEmail: Option[RawlsUserEmail], replyTos: Option[Set[RawlsUserSubjectId]], notificationId: String, substitutions: Map[String, String], emailLookupSubstitutions: Map[String, RawlsUserSubjectId], nameLookupSubstitution: Map[String, RawlsUserSubjectId])

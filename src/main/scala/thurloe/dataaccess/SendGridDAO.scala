@@ -17,9 +17,11 @@ trait SendGridDAO {
   val apiKey = sendGridConfig.getString("apiKey")
   val substitutionChar = sendGridConfig.getString("substitutionChar")
   val defaultFromAddress = sendGridConfig.getString("defaultFromAddress")
+  val defaultFromName = sendGridConfig.getString("defaultFromName")
 
   def sendEmail(email: SendGrid.Email): Future[Response]
   def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail]
+  def lookupUserName(userId: RawlsUserSubjectId): Future[String]
 
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
     Future.sequence(notifications.map { notification =>
@@ -39,11 +41,18 @@ trait SendGridDAO {
         }
       }
 
+      val nameSubstitutionsFuture = Future.traverse(notification.nameLookupSubstitution) {
+        case(key, id) => lookupUserName(id).map { name =>
+          key -> name
+        }
+      }
+
       for {
         toAddress <- toAddressFuture
         replyTos <- replyTosFuture
         emailSubstitutions <- emailSubstitutionsFuture
-        response <- sendEmail(createEmail(toAddress, replyTos, notification.notificationId, notification.substitutions ++ emailSubstitutions))
+        nameSubstitution <- nameSubstitutionsFuture
+        response <- sendEmail(createEmail(toAddress, replyTos, notification.notificationId, notification.substitutions ++ emailSubstitutions ++ nameSubstitution))
       } yield response
     })
   }
@@ -59,6 +68,7 @@ trait SendGridDAO {
     email.setFrom(defaultFromAddress)
     email.setTemplateId(notificationId)
     email.setSubject(" ")
+    email.setFromName(defaultFromName)
     replyTos.map { rawlsAddrs =>
       val addrs = rawlsAddrs.map(_.value)
       email.addHeader("Reply-To", addrs.mkString(", "))

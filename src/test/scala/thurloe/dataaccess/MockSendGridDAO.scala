@@ -35,14 +35,17 @@ class MockSendGridDAO extends SendGridDAO {
 
   val testUserId1 = "a_user_id"
   val testUserEmail1 = "a_user_email"
+  val testUserName1 = ("My", "Name")
   val testUserContactEmail = "a_user_contactEmail"
 
   val testUserId2 = "a_user_id2"
   val testUserEmail2 = "a_user_email2"
+  val testUserName2 = ("Abby", "Testerson")
   val testUserContactEmail2 = ""
 
   val testUserId3 = "a_user_id3"
   val testUserEmail3 = ""
+  val testUserName3 = ("Elvin", "")
   val testUserContactEmail3 = ""
 
   val notificationMonitorPreferredEmails = (for (i <- 0 until 10 * 4) yield (s"bar$i" -> (s"bar$i", s"bar$i")))
@@ -50,9 +53,20 @@ class MockSendGridDAO extends SendGridDAO {
   val preferredEmailMap = Map(testUserId1 -> (testUserEmail1, testUserContactEmail),
     testUserId2 -> (testUserEmail2, testUserContactEmail2)) ++ notificationMonitorPreferredEmails
 
+  val notificationMonitorUserNames = (for (i <- 0 until 10 * 4) yield (s"bar$i" -> (s"First$i", s"Last$i")))
+
+  val nameMap = Map(testUserId1 -> testUserName1, testUserId2 -> testUserName2, testUserId3 -> testUserName3) ++ notificationMonitorUserNames
+
   def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] = Future {
     preferredEmailMap get userId.value match {
       case Some((email, contactEmail)) => if(contactEmail.isEmpty) RawlsUserEmail(email) else RawlsUserEmail(contactEmail)
+      case _ => throw new Exception("Not Found")
+    }
+  }
+
+  def lookupUserName(userId: RawlsUserSubjectId): Future[String] = Future {
+    nameMap get userId.value match {
+      case Some((firstName, lastName)) => s"${firstName} ${lastName}"
       case _ => throw new Exception("Not Found")
     }
   }
