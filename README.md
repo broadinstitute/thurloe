@@ -8,9 +8,13 @@ A simple service to store arbitrary key/value pairs
 
 Install the Java Cryptography Extension (for java 8) as described in this [SO post](https://stackoverflow.com/questions/6481627/java-security-illegal-key-size-or-default-parameters). Tests will fail without it.
 
-Make sure [sbt](http://www.scala-sbt.org/) is installed.  Then start a server with:
+Make sure [sbt](http://www.scala-sbt.org/) is installed.  
+Make sure you've installed git-secrets.
+Then use these commands to ensure git-hooks are run and start a server:
 
 ```
+$ cp -r hooks/ .git/hooks/ #this step can be skipped if you use the rsync script to spin up locally
+$ chmod 755 .git/hooks/apply-get-secrets.sh #this step as well
 $ sbt run
 ```
 
