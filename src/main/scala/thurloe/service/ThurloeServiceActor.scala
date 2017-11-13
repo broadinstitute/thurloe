@@ -25,8 +25,8 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
 
   override def receive = runRoute(
       swaggerUiResourceRoute ~
-      statusRoute ~
-      fireCloudProtectedRoutes
+      fireCloudProtectedRoutes ~
+      statusRoute
     )
 
 

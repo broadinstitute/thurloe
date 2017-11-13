@@ -12,10 +12,9 @@ trait FireCloudProtectedServices extends HttpService with ThurloeService with No
   val config = ConfigFactory.load()
   val fcId = config.getConfig("fireCloud").getString("id")
 
-  val fireCloudProtectedRoutes: Route = optionalHeaderValueByName(fcHeader) {
-    case Some(x) if x.equals(fcId) => pathPrefix("api") { keyValuePairRoutes ~ notificationRoutes}
-    case Some(x) => respondWithStatus(StatusCodes.BadRequest) { complete(s"Invalid '$fcHeader' Header Provided") }
-    case None => respondWithStatus(StatusCodes.BadRequest) { complete(s"Missing '$fcHeader' Header") }
+  val fireCloudProtectedRoutes: Route = headerValueByName(fcHeader) {
+    case x if x.equals(fcId) => pathPrefix("api") { keyValuePairRoutes ~ notificationRoutes}
+    case x => respondWithStatus(StatusCodes.BadRequest) { complete(s"Invalid '$fcHeader' Header Provided") }
   }
 
 }
