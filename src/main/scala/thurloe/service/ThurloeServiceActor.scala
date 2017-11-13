@@ -29,5 +29,4 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
       statusRoute
     )
 
-
 }
