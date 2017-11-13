@@ -3,19 +3,17 @@ package thurloe.service
 import org.scalatest.FunSpec
 import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
-import thurloe.database.ThurloeDatabaseConnector
+import thurloe.database.{MockThurloeDatabaseConnector, MockUnhealthyThurloeDatabaseConnector}
 
-class StatusServiceSpec extends FunSpec with ScalatestRouteTest {
+class StatusServicePositiveSpec extends FunSpec with ScalatestRouteTest {
 
   def statusService = new StatusService {
-    val dataAccess = ThurloeDatabaseConnector
+    val dataAccess = MockThurloeDatabaseConnector
     def actorRefFactory = system
   }
 
-  describe("The Status Service") {
-    ignore ("should return successful status code") {
-      // test database is weird -- get an error trying to select version ()
-      // java.sql.SQLSyntaxErrorException: user lacks privilege or object not found: VERSION
+  describe("A healthy Thurloe's status service") {
+    it ("should return successful status code, without requiring authentication") {
       Get(s"/status") ~> statusService.statusRoute~> check {
         assertResult(StatusCodes.OK) {
           status
@@ -26,10 +24,20 @@ class StatusServiceSpec extends FunSpec with ScalatestRouteTest {
 
       }
     }
-    it ("should return internal server error") {
-      // This shouldn't really pass, but test database is weird so select version () fails
-      Get(s"/status") ~> statusService.statusRoute~> check {
-        assertResult(s"""{"status": "down", "error": "user lacks privilege or object not found: VERSION"}""") {
+  }
+}
+
+class StatusServiceNegativeSpec extends FunSpec with ScalatestRouteTest {
+
+  def statusService = new StatusService {
+    val dataAccess = MockUnhealthyThurloeDatabaseConnector
+    def actorRefFactory = system
+  }
+
+  describe("An unhealthy Thurloe's status service") {
+    it("should return an error from the DAO, without requiring authentication") {
+      Get(s"/status") ~> statusService.statusRoute ~> check {
+        assertResult(s"""{"status": "down", "error": "Failure from \"unhealthy\" mock DAO"}""") {
           responseAs[String]
         }
         assertResult(StatusCodes.InternalServerError) {
