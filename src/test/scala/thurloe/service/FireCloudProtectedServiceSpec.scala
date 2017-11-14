@@ -25,7 +25,6 @@ class FireCloudProtectedServiceSpec extends FunSpec with ScalatestRouteTest with
 
     it("should return a valid response with a correct header") {
       Get(uriPrefix) ~> addHeader(HttpHeaders.RawHeader(fcHeader, fcId)) ~> routes ~> check {
-        assert(responseAs[String].contains("[]"))
         assertResult(StatusCodes.OK) {
           status
         }
