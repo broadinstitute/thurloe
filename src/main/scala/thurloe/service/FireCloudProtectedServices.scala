@@ -14,7 +14,7 @@ trait FireCloudProtectedServices extends HttpService with ThurloeService with No
 
   val fireCloudProtectedRoutes: Route = headerValueByName(fcHeader) {
     case x if x.equals(fcId) => pathPrefix("api") { keyValuePairRoutes ~ notificationRoutes}
-    case x => respondWithStatus(StatusCodes.BadRequest) { complete(s"Invalid '$fcHeader' Header Provided") }
+    case _ => respondWithStatus(StatusCodes.BadRequest) { complete(s"Invalid '$fcHeader' Header Provided") }
   }
 
 }
