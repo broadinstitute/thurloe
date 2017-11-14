@@ -31,16 +31,18 @@ class FireCloudProtectedServiceSpec extends FunSpec with ScalatestRouteTest with
       }
     }
 
-    it("should return a BadRequest response with an incorrect header value") {
+    it("should return a BadRequest response that indicates an incorrect header value") {
       Get(uriPrefix) ~> addHeader(HttpHeaders.RawHeader(fcHeader, "invalid")) ~> sealRoute(routes) ~> check {
+        assert(responseAs[String].contains("Invalid 'X-FireCloud-Id' Header Provided"))
         assertResult(StatusCodes.BadRequest) {
           status
         }
       }
     }
 
-    it("should return a BadRequest response with missing header") {
+    it("should return a BadRequest response that indicates a missing header") {
       Get(uriPrefix) ~> sealRoute(routes) ~> check {
+        assert(responseAs[String].contains("Request is missing required HTTP header 'X-FireCloud-Id'"))
         assertResult(StatusCodes.BadRequest) {
           status
         }
