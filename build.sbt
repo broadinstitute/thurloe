@@ -10,9 +10,9 @@ resolvers ++= Seq(
   "spray repo" at "http://repo.spray.io/"
 )
 
-val sprayV = "1.3.3"
+val sprayV = "1.3.4"
 
-val downgradedSprayV = "1.3.1"
+val downgradedSprayV = "1.3.3"
 
 val akkaV = "2.3.12"
 val slickV = "3.1.0"
@@ -42,17 +42,20 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.3.0",
   "commons-io" % "commons-io" % "2.4",
   "commons-codec" % "commons-codec" % "1.10",
-  "mysql" % "mysql-connector-java" % "5.1.35",
+  "mysql" % "mysql-connector-java" % "5.1.42",
   "org.liquibase" % "liquibase-core" % "3.3.5",
   "org.hsqldb" % "hsqldb" % "2.3.2",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
-  "ch.qos.logback" % "logback-classic" % "1.1.6",
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
   //---------- Test libraries -------------------//
   "io.spray" %% "spray-testkit" % sprayV % Test,
   "org.scalatest" %% "scalatest" % "2.2.5" % Test,
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "org.liquibase" % "liquibase-core" % "3.3.5" % Test,
-  "org.yaml" % "snakeyaml" % "1.16" % Test
+  "org.yaml" % "snakeyaml" % "1.16" % Test,
+  //---------- Transitive dependencies that we explicitly upgrade to get better versions -------------------//
+  "org.apache.httpcomponents" % "httpclient" % "4.5.3",
+  "com.fasterxml.jackson.core" % "jackson-core" % "2.8.6"
 )
 
 releaseSettings
