@@ -1,8 +1,6 @@
 package thurloe.service
 
-import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatest.{Matchers, FlatSpec, FunSpec}
-import org.yaml.snakeyaml.Yaml
+import org.scalatest.FunSpec
 import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
@@ -334,55 +332,6 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
           status
         }
       }
-    }
-  }
-}
-
-class SwaggerServiceSpec extends FlatSpec with SwaggerService with ScalatestRouteTest with Matchers with
-  TableDrivenPropertyChecks {
-  def actorRefFactory = system
-
-  "Thurloe swagger docs" should "return 200" in {
-    Get("/swagger/thurloe.yaml") ~>
-      swaggerUiResourceRoute ~>
-      check {
-        assertResult(StatusCodes.OK) {
-          status
-        }
-        assertResult("2.0") {
-          new Yaml()
-            .loadAs(responseAs[String], classOf[java.util.Map[String, AnyRef]])
-            .get("swagger")
-        }
-      }
-
-    Get("/swagger/index.html") ~>
-      swaggerUiResourceRoute ~>
-      check {
-        assertResult(StatusCodes.OK) {
-          status
-        }
-        assertResult("<!DOCTYPE html>") {
-          responseAs[String].take(15)
-        }
-      }
-  }
-
-  "Thurloe swagger route" should "return 200 for all options" in {
-    val pathExamples = Table("path", "/", "/swagger", "/swagger/thurloe.yaml", "/swagger/index.html", "/api",
-      "/api/thurloe/", "/thurloe")
-
-    forAll(pathExamples) { path =>
-      Options(path) ~>
-        swaggerUiResourceRoute ~>
-        check {
-          assertResult(StatusCodes.OK) {
-            status
-          }
-          assertResult("OK") {
-            responseAs[String]
-          }
-        }
     }
   }
 }

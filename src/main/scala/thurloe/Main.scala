@@ -11,7 +11,7 @@ import org.broadinstitute.dsde.rawls.google.HttpGooglePubSubDAO
 import thurloe.dataaccess.HttpSendGridDAO
 import thurloe.database.ThurloeDatabaseConnector
 import thurloe.notification.NotificationMonitorSupervisor
-import thurloe.service.{SwaggerService, ThurloeServiceActor}
+import thurloe.service.ThurloeServiceActor
 import org.broadinstitute.dsde.rawls.util
 
 import scala.concurrent.duration._
