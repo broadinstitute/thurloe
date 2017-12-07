@@ -22,7 +22,7 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
   override def actorRefFactory = context
   override val sendGridDAO = new HttpSendGridDAO
 
-  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/2.2.5"
+  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/2.2.10-1"
 
   override def receive = runRoute(
     swaggerUiService ~

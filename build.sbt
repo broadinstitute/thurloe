@@ -25,12 +25,11 @@ resolvers ++= Seq(
   "Broad Artifactory Snapshots" at "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "2.2.5",
+  "org.webjars" % "swagger-ui" % "2.2.10-1",
   "org.broadinstitute" %% "lenthall" % lenthallV,
   "org.broadinstitute.dsde" %%  "rawls-model"  % workbenchV,
   "org.broadinstitute.dsde" %%  "workbench-google"  % workbenchV,
   "org.scala-lang" % "scala-reflect" % "2.11.7",
-  "org.webjars" % "swagger-ui" % "2.1.1",
   "io.spray" %% "spray-can" % sprayV,
   "io.spray" %% "spray-routing" % sprayV,
   "io.spray" %% "spray-client" % sprayV,
