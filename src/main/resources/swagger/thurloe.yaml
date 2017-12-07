@@ -1,8 +1,8 @@
 swagger: "2.0"
 info:
   title: Thurloe
-  description: All your key/value pairs are belong to us
-  version: 0.2
+  description: All your key-value pairs are belong to us
+  version: "0.2"
 paths:
   /status:
     get:
@@ -22,8 +22,8 @@ paths:
       operationId: query
       summary: Query the database using a custom subset of userId, key and value
       produces:
-        - text/plain
         - application/json
+        - text/plain
       parameters:
         - name: X-FireCloud-Id
           in: header
@@ -31,68 +31,58 @@ paths:
           required: true
           type: string
         - name: userId
-          description: User ID of the owner of the key/value pair
+          description: User ID of the owner of the key-value pair
           required: false
           type: array
           items:
             type: string
           collectionFormat: multi
           in: query
-          description: >
-            Show only (User,(Key,Value)) items which are assigned to this user ID
         - name: key
-          description: Key of the key/value pair
+          description: Key of the key-value pair
           required: false
           type: array
           items:
             type: string
           collectionFormat: multi
           in: query
-          description: >
-            Show only (User,(Key,Value)) items which have this key
         - name: value
-          description: Value of the key/value pair
+          description: Value of the key-value pair
           required: false
           type: array
           items:
             type: string
           collectionFormat: multi
           in: query
-          description: >
-            Show only (User,(Key,Value)) items which have this value
       tags:
-        - Key/value pairs
+        - Key-value pairs
       responses:
         200:
           description: OK
           schema:
             type: array
             items:
-              type: "object"
+              type: object
           examples:
-            application/json: |-
-              [{
-                "userId": "string",
-                "keyValuePair": {
-                  "key": "string",
-                  "value": "string"
-                }
-              }]
+            application/json:
+              -
+                userId: 123
+                keyValuePair:
+                  key: foo
+                  value: bar
         400:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
-      tags:
-        - Key/value pairs
       security:
         - google_oauth:
             - openid
     post:
       operationId: setKey
-      summary: Adds or resets a list of key/value pair to the database for a given user ID.
+      summary: Adds or resets a list of key-value pair to the database for a given user ID.
       produces:
-        - text/plain
         - application/json
+        - text/plain
       consumes:
       - application/json
       parameters:
@@ -104,35 +94,28 @@ paths:
       - name: body
         in: body
         description: The Key/Value pair to add to the system
-        required: true
-        type: string
         schema:
-          {
-            type: "object",
-            required: ["key", "value"],
-            properties: {
-              userId: {
-                type: "string"
-              },
-              keyValuePairs: {
-                type: "array",
-                items: {
-                  type: "object",
-                  required: [ "key", "value" ],
-                  properties: {
-                    key: {
-                      type: "string"
-                    },
-                    value: {
-                      type: "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
+          type: object
+          required:
+            - userId
+            - keyValuePairs
+          properties:
+            userId:
+              type: string
+            keyValuePairs:
+              type: array
+              items:
+                type: object
+                required:
+                  - key
+                  - value
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
       tags:
-        - Key/value pairs
+        - Key-value pairs
       responses:
         200:
           description: OK
@@ -148,8 +131,8 @@ paths:
       operationId: getAll
       summary: Returns a list of all keys and values stored in Thurloe for the specified user ID.
       produces:
-        - text/plain
         - application/json
+        - text/plain
       parameters:
       - name: X-FireCloud-Id
         in: header
@@ -165,46 +148,35 @@ paths:
         200:
           description: OK
           schema:
-            {
-              properties: {
-                userId: {
-                  type: "string"
-                },
-                keyValuePairs": {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    required: [ "key", "value" ],
-                    properties: {
-                      key: {
-                        type: "string"
-                      },
-                      value: {
-                        type: "string"
-                      }
-                    }
-                  }
-                }
-              },
-              type: "object",
-              required: [ "userId", "keyValuePairs" ]
-            }
+            type: object
+            properties:
+              userId:
+                type: string
+              keyValuePairs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
         400:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         500:
           description: Internal server error
       tags:
-        - Key/value pairs
+        - Key-value pairs
       security:
         - google_oauth:
             - openid
   /api/thurloe/{userId}/{key}:
     get:
       operationId: getKvp
-      summary: Returns a single key/value pair, looked up by key and userId.
+      summary: Returns a single key-value pair, looked up by key and userId.
       produces:
-        - text/plain
         - application/json
+        - text/plain
       parameters:
       - name: X-FireCloud-Id
         in: header
@@ -225,27 +197,17 @@ paths:
         200:
           description: OK
           schema:
-            {
-              type: "object",
-              required: ["key", "value"],
-              properties: {
-                userId: {
-                  type: "string"
-                },
-                keyValuePair": {
-                  type: "object",
-                  required: [ "key", "value" ],
-                  properties: {
-                    key: {
-                      type: "string"
-                    },
-                    value: {
-                      type: "string"
-                    }
-                  }
-                }
-              }
-            }
+            type: object
+            properties:
+              userid:
+                type: string
+              keyValuePair:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
         400:
           description: Bad Request (e.g. missing or invalid "X-FireCloud-Id" header)
         404:
@@ -253,18 +215,16 @@ paths:
         500:
           description: Internal server error
       tags:
-        - Key/value pairs
+        - Key-value pairs
       security:
         - google_oauth:
             - openid
     delete:
       operationId: deleteKvp
-      summary: Deletes a single key/value pair, referenced by key and userId.
+      summary: Deletes a single key-value pair, referenced by key and userId.
       produces:
-        - text/plain
         - application/json
-      produces:
-      - text/plain
+        - text/plain
       parameters:
       - name: X-FireCloud-Id
         in: header
@@ -291,7 +251,7 @@ paths:
         500:
           description: Internal server error
       tags:
-        - Key/value pairs
+        - Key-value pairs
       security:
         - google_oauth:
             - openid
@@ -310,36 +270,24 @@ paths:
       - name: body
         in: body
         description: The notification to send
-        required: true
-        type: string
         schema:
-          {
-            type: "object",
-            required: ["notificationId"],
-            properties: {
-              userId: {
-                type: "string"
-              },
-              userEmail: {
-                type: "string"
-              },
-              replyTo: {
-                type: "string"
-              },
-              notificationId: {
-                type: "string"
-              },
-              substitutions: {
-                type: "object",
-                properties: {
-                  key: {
-                    type: "string",
-                    default: "value"
-                  }
-                }
-              }
-            }
-          }
+          type: object
+          required:
+            - notificationId
+          properties:
+            userId:
+              type: string
+            userEmail:
+              type: string
+            replyTo:
+              type: string
+            notificationId:
+              type: string
+            substitutions:
+              type: object
+              properties:
+                key:
+                  type: string
       responses:
         200:
           description: OK
