@@ -2,11 +2,11 @@ package thurloe.service
 
 import java.net.URLEncoder
 
-import spray.http.HttpHeaders.RawHeader
+import com.typesafe.scalalogging.LazyLogging
 import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.json._
-import spray.routing.HttpService
+import spray.routing.{HttpService, RequestContext}
 import thurloe.database.DatabaseOperation.DatabaseOperation
 import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-trait ThurloeService extends HttpService {
+trait ThurloeService extends HttpService with LazyLogging {
 
   import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
@@ -24,7 +24,7 @@ trait ThurloeService extends HttpService {
   val Interjection = "Harumph!"
 
   val getRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
-    get {
+    get { requestContext =>
       val query: Future[UserKeyValuePair] = dataAccess.lookup(userId, key)
       onComplete(query) {
         case Success(keyValuePair) =>
@@ -40,18 +40,14 @@ trait ThurloeService extends HttpService {
             }
           }
         case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"$Interjection $e"
-            }
-          }
+          handleError(e, requestContext)
       }
     }
   }
 
   val queryRoute = path(ThurloePrefix) {
     parameterSeq { parameters =>
-      get {
+      get { requestContext =>
         val thurloeQuerySpec = ThurloeQuery(parameters)
         thurloeQuerySpec.unrecognizedFilters match {
           case Some(invalidFilters) =>
@@ -70,19 +66,24 @@ trait ThurloeService extends HttpService {
                   }
                 }
               case Failure(e) =>
-                respondWithStatus(StatusCodes.InternalServerError) {
-                  complete {
-                    s"$Interjection $e"
-                  }
-                }
+                handleError(e, requestContext)
             }
         }
       }
     }
   }
 
+  private def handleError(e: Throwable, requestContext: RequestContext) = {
+    logger.error(s"error handling request: ${requestContext.request.method} ${requestContext.request.uri}", e)
+    respondWithStatus(StatusCodes.InternalServerError) {
+      complete {
+        s"$Interjection $e"
+      }
+    }
+  }
+
   val getAllRoute = path(ThurloePrefix / Segment) { (userId) =>
-    get {
+    get { requestContext =>
       onComplete(dataAccess.lookup(userId)) {
         case Success(userKeyValuePairs) =>
           respondWithMediaType(`application/json`) {
@@ -91,11 +92,7 @@ trait ThurloeService extends HttpService {
             }
           }
         case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"$Interjection $e"
-            }
-          }
+          handleError(e, requestContext)
       }
     }
   }
@@ -110,7 +107,7 @@ trait ThurloeService extends HttpService {
 
 
   val setRoute = path(ThurloePrefix) {
-    post {
+    post { requestContext =>
       entity(as[UserKeyValuePairs]) { keyValuePairs =>
         onComplete(dataAccess.set(keyValuePairs)) {
           case Success(setKeyResponse) =>
@@ -122,18 +119,14 @@ trait ThurloeService extends HttpService {
               }
             }
           case Failure(e) =>
-            respondWithStatus(StatusCodes.InternalServerError) {
-              complete {
-                s"$Interjection $e"
-              }
-            }
+            handleError(e, requestContext)
         }
       }
     }
   }
 
   val deleteRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
-    delete {
+    delete { requestContext =>
       onComplete(dataAccess.delete(userId, key)) {
         case Success(_) =>
           respondWithMediaType(`text/plain`) {
@@ -148,11 +141,7 @@ trait ThurloeService extends HttpService {
             }
           }
         case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"$Interjection $e"
-            }
-          }
+          handleError(e, requestContext)
       }
     }
   }
