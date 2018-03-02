@@ -24,7 +24,7 @@ trait ThurloeService extends HttpService with LazyLogging {
   val Interjection = "Harumph!"
 
   val getRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
-    get { requestContext =>
+    get {
       val query: Future[UserKeyValuePair] = dataAccess.lookup(userId, key)
       onComplete(query) {
         case Success(keyValuePair) =>
@@ -40,14 +40,14 @@ trait ThurloeService extends HttpService with LazyLogging {
             }
           }
         case Failure(e) =>
-          handleError(e, requestContext)
+          handleError(e)
       }
     }
   }
 
   val queryRoute = path(ThurloePrefix) {
     parameterSeq { parameters =>
-      get { requestContext =>
+      get {
         val thurloeQuerySpec = ThurloeQuery(parameters)
         thurloeQuerySpec.unrecognizedFilters match {
           case Some(invalidFilters) =>
@@ -66,24 +66,26 @@ trait ThurloeService extends HttpService with LazyLogging {
                   }
                 }
               case Failure(e) =>
-                handleError(e, requestContext)
+                handleError(e)
             }
         }
       }
     }
   }
 
-  private def handleError(e: Throwable, requestContext: RequestContext) = {
-    logger.error(s"error handling request: ${requestContext.request.method} ${requestContext.request.uri}", e)
-    respondWithStatus(StatusCodes.InternalServerError) {
-      complete {
-        s"$Interjection $e"
+  private def handleError(e: Throwable) = {
+    extract(_.request) { request =>
+      logger.error(s"error handling request: ${request.method} ${request.uri}", e)
+      respondWithStatus(StatusCodes.InternalServerError) {
+        complete {
+          s"$Interjection $e"
+        }
       }
     }
   }
 
   val getAllRoute = path(ThurloePrefix / Segment) { (userId) =>
-    get { requestContext =>
+    get {
       onComplete(dataAccess.lookup(userId)) {
         case Success(userKeyValuePairs) =>
           respondWithMediaType(`application/json`) {
@@ -92,7 +94,7 @@ trait ThurloeService extends HttpService with LazyLogging {
             }
           }
         case Failure(e) =>
-          handleError(e, requestContext)
+          handleError(e)
       }
     }
   }
@@ -107,7 +109,7 @@ trait ThurloeService extends HttpService with LazyLogging {
 
 
   val setRoute = path(ThurloePrefix) {
-    post { requestContext =>
+    post {
       entity(as[UserKeyValuePairs]) { keyValuePairs =>
         onComplete(dataAccess.set(keyValuePairs)) {
           case Success(setKeyResponse) =>
@@ -119,14 +121,14 @@ trait ThurloeService extends HttpService with LazyLogging {
               }
             }
           case Failure(e) =>
-            handleError(e, requestContext)
+            handleError(e)
         }
       }
     }
   }
 
   val deleteRoute = path(ThurloePrefix / Segment / Segment) { (userId, key) =>
-    delete { requestContext =>
+    delete {
       onComplete(dataAccess.delete(userId, key)) {
         case Success(_) =>
           respondWithMediaType(`text/plain`) {
@@ -141,7 +143,7 @@ trait ThurloeService extends HttpService with LazyLogging {
             }
           }
         case Failure(e) =>
-          handleError(e, requestContext)
+          handleError(e)
       }
     }
   }

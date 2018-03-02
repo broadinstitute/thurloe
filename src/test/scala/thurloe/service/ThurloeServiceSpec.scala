@@ -4,7 +4,7 @@ import org.scalatest.FunSpec
 import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport._
-import thurloe.database.ThurloeDatabaseConnector
+import thurloe.database.{MockUnhealthyThurloeDatabaseConnector, ThurloeDatabaseConnector}
 
 class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
 
@@ -333,5 +333,18 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
         }
       }
     }
+
+    it("should fail with internal server error") {
+      val errorThurloe = new ThurloeService {
+        val dataAccess = MockUnhealthyThurloeDatabaseConnector
+        def actorRefFactory = system
+      }
+      Get(s"$uriPrefix?userId=$user1") ~> errorThurloe.keyValuePairRoutes ~> check {
+        assertResult(StatusCodes.InternalServerError) {
+          status
+        }
+      }
+    }
+
   }
 }
