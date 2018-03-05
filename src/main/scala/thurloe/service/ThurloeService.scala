@@ -2,11 +2,11 @@ package thurloe.service
 
 import java.net.URLEncoder
 
-import spray.http.HttpHeaders.RawHeader
+import com.typesafe.scalalogging.LazyLogging
 import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.json._
-import spray.routing.HttpService
+import spray.routing.{HttpService, RequestContext}
 import thurloe.database.DatabaseOperation.DatabaseOperation
 import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-trait ThurloeService extends HttpService {
+trait ThurloeService extends HttpService with LazyLogging {
 
   import spray.httpx.SprayJsonSupport.sprayJsonUnmarshaller
 
@@ -40,11 +40,7 @@ trait ThurloeService extends HttpService {
             }
           }
         case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"$Interjection $e"
-            }
-          }
+          handleError(e)
       }
     }
   }
@@ -70,12 +66,19 @@ trait ThurloeService extends HttpService {
                   }
                 }
               case Failure(e) =>
-                respondWithStatus(StatusCodes.InternalServerError) {
-                  complete {
-                    s"$Interjection $e"
-                  }
-                }
+                handleError(e)
             }
+        }
+      }
+    }
+  }
+
+  private def handleError(e: Throwable) = {
+    extract(_.request) { request =>
+      logger.error(s"error handling request: ${request.method} ${request.uri}", e)
+      respondWithStatus(StatusCodes.InternalServerError) {
+        complete {
+          s"$Interjection $e"
         }
       }
     }
@@ -91,11 +94,7 @@ trait ThurloeService extends HttpService {
             }
           }
         case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"$Interjection $e"
-            }
-          }
+          handleError(e)
       }
     }
   }
@@ -122,11 +121,7 @@ trait ThurloeService extends HttpService {
               }
             }
           case Failure(e) =>
-            respondWithStatus(StatusCodes.InternalServerError) {
-              complete {
-                s"$Interjection $e"
-              }
-            }
+            handleError(e)
         }
       }
     }
@@ -148,11 +143,7 @@ trait ThurloeService extends HttpService {
             }
           }
         case Failure(e) =>
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete {
-              s"$Interjection $e"
-            }
-          }
+          handleError(e)
       }
     }
   }
