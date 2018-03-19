@@ -39,7 +39,7 @@ Note that you can also run `build.sh` once with both commands.
 
 To run the docker image:
 ```
-$ docker run -p 8000:8000 -d broadinsitute/thurloe:${GIT_SHA:0:12}
+$ docker run -p 8080:8080 -d broadinsitute/thurloe:${GIT_SHA:0:12}
 ```
 
 Then one can issue requests to `localhost`.
@@ -53,8 +53,8 @@ Then one can issue requests to `localhost`.
 Adds a new key/value pair to Thurloe
 
 ```
-http --print=hbHB POST http://localhost:8000/api/thurloe < payload.json
-curl -X POST -d @payload.json http://localhost:8000/api/thurloe --header "Content-Type: application/json"
+http --print=hbHB POST http://localhost:8080/api/thurloe < payload.json
+curl -X POST -d @payload.json http://localhost:8080/api/thurloe --header "Content-Type: application/json"
 ```
 
 Where payload.json contains:
@@ -78,7 +78,7 @@ Accept-Encoding: gzip, deflate
 Connection: keep-alive
 Content-Length: 80
 Content-Type: application/json
-Host: localhost:8000
+Host: localhost:8080
 User-Agent: HTTPie/0.9.2
 
 {
@@ -95,8 +95,8 @@ If the key already exists, a **406 Not Acceptable** will be returned.
 ### GET /api/thurloe?userId=:userId&key=:key&value=:value
 
 ```
-http --print=hbHB http://localhost:8000/api/thurloe?userId=u&key=k&value=v
-curl http://localhost:8000/api/thurloe?userId=u&key=k&value=v
+http --print=hbHB http://localhost:8080/api/thurloe?userId=u&key=k&value=v
+curl http://localhost:8080/api/thurloe?userId=u&key=k&value=v
 ```
 
 All parameters are optional. 
@@ -126,8 +126,8 @@ Server: spray-can/1.3.3
 ### GET /api/thurloe/:user_id/:key
 
 ```
-http --print=hbHB http://localhost:8000/api/thurloe/uid/k
-curl http://localhost:8000/api/thurloe/uid/k
+http --print=hbHB http://localhost:8080/api/thurloe/uid/k
+curl http://localhost:8080/api/thurloe/uid/k
 ```
 
 Response:
@@ -153,8 +153,8 @@ If the key or user ID is not found, a **404 Not Found** will be returned.
 ### GET /api/thurloe/:user_id
 
 ```
-http --print=hbHB http://localhost:8000/api/thurloe/uid
-curl http://localhost:8000/api/thurloe/uid
+http --print=hbHB http://localhost:8080/api/thurloe/uid
+curl http://localhost:8080/api/thurloe/uid
 ```
 
 ```
@@ -184,8 +184,8 @@ If the key or user ID is not found, a **404 Not Found** will be returned.
 ### DELETE /api/thurloe/:user_id/:key
 
 ```
-http --print=hbHB DELETE http://localhost:8000/api/thurloe/uid/k2
-curl -X DELETE http://localhost:8000/api/thurloe/uid/k
+http --print=hbHB DELETE http://localhost:8080/api/thurloe/uid/k2
+curl -X DELETE http://localhost:8080/api/thurloe/uid/k
 ```
 
 If the key is not found, a 404 is returned:

@@ -53,8 +53,8 @@ object Main extends App {
   implicit val timeout = Timeout(5.seconds)
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  // Start a new HTTP server on port 8000 with our service actor as the handler.
-  service.bindOrShutdown(interface = "0.0.0.0", port = 8000) onSuccess {
+  // Start a new HTTP server on port 8080 with our service actor as the handler.
+  service.bindOrShutdown(interface = "0.0.0.0", port = 8080) onSuccess {
     case _ => system.log.info("Thurloe now available for all your key/value pair and notification needs.")
   }
 }
