@@ -22,18 +22,17 @@ function docker_cmd()
     DOCKER_CMD=$1
     if [ $DOCKER_CMD="build" ] || [ $DOCKER_CMD="push" ]; then
         echo "building docker image..."
-        if [ "$ENV" != "dev" ] && [ "$ENV" != "alpha" ] && [ "$ENV" != "staging" ] && [ "$ENV" != "perf" ]; then
-            DOCKER_TAG=${BRANCH}
-        else
-            GIT_SHA=$(git rev-parse origin/${BRANCH})
-            echo GIT_SHA=$GIT_SHA > env.properties
-            DOCKER_TAG=${GIT_SHA:0:12}
-        fi        
-        docker build -t $REPO:${DOCKER_TAG} .
+        GIT_SHA=$(git rev-parse origin/${BRANCH})
+        echo GIT_SHA=$GIT_SHA > env.properties
+        HASH_TAG=${GIT_SHA:0:12}
+        
+ 	docker build -t $REPO:${HASH_TAG} .
 
         if [ $DOCKER_CMD="push" ]; then
             echo "pushing docker image..."
-            docker push $REPO:${DOCKER_TAG}
+            docker push $REPO:${HASH_TAG}
+	    docker tag $REPO:${HASH_TAG} $REPO:${BRANCH}
+            docker push $REPO:${BRANCH}
         fi
     else
         echo "Not a valid docker option!  Choose either build or push (which includes build)"
