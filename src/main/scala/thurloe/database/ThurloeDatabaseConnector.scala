@@ -1,8 +1,16 @@
 package thurloe.database
 
+import java.sql.SQLTimeoutException
+
+import com.google.common.base.Throwables
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.LazyLogging
+import liquibase.{Contexts, Liquibase}
+import liquibase.database.jvm.JdbcConnection
+import liquibase.resource.{ClassLoaderResourceAccessor, ResourceAccessor}
 import slick.backend.DatabaseConfig
 import slick.driver.JdbcProfile
+import sun.security.provider.certpath.SunCertPathBuilderException
 import thurloe.crypto.{Aes256Cbc, EncryptedBytes, SecretKey}
 
 import scala.concurrent.{Await, Future}
@@ -12,7 +20,7 @@ import thurloe.service._
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
-case object ThurloeDatabaseConnector extends DataAccess {
+case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
   val configFile = ConfigFactory.load()
 
@@ -34,8 +42,7 @@ case object ThurloeDatabaseConnector extends DataAccess {
   val database = slickConfig.db
   val keyValuePairTable = TableQuery[DbKeyValuePair]
 
-  if (databaseInstanceConfig.hasPath("slick.createSchema") && databaseInstanceConfig.getBoolean("slick.createSchema"))
-    setupInMemoryDatabase(database)
+  initWithLiquibase()
 
   private def databaseValuesToUserKeyValuePair(id: Option[Int], userId: String, key: String, value: String, iv: String): Try[UserKeyValuePairWithId] = {
     Aes256Cbc.decrypt(EncryptedBytes(value, iv), secretKey) map { decryptedBytes =>
@@ -192,15 +199,45 @@ case object ThurloeDatabaseConnector extends DataAccess {
     } yield ()
   }
 
-  def setupInMemoryDatabase(database: Database): Unit = {
-    val setup = DBIO.seq(keyValuePairTable.schema.create)
-    Await.result(database.run(setup), Duration.Inf)
-  }
-
   def status(): Future[Unit] = {
     // Check database connection by selecting version
     val action = sql"select version ()".as[String]
     database.run(action.transactionally) map { _ => Unit }
+  }
+
+  def initWithLiquibase() = {
+    val liquibaseConf = configFile.getConfig("liquibase")
+    val liquibaseChangeLog = liquibaseConf.getString("changelog")
+    val initWithLiquibase = liquibaseConf.getBoolean("initWithLiquibase")
+
+    if (initWithLiquibase) {
+      val dbConnection = database.source.createConnection()
+      try {
+        val liquibaseConnection = new JdbcConnection(dbConnection)
+        val resourceAccessor: ResourceAccessor = new ClassLoaderResourceAccessor()
+        val liquibase = new Liquibase(liquibaseChangeLog, resourceAccessor, liquibaseConnection)
+
+        liquibase.update(new Contexts())
+
+      } catch {
+        case e: SQLTimeoutException =>
+          val isCertProblem = Throwables.getRootCause(e).isInstanceOf[SunCertPathBuilderException]
+          if (isCertProblem) {
+            val k = "javax.net.ssl.keyStore"
+            if (System.getProperty(k) == null) {
+              logger.warn("************")
+              logger.warn(
+                s"The system property '${k}' is null. This is likely the cause of the database"
+                  + " connection failure."
+              )
+              logger.warn("************")
+            }
+          }
+          throw e
+      } finally {
+        dbConnection.close()
+      }
+    }
   }
 }
 
