@@ -3,7 +3,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
 
-    <changeSet author="chrisl" id="db_schema_kvp_table_alldb">
+    <changeSet author="chrisl" id="db_schema_kvp_table_alldb" logicalFilePath="src/main/migrations/changesets/db_schema.xml">
         <createTable tableName="KEY_VALUE_PAIR">
             <column autoIncrement="true" name="KVP_ID" type="INT">
                 <constraints primaryKey="true" primaryKeyName="PK_KVP"/>
@@ -24,7 +24,7 @@
         </modifySql>
     </changeSet>
 
-    <changeSet author="chrisl" id="db_schema_constraints">
+    <changeSet author="chrisl" id="db_schema_constraints" logicalFilePath="src/main/migrations/changesets/db_schema.xml">
         <addUniqueConstraint tableName="KEY_VALUE_PAIR" columnNames="USER_ID, KEY" />
     </changeSet>
 </databaseChangeLog>
