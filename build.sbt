@@ -1,6 +1,5 @@
+import Version._
 name := "thurloe"
-
-version := "0.1"
 
 organization := "org.broadinstitute"
 

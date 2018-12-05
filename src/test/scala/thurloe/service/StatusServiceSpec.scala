@@ -5,6 +5,24 @@ import spray.http.StatusCodes
 import spray.testkit.ScalatestRouteTest
 import thurloe.database.{MockThurloeDatabaseConnector, MockUnhealthyThurloeDatabaseConnector}
 
+class StatusServiceVersionSpec extends FunSpec with ScalatestRouteTest {
+
+  def statusService = new StatusService {
+    val dataAccess = MockThurloeDatabaseConnector
+    def actorRefFactory = system
+  }
+
+  describe("A healthy Thurloe's status service") {
+    it ("should return successful version without requiring authentication") {
+      Get(s"/version") ~> statusService.statusRoute~> check {
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+    }
+  }
+}
+
 class StatusServicePositiveSpec extends FunSpec with ScalatestRouteTest {
 
   def statusService = new StatusService {

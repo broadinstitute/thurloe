@@ -17,6 +17,20 @@ paths:
           description: OK
         500:
           description: Internal server error
+  /version:
+    get:
+      tags:
+        - Version
+      operationId: thurloeVersion
+      summary: Returns the currently deployed version of this service.
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              version:
+                type: string
   /api/thurloe:
     get:
       operationId: query
