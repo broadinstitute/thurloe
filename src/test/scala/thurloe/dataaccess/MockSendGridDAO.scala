@@ -70,4 +70,11 @@ class MockSendGridDAO extends SendGridDAO {
       case _ => throw new Exception("Not Found")
     }
   }
+
+  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String] = Future {
+    nameMap get userId.value match {
+      case Some((firstName, _)) => firstName
+      case _ => throw new Exception("Not Found")
+    }
+  }
 }
