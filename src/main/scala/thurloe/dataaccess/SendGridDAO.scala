@@ -22,6 +22,7 @@ trait SendGridDAO {
   def sendEmail(email: SendGrid.Email): Future[Response]
   def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail]
   def lookupUserName(userId: RawlsUserSubjectId): Future[String]
+  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String]
 
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
     Future.sequence(notifications.map { notification =>
@@ -47,12 +48,18 @@ trait SendGridDAO {
         }
       }
 
+      val recipientFirstNameSubstitutionFuture = notification.userId match {
+        case Some(userId) => lookupUserFirstName(userId).map(firstName => Map("recipientFirstName" -> firstName))
+        case None => Future.successful(Map.empty)
+      }
+
       for {
         toAddress <- toAddressFuture
         replyTos <- replyTosFuture
         emailSubstitutions <- emailSubstitutionsFuture
         nameSubstitution <- nameSubstitutionsFuture
-        response <- sendEmail(createEmail(toAddress, replyTos, notification.notificationId, notification.substitutions ++ emailSubstitutions ++ nameSubstitution))
+        recipientFirstNameSubstitution <- recipientFirstNameSubstitutionFuture
+        response <- sendEmail(createEmail(toAddress, replyTos, notification.notificationId, notification.substitutions ++ emailSubstitutions ++ nameSubstitution ++ recipientFirstNameSubstitution))
       } yield response
     })
   }

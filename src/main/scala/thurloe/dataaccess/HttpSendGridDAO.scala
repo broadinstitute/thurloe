@@ -38,4 +38,10 @@ class HttpSendGridDAO extends SendGridDAO {
       lastName <- dataAccess.lookup(userId.value, "lastName")
     } yield s"${firstName.keyValuePair.value} ${lastName.keyValuePair.value}"
   }
+
+  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String] = {
+    for {
+      firstName <- dataAccess.lookup(userId.value, "firstName")
+    } yield firstName.keyValuePair.value
+  }
 }
