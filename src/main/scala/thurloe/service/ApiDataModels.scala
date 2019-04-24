@@ -42,7 +42,11 @@ object ThurloeQuery {
   }
 }
 
-final case class ThurloeQuery(userId: Option[Seq[String]], key: Option[Seq[String]], value: Option[Seq[String]], unrecognizedFilters: Option[Seq[String]])
+final case class ThurloeQuery(userId: Option[Seq[String]], key: Option[Seq[String]], value: Option[Seq[String]], unrecognizedFilters: Option[Seq[String]]) {
+  def isEmpty: Boolean = {
+     userId.isEmpty && key.isEmpty && value.isEmpty
+  }
+}
 
 case class KeyValuePair(key: String, value: String)
 case class KeyValuePairWithId(id: Option[Int], keyValuePair: KeyValuePair)

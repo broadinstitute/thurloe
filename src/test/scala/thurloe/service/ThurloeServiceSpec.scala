@@ -163,6 +163,14 @@ class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
       }
     }
 
+    it("should not allow custom queries with no parameters") {
+      Get(s"$uriPrefix") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(StatusCodes.BadRequest) {
+          status
+        }
+      }
+    }
+
     it("should allow custom queries based on multiple userIds") {
       Get(s"$uriPrefix?userId=$user1&userId=$user2") ~> thurloeService.keyValuePairRoutes ~> check {
         val r: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]

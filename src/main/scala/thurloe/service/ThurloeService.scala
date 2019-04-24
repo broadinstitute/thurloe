@@ -1,12 +1,10 @@
 package thurloe.service
 
-import java.net.URLEncoder
-
 import com.typesafe.scalalogging.LazyLogging
 import spray.http.MediaTypes._
 import spray.http.StatusCodes
 import spray.json._
-import spray.routing.{HttpService, RequestContext}
+import spray.routing.{HttpService}
 import thurloe.database.DatabaseOperation.DatabaseOperation
 import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
@@ -46,28 +44,37 @@ trait ThurloeService extends HttpService with LazyLogging {
   }
 
   val queryRoute = path(ThurloePrefix) {
-    parameterSeq { parameters =>
-      get {
+    get {
+      parameterSeq { parameters =>
         val thurloeQuerySpec = ThurloeQuery(parameters)
-        thurloeQuerySpec.unrecognizedFilters match {
-          case Some(invalidFilters) =>
-            respondWithStatus(StatusCodes.BadRequest) {
-              complete {
-                "Bad query parameter(s): " + invalidFilters.mkString(",")
-              }
+
+        if (thurloeQuerySpec.isEmpty) {
+          respondWithStatus(StatusCodes.BadRequest) {
+            complete {
+              "No query parameters specified"
             }
-          case None =>
-            val query: Future[Seq[UserKeyValuePair]] = dataAccess.lookup(ThurloeQuery(parameters))
-            onComplete(query) {
-              case Success(keyValuePairs: Seq[UserKeyValuePair]) =>
-                respondWithMediaType(`application/json`) {
-                  complete {
-                    keyValuePairs.toJson.prettyPrint
-                  }
+          }
+        } else {
+          thurloeQuerySpec.unrecognizedFilters match {
+            case Some(invalidFilters) =>
+              respondWithStatus(StatusCodes.BadRequest) {
+                complete {
+                  "Bad query parameter(s): " + invalidFilters.mkString(",")
                 }
-              case Failure(e) =>
-                handleError(e)
-            }
+              }
+            case None =>
+              val query: Future[Seq[UserKeyValuePair]] = dataAccess.lookup(ThurloeQuery(parameters))
+              onComplete(query) {
+                case Success(keyValuePairs: Seq[UserKeyValuePair]) =>
+                  respondWithMediaType(`application/json`) {
+                    complete {
+                      keyValuePairs.toJson.prettyPrint
+                    }
+                  }
+                case Failure(e) =>
+                  handleError(e)
+              }
+          }
         }
       }
     }
