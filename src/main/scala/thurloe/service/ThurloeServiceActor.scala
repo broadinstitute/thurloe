@@ -22,7 +22,7 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
   override def actorRefFactory = context
   override val sendGridDAO = new HttpSendGridDAO
 
-  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/2.2.10-1"
+  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/3.25.0"
 
   override def receive = runRoute(
     swaggerUiService ~
@@ -36,12 +36,7 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
   val swaggerUiService = {
     path("") {
       get {
-        parameter("url") {urlparam =>
-          requestUri {uri =>
-            redirect(uri.withQuery(Map.empty[String,String]), MovedPermanently)
-          }
-        } ~
-          serveIndex()
+        serveIndex()
       }
     } ~
       path("thurloe.yaml") {
@@ -54,9 +49,8 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
       // We have to be explicit about the paths here since we're matching at the root URL and we don't
       // want to catch all paths lest we circumvent Spray's not-found and method-not-allowed error
       // messages.
-      (pathSuffixTest("o2c.html") | pathSuffixTest("swagger-ui.js")
-        | pathPrefixTest("css" /) | pathPrefixTest("fonts" /) | pathPrefixTest("images" /)
-        | pathPrefixTest("lang" /) | pathPrefixTest("lib" /)) {
+      (pathPrefixTest("swagger-ui") | pathPrefixTest("oauth2") | pathSuffixTest("js")
+        | pathSuffixTest("css") | pathPrefixTest("favicon")) {
         get {
           getFromResourceDirectory(swaggerUiPath)
         }
@@ -70,16 +64,21 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
           """
             |        validatorUrl: null,
             |        apisSorter: "alpha",
-            |        operationsSorter: "alpha",
+            |        operationsSorter: "alpha"
           """.stripMargin
 
         HttpEntity(ContentType(MediaTypes.`text/html`),
           indexHtml
-            .replace("your-client-id", authConfig.getString("googleClientId"))
-            .replace("scopeSeparator: \",\"", "scopeSeparator: \" \"")
-            .replace("jsonEditor: false,", "jsonEditor: false," + swaggerOptions)
-            .replace("url = \"http://petstore.swagger.io/v2/swagger.json\";",
-              "url = '/thurloe.yaml';"))
+            .replace("""url: "https://petstore.swagger.io/v2/swagger.json"""", "url: '/thurloe.yaml'")
+            .replace("""layout: "StandaloneLayout"""", s"""layout: "StandaloneLayout", $swaggerOptions""")
+            .replace("window.ui = ui", s"""ui.initOAuth({
+                                          |        clientId: "${authConfig.getString("googleClientId")}",
+                                          |        appName: "thurloe",
+                                          |        scopeSeparator: " ",
+                                          |        additionalQueryStringParams: {}
+                                          |      })
+                                          |      window.ui = ui
+                                          |      """.stripMargin))
       }
     }
   }

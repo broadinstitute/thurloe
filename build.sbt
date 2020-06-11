@@ -25,7 +25,7 @@ resolvers ++= Seq(
   "Broad Artifactory Snapshots" at "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "2.2.10-1",
+  "org.webjars" % "swagger-ui" % "3.25.0",
   "org.broadinstitute" %% "lenthall" % lenthallV,
   "org.broadinstitute.dsde" %%  "rawls-model"  % workbenchV,
   "org.broadinstitute.dsde" %%  "workbench-google"  % workbenchV,
