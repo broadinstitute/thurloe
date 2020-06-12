@@ -329,7 +329,7 @@ paths:
       requestBody:
         description: The notification to send
         content:
-          '*/*':
+          'application/json':
             schema:
               required:
                 - notificationId
