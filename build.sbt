@@ -61,7 +61,6 @@ libraryDependencies ++= Seq(
 releaseSettings
 
 jacocoReportSettings in Test := JacocoReportSettings()
-  .withTitle("Jacoco Coverage Report")
   .withFormats(JacocoReportFormats.XML)
 
 // The reason why -Xmax-classfile-name is set is because this will fail
