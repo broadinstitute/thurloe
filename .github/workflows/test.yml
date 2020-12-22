@@ -3,9 +3,7 @@ name: Run scala tests with coverage
 on:
   push:
     paths-ignore:
-      - 'README.md'
-  pull_request:
-    branches: [ develop ]
+      - '*.md'
 
 jobs:
   build:
