@@ -60,6 +60,9 @@ libraryDependencies ++= Seq(
 
 releaseSettings
 
+jacocoReportSettings in Test := JacocoReportSettings()
+  .withFormats(JacocoReportFormats.XML)
+
 // The reason why -Xmax-classfile-name is set is because this will fail
 // to build on Docker otherwise.  The reason why it's 200 is because it
 // fails if the value is too close to 256 (even 254 fails).  For more info:
