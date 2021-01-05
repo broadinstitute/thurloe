@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM us.gcr.io/broad-dsp-gcr-public/base/jre:8-debian
 
 # Thurloe's HTTP Port
 EXPOSE 8000
