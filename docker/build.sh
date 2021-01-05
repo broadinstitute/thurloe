@@ -97,7 +97,7 @@ function docker_cmd()
         HASH_TAG=${GIT_SHA:0:12}
 
         echo "building ${DOCKERHUB_REGISTRY}:${HASH_TAG}..."
-        docker build -t $DOCKERHUB_REGISTRY:${HASH_TAG} .
+        docker build --pull -t $DOCKERHUB_REGISTRY:${HASH_TAG} .
 
         if [ $DOCKER_CMD="push" ]; then
             echo "pushing ${DOCKERHUB_REGISTRY}:${HASH_TAG}..."
