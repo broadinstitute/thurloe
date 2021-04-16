@@ -150,9 +150,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
   def booleanLookup(userId: RawlsUserSubjectId, key: String, defaultValue: Boolean): Future[Boolean] = {
     dataAccess.lookup(userId.value, key).map { kvp =>
       kvp.keyValuePair.value.toBoolean
-    }.
-    
-    {
+    }.recover {
       case notFound: KeyNotFoundException => defaultValue
       case notBoolean: IllegalArgumentException => defaultValue
     }
