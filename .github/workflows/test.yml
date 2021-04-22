@@ -27,6 +27,6 @@ jobs:
           java-version: '8'
 
       - name: Run tests
-        run: sbt jacoco
+        run: sbt -Dsbt.boot.directory=/tmp/boot1 -Dsbt.launcher.coursier=false jacoco
 
       - uses: codecov/codecov-action@v1
