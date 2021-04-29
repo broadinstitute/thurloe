@@ -2,11 +2,12 @@ package thurloe.dataaccess
 
 import java.util
 import java.util.Collections
-
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
 import spray.http.StatusCodes
+import thurloe.database.KeyNotFoundException
+import thurloe.service.Notification
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -76,5 +77,11 @@ class MockSendGridDAO extends SendGridDAO {
       case Some((firstName, _)) => firstName
       case _ => throw new Exception("Not Found")
     }
+  }
+}
+
+class MockSendGridDAOWithException extends MockSendGridDAO {
+  override def sendNotifications(notifications: List[Notification]): Future[List[Response]] = {
+    Future.failed(KeyNotFoundException("111111", "fakeKey"))
   }
 }
