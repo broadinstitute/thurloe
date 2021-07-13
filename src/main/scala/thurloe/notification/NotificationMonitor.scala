@@ -11,7 +11,9 @@ import thurloe.dataaccess.SendGridDAO
 import thurloe.database.{DataAccess, KeyNotFoundException, ThurloeDatabaseConnector}
 import thurloe.notification.NotificationMonitor.StartMonitorPass
 import thurloe.notification.NotificationMonitorSupervisor._
-import org.broadinstitute.dsde.rawls.model.Notifications._
+//import org.broadinstitute.dsde.rawls.model.Notifications._
+// temporary solution:
+import thurloe.notification.Notifications._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
@@ -206,6 +208,14 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
           Map("originEmail" -> requesterId),
           Map("userNameFL" -> requesterId)
         )
+
+      case SubmissionCompletedNotification(recipientUserEmail, workspaceName, submissionId, terminalStatus) =>
+        thurloe.service.Notification(None, Option(recipientUserEmail), None, templateId,
+          Map("wsName" -> workspaceName.name,
+            "submissionId" -> submissionId,
+            "terminalStatus" -> terminalStatus),
+          Map.empty,
+          Map.empty)
     }
   }
 
