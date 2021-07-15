@@ -114,7 +114,7 @@ object Notifications {
   case class SubmissionCompletedNotification(recipientUserEmail: RawlsUserEmail,
                                              workspaceName: WorkspaceName,
                                              submissionId: String,
-                                             nWorkflows: Int,
+                                             nWorkflows: String,
                                              terminalStatus: String,
                                              dateSubmitted: String) extends Notification
   val SubmissionCompletedNotificationType = register(new NotificationType[SubmissionCompletedNotification] {

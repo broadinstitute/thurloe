@@ -159,6 +159,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
   }
 
   def workspacePortalUrl(workspaceName: WorkspaceName): String = s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
+  def workspacePortalSubmissionUrl(workspaceName: WorkspaceName, submissionId: String): String = s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}/job_history/${submissionId}"
   def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
   def bucketUrl(bucketName: String): String = s"https://console.cloud.google.com/storage/browser/${bucketName}"
 
@@ -209,11 +210,14 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
           Map("userNameFL" -> requesterId)
         )
 
-      case SubmissionCompletedNotification(recipientUserEmail, workspaceName, submissionId, terminalStatus) =>
+      case SubmissionCompletedNotification(recipientUserEmail, workspaceName, submissionId, numWorkflows, terminalStatus, dateSubmitted) =>
         thurloe.service.Notification(None, Option(recipientUserEmail), None, templateId,
-          Map("wsName" -> workspaceName.name,
+          Map("workspaceName" -> workspaceName.name,
             "submissionId" -> submissionId,
-            "terminalStatus" -> terminalStatus),
+            "submissionUrl" -> workspacePortalSubmissionUrl(workspaceName, submissionId),
+            "terminalStatus" -> terminalStatus,
+            "dateSubmitted" -> dateSubmitted,
+            "numWorkflows" -> numWorkflows),
           Map.empty,
           Map.empty)
     }
