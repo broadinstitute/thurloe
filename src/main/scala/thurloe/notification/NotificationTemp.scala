@@ -111,9 +111,14 @@ object Notifications {
 
   // TODO: use RawlsUserSubjectId instead of email
   // TODO: type check on submissionID
-  case class SubmissionCompletedNotification(recipientUserEmail: RawlsUserEmail, workspaceName: WorkspaceName, submissionId: String, terminalStatus: String) extends Notification
+  case class SubmissionCompletedNotification(recipientUserEmail: RawlsUserEmail,
+                                             workspaceName: WorkspaceName,
+                                             submissionId: String,
+                                             nWorkflows: Int,
+                                             terminalStatus: String,
+                                             dateSubmitted: String) extends Notification
   val SubmissionCompletedNotificationType = register(new NotificationType[SubmissionCompletedNotification] {
-    override val format = jsonFormat4(SubmissionCompletedNotification.apply)
+    override val format = jsonFormat6(SubmissionCompletedNotification.apply)
     override val description = "Submission completed"
   })
 
