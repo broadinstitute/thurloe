@@ -216,6 +216,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
             "submissionId" -> submissionId,
             "submissionUrl" -> workspacePortalSubmissionUrl(workspaceName, submissionId),
             "terminalStatus" -> terminalStatus,
+            "recipientFirstName" -> "Hermione",
             "dateSubmitted" -> dateSubmitted,
             "numWorkflows" -> numWorkflows),
           Map.empty,
