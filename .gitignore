@@ -1,7 +1,0 @@
-.idea
-log
-target
-/config/
-/configure.rb
-
-*.pid
