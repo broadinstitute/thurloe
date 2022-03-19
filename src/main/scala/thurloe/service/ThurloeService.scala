@@ -46,7 +46,9 @@ trait ThurloeService extends HttpService with LazyLogging {
   val queryRoute = path(ThurloePrefix) {
     get {
       parameterSeq { parameters =>
+        logger.info("XXX in queryRoute, parameters = " + parameters)
         val thurloeQuerySpec = ThurloeQuery(parameters)
+        logger.info("XXX in queryRoute, ThurloeQuery = " + thurloeQuerySpec)
 
         if (thurloeQuerySpec.isEmpty) {
           respondWithStatus(StatusCodes.BadRequest) {
