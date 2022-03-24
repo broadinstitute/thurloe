@@ -1,10 +1,8 @@
 package thurloe.service
 
+import org.broadinstitute.dsde.rawls.model.UserModelJsonSupport.{RawlsUserEmailFormat, RawlsUserSubjectIdFormat}
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
-import org.broadinstitute.dsde.rawls.model.UserModelJsonSupport.{RawlsUserSubjectIdFormat, RawlsUserEmailFormat}
 import spray.json.DefaultJsonProtocol
-
-import scala.language.postfixOps
 
 object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
   implicit val keyValuePairFormat = jsonFormat2(KeyValuePair)
@@ -21,11 +19,11 @@ object ThurloeQuery {
   private val AllowedKeys = Seq(UserIdParam, KeyParam, ValueParam)
 
   private def getKeys(maybeStrings: Option[Seq[(String, String)]]): Option[Seq[String]] = {
-    maybeStrings map { sequence => sequence map { case (key, value) => key } }
+    maybeStrings map { sequence => sequence map { case (key, _) => key } }
   }
 
   private def getValues(maybeStrings: Option[Seq[(String, String)]]): Option[Seq[String]] = {
-    maybeStrings map { sequence => sequence map { case (key, value) => value } }
+    maybeStrings map { sequence => sequence map { case (_, value) => value } }
   }
 
   private def validKeyOrUnrecognized(maybeKey: String): String = {
@@ -33,7 +31,7 @@ object ThurloeQuery {
   }
 
   def apply(params: Seq[(String, String)]): ThurloeQuery = {
-    val asMap = params groupBy {case (k,v) => validKeyOrUnrecognized(k) }
+    val asMap = params groupBy {case (k,_) => validKeyOrUnrecognized(k) }
     ThurloeQuery(
       getValues(asMap.get(UserIdParam)),
       getValues(asMap.get(KeyParam)),

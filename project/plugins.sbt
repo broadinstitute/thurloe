@@ -1,9 +1,11 @@
-addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.6.4")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.1.1")
 
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8.3")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.3")
 
-addSbtPlugin("com.github.sbt" % "sbt-jacoco" % "3.2.0")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
 
-addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.2")
+addSbtPlugin(
+  "com.github.cb372" % "sbt-explicit-dependencies" % "0.2.16"
+) // Use `unusedCompileDependencies` to see unused dependencies
 
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.34")

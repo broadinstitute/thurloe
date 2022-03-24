@@ -1,23 +1,20 @@
 package thurloe.database
 
-import java.sql.SQLTimeoutException
-
 import com.google.common.base.Throwables
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import liquibase.{Contexts, Liquibase}
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.{ClassLoaderResourceAccessor, ResourceAccessor}
-import slick.backend.DatabaseConfig
-import slick.driver.JdbcProfile
+import liquibase.{Contexts, Liquibase}
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 import sun.security.provider.certpath.SunCertPathBuilderException
 import thurloe.crypto.{Aes256Cbc, EncryptedBytes, SecretKey}
-
-import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 import thurloe.service._
 
-import scala.concurrent.duration.Duration
+import java.sql.SQLTimeoutException
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
@@ -30,7 +27,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
   val dbConfig = configFile.getConfig(dbConfigName)
   val databaseInstanceConfig = dbConfig.getConfig(dbConfig.getString("config"))
   val slickConfig = DatabaseConfig.forConfig[JdbcProfile]("", databaseInstanceConfig)
-  val dataModels = new DatabaseDataModels(slickConfig.driver)
+  val dataModels = new DatabaseDataModels(slickConfig.profile)
 
   // Crypto Config:
   val cryptoConfig = configFile.getConfig("crypto")
@@ -126,7 +123,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
   private def databaseWrite(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
     val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
     lookupExists flatMap { existingKvp => update(existingKvp, userKeyValuePair, encryptedValue) } recoverWith {
-      case e: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
+      case _: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
       case e => Future.failed(e)
     }
   }
@@ -202,7 +199,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
   def status(): Future[Unit] = {
     // Check database connection by selecting version
     val action = sql"select version ()".as[String]
-    database.run(action.transactionally) map { _ => Unit }
+    database.run(action.transactionally) map { _ => () }
   }
 
   def initWithLiquibase() = {

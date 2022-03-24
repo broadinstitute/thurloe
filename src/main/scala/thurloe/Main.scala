@@ -1,22 +1,19 @@
 package thurloe
 
-import java.io.StringReader
-
 import akka.actor.ActorSystem
-import akka.util.Timeout
+import akka.http.scaladsl.Http
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.typesafe.config.ConfigFactory
-import lenthall.spray.SprayCanHttpService._
-import org.broadinstitute.dsde.rawls.google.HttpGooglePubSubDAO
+import org.broadinstitute.dsde.workbench.google.{GoogleCredentialModes, HttpGooglePubSubDAO}
+import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
+import org.broadinstitute.dsde.workbench.util.toScalaDuration
 import thurloe.dataaccess.HttpSendGridDAO
-import thurloe.database.ThurloeDatabaseConnector
 import thurloe.notification.NotificationMonitorSupervisor
 import thurloe.service.ThurloeServiceActor
-import org.broadinstitute.dsde.rawls.util
 
-import scala.concurrent.duration._
+import java.io.File
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 
 object Main extends App {
   // We need an ActorSystem to host our application in
@@ -27,34 +24,36 @@ object Main extends App {
 
   val jsonFactory = JacksonFactory.getDefaultInstance
 
+  val pem = GoogleCredentialModes.Pem(WorkbenchEmail(config.getString("clientEmail")), new File(config.getString("pathToPem")))
   val pubSubDAO = new HttpGooglePubSubDAO(
-    gcsConfig.getString("clientEmail"),
-    gcsConfig.getString("pathToPem"),
     gcsConfig.getString("appName"),
+    pem,
+    "thurloe",
     gcsConfig.getString("serviceProject")
   )
 
   system.actorOf(NotificationMonitorSupervisor.props(
-    util.toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
-    util.toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollIntervalJitter")),
+    toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
+    toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollIntervalJitter")),
     pubSubDAO,
     gcsConfig.getString("notificationMonitor.topicName"),
     gcsConfig.getString("notificationMonitor.subscriptionName"),
     gcsConfig.getInt("notificationMonitor.workerCount"),
     new HttpSendGridDAO,
-    config.getConfig("notification.templateIds").entrySet().map(entry => entry.getKey -> entry.getValue.unwrapped().toString).toMap,
-    config.getString("notification.fireCloudPortalUrl"),
-    ThurloeDatabaseConnector
+    config.getConfig("notification.templateIds").entrySet().asScala.map(entry => entry.getKey -> entry.getValue.unwrapped().toString).toMap,
+    config.getString("notification.fireCloudPortalUrl")
   ))
 
-  // create and start our service actor
-  val service = system.actorOf(ThurloeServiceActor.props(ConfigFactory.load()))
+  val routes = new ThurloeServiceActor()
 
-  implicit val timeout = Timeout(5.seconds)
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  // Start a new HTTP server on port 8000 with our service actor as the handler.
-  service.bindOrShutdown(interface = "0.0.0.0", port = 8000) onSuccess {
-    case _ => system.log.info("Thurloe now available for all your key/value pair and notification needs.")
-  }
+  for {
+    binding <- Http().newServerAt("0.0.0.0", 8080).bind(routes.route).recover {
+      case t: Throwable =>
+        system.log.error("FATAL - failure starting http server", t)
+        throw t
+    }
+    _ = system.log.info("Thurloe now available for all your key/value pair and notification needs.")
+    _ <- binding.whenTerminated
+    _ <- system.terminate()
+  } yield ()
 }

@@ -1,8 +1,6 @@
 package thurloe.database
 
-import slick.driver.JdbcProfile
-
-import scala.reflect.runtime._
+import slick.jdbc.JdbcProfile
 
 class DatabaseDataModels(val driver: JdbcProfile) {
 

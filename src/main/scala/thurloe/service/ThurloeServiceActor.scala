@@ -1,37 +1,28 @@
 package thurloe.service
 
-import akka.actor.{Actor, Props}
-import com.typesafe.config.{Config, ConfigFactory}
-import org.parboiled.common.FileUtils
-import spray.http.StatusCodes._
-import spray.http._
-import spray.routing.Route
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import com.typesafe.config.ConfigFactory
 import thurloe.dataaccess.HttpSendGridDAO
 import thurloe.database.ThurloeDatabaseConnector
 
-import scala.language.postfixOps
-
-object ThurloeServiceActor {
-  def props(config: Config) = Props(new ThurloeServiceActor(config))
-}
-
-class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedServices with StatusService {
+class ThurloeServiceActor extends FireCloudProtectedServices with StatusService {
   val authConfig = ConfigFactory.load().getConfig("auth")
 
   override val dataAccess = ThurloeDatabaseConnector
-  override def actorRefFactory = context
   override val sendGridDAO = new HttpSendGridDAO
-
   protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/3.25.0"
 
-  override def receive = runRoute(
+  def route: Route =
     swaggerUiService ~
-      fireCloudProtectedRoutes ~
-      statusRoute
-  )
+      fireCloudProtectedRoutes ~ statusRoute
 
   def withResourceFileContents(path: String)(innerRoute: String => Route): Route =
-    innerRoute( FileUtils.readAllTextFromResource(path) )
+    innerRoute {
+      val source = scala.io.Source.fromInputStream(getClass.getResourceAsStream(path))
+      try source.mkString finally source.close()
+    }
 
   val swaggerUiService = {
     path("") {
@@ -67,7 +58,7 @@ class ThurloeServiceActor(config: Config) extends Actor with FireCloudProtectedS
             |        operationsSorter: "alpha"
           """.stripMargin
 
-        HttpEntity(ContentType(MediaTypes.`text/html`),
+        HttpEntity(ContentTypes.`text/html(UTF-8)`,
           indexHtml
             .replace("""url: "https://petstore.swagger.io/v2/swagger.json"""", "url: '/thurloe.yaml'")
             .replace("""layout: "StandaloneLayout"""", s"""layout: "StandaloneLayout", $swaggerOptions""")

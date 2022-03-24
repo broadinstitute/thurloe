@@ -1,7 +1,7 @@
 package thurloe.database
 
 import thurloe.database.DatabaseOperation.DatabaseOperation
-import thurloe.service.{ThurloeQuery, KeyValuePairWithId, UserKeyValuePairs, UserKeyValuePair}
+import thurloe.service.{ThurloeQuery, UserKeyValuePair, UserKeyValuePairs}
 
 import scala.concurrent.Future
 

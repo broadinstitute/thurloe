@@ -2,23 +2,21 @@ package thurloe.notification
 
 import akka.actor.SupervisorStrategy.{Escalate, Stop}
 import akka.actor._
+import akka.pattern._
 import com.sendgrid.SendGrid.Response
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.rawls.google.GooglePubSubDAO
-import org.broadinstitute.dsde.rawls.google.GooglePubSubDAO.PubSubMessage
+import org.broadinstitute.dsde.rawls.model.Notifications._
 import org.broadinstitute.dsde.rawls.model.{RawlsUserSubjectId, WorkspaceName}
+import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO
+import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO.PubSubMessage
+import spray.json._
 import thurloe.dataaccess.SendGridDAO
 import thurloe.database.{DataAccess, KeyNotFoundException, ThurloeDatabaseConnector}
 import thurloe.notification.NotificationMonitor.StartMonitorPass
 import thurloe.notification.NotificationMonitorSupervisor._
-import org.broadinstitute.dsde.rawls.model.Notifications._
 
+import scala.concurrent.duration.{FiniteDuration, _}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
-import akka.pattern._
-import spray.json._
-import spray.json.DefaultJsonProtocol._
 
 /**
  * Created by dvoet on 12/6/16.
@@ -28,19 +26,19 @@ object NotificationMonitorSupervisor {
   case object Init extends NotificationMonitorSupervisorMessage
   case object Start extends NotificationMonitorSupervisorMessage
 
-  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String, dataAccess: DataAccess)(implicit executionContext: ExecutionContext): Props = {
-    Props(new NotificationMonitorSupervisor(pollInterval, pollIntervalJitter, pubSubDao, pubSubTopicName, pubSubSubscriptionName, workerCount, sendGridDAO, templateIdsByType, fireCloudPortalUrl, dataAccess))
+  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext): Props = {
+    Props(new NotificationMonitorSupervisor(pollInterval, pollIntervalJitter, pubSubDao, pubSubTopicName, pubSubSubscriptionName, workerCount, sendGridDAO, templateIdsByType, fireCloudPortalUrl))
   }
 }
 
-class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String, dataAccess: DataAccess)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
-  import context._
+class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
+  import context.system
 
   self ! Init
 
   override def receive = {
     case Init => init pipeTo self
-    case Start => for(i <- 1 to workerCount) startOne()
+    case Start => for(_ <- 1 to workerCount) startOne()
     case Status.Failure(t) => logger.error("error initializing notification monitor", t)
   }
 
@@ -53,7 +51,7 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollInterv
 
   def startOne(): Unit = {
     logger.info("starting NotificationMonitorActor")
-    actorOf(NotificationMonitor.props(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl, ThurloeDatabaseConnector))
+    system.actorOf(NotificationMonitor.props(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl, ThurloeDatabaseConnector))
   }
 
   override val supervisorStrategy =
@@ -79,12 +77,12 @@ object NotificationMonitor {
 }
 
 class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String, dataAccess: DataAccess)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
-  import context._
+  import context.system
 
   self ! StartMonitorPass
 
   // fail safe in case this actor is idle too long but not too fast (1 second lower limit)
-  setReceiveTimeout(max((pollInterval + pollIntervalJitter) * 10, 1.second))
+  context.setReceiveTimeout(max((pollInterval + pollIntervalJitter) * 10, 1.second))
 
   private def max(durations: FiniteDuration*): FiniteDuration = durations.max
 
@@ -101,10 +99,10 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
       val nextTime = pollInterval + pollIntervalJitter * Math.random()
       system.scheduler.scheduleOnce(nextTime.asInstanceOf[FiniteDuration], self, StartMonitorPass)
 
-    case (responseOption: Option[Response], message: PubSubMessage) =>
+    case (responseOption: Option[_], message: PubSubMessage) =>
       pubSubDao.acknowledgeMessagesById(pubSubSubscriptionName, Seq(message.ackId)).map(_ => StartMonitorPass) pipeTo self
       responseOption match {
-        case Some(response) if !response.getStatus => logger.error(s"could not send notification ${message.contents}, sendgrid code: ${response.getCode}, sendgrid message: ${response.getMessage}")
+        case Some(response: Response) if !response.getStatus => logger.error(s"could not send notification ${message.contents}, sendgrid code: ${response.getCode}, sendgrid message: ${response.getMessage}")
         case _ => // log nothing
       }
 
@@ -151,8 +149,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
     dataAccess.lookup(userId.value, key).map { kvp =>
       kvp.keyValuePair.value.toBoolean
     }.recover {
-      case notFound: KeyNotFoundException => defaultValue
-      case notBoolean: IllegalArgumentException => defaultValue
+      case _: KeyNotFoundException => defaultValue
+      case _: IllegalArgumentException => defaultValue
     }
   }
 
@@ -211,7 +209,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
 
   override val supervisorStrategy =
     OneForOneStrategy() {
-      case e => {
+      case _ => {
         Escalate
       }
     }

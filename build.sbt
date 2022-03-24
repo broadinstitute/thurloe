@@ -4,89 +4,80 @@ version := "0.1"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.13.8"
 
-resolvers ++= Seq(
-  "spray repo" at "http://repo.spray.io/"
-)
-
-val sprayV = "1.3.4"
-
-val downgradedSprayV = "1.3.3"
-
-val akkaV = "2.3.12"
-val slickV = "3.1.0"
-
-val lenthallV = "0.14-2ce072a-SNAPSHOT"
-val workbenchV = "0.1-4f8d151-SNAP"
+val akkaV = "2.6.18"
+val akkaHttpV = "10.2.7"
+val slickV = "3.3.3"
+val workbenchGoogleV = "0.21-31be16e8-SNAP"
+val rawlsModelV = "0.1-384ab501b"
+val scalaTestV = "3.2.11"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
   "Broad Artifactory Snapshots" at "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "3.25.0",
-  "org.broadinstitute" %% "lenthall" % lenthallV,
-  "org.broadinstitute.dsde" %%  "rawls-model"  % workbenchV,
-  "org.broadinstitute.dsde" %%  "workbench-google"  % workbenchV,
-  "org.scala-lang" % "scala-reflect" % "2.11.7",
-  "io.spray" %% "spray-can" % sprayV,
-  "io.spray" %% "spray-routing" % sprayV,
-  "io.spray" %% "spray-client" % sprayV,
-  "io.spray" %% "spray-http" % sprayV,
-  "io.spray" %% "spray-json" % downgradedSprayV,
-  "com.typesafe.akka" %% "akka-actor" % akkaV,
+  "org.webjars" % "swagger-ui" % "4.1.3",
+  "org.broadinstitute.dsde" %%  "rawls-model" % rawlsModelV,
+  "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV,
+  "com.typesafe.akka" %% "akka-http" % akkaHttpV,
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
-  "com.typesafe" % "config" % "1.3.0",
-  "commons-io" % "commons-io" % "2.4",
-  "commons-codec" % "commons-codec" % "1.10",
-  "mysql" % "mysql-connector-java" % "5.1.42",
-  "org.liquibase" % "liquibase-core" % "3.3.5",
-  "org.hsqldb" % "hsqldb" % "2.3.2",
+  "com.typesafe" % "config" % "1.4.2",
+  "commons-io" % "commons-io" % "2.11.0",
+  "commons-codec" % "commons-codec" % "1.15",
+  "mysql" % "mysql-connector-java" % "8.0.28",
+  "org.liquibase" % "liquibase-core" % "4.7.1",
+  "org.hsqldb" % "hsqldb" % "2.6.1",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "ch.qos.logback" % "logback-classic" % "1.2.10",
   //---------- Test libraries -------------------//
-  "io.spray" %% "spray-testkit" % sprayV % Test,
-  "org.scalatest" %% "scalatest" % "2.2.5" % Test,
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
-  "org.liquibase" % "liquibase-core" % "3.3.5" % Test,
-  "org.yaml" % "snakeyaml" % "1.16" % Test,
-  //---------- Transitive dependencies that we explicitly upgrade to get better versions -------------------//
-  "org.apache.httpcomponents" % "httpclient" % "4.5.3",
-  "com.fasterxml.jackson.core" % "jackson-core" % "2.8.6"
+  "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
+  "org.scalatest" %% "scalatest" % scalaTestV % Test,
+  "org.yaml" % "snakeyaml" % "1.30" % Test
 )
 
-releaseSettings
+scalacOptions ++= Seq(
+  "-target:jvm-11",
+  "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
+  "-encoding", "utf-8",                // Specify character encoding used by source files.
+  "-explaintypes",                     // Explain type errors in more detail.
+  "-feature",                          // Emit warning and location for usages of features that should be imported explicitly.
+  "-language:existentials",            // Existential types (besides wildcard types) can be written and inferred
+  "-language:higherKinds",             // Allow higher-kinded types
+  "-language:implicitConversions",     // Allow definition of implicit functions called views
+  "-unchecked",                        // Enable additional warnings where generated code depends on assumptions.
+  "-Xcheckinit",                       // Wrap field accessors to throw an exception on uninitialized access.
+  "-Xfatal-warnings",                  // Fail the compilation if there are any warnings.
+  "-Xlint:adapted-args",               // Warn if an argument list is modified to match the receiver.
+  "-Xlint:constant",                   // Evaluation of a constant arithmetic expression results in an error.
+  "-Xlint:delayedinit-select",         // Selecting member of DelayedInit.
+  "-Xlint:doc-detached",               // A Scaladoc comment appears to be detached from its element.
+  "-Xlint:inaccessible",               // Warn about inaccessible types in method signatures.
+  "-Xlint:infer-any",                  // Warn when a type argument is inferred to be `Any`.
+  "-Xlint:missing-interpolator",       // A string literal appears to be missing an interpolator id.
+  "-Xlint:nullary-unit",               // Warn when nullary methods return Unit.
+  "-Xlint:option-implicit",            // Option.apply used implicit view.
+  "-Xlint:package-object-classes",     // Class or object defined in package object.
+  "-Xlint:poly-implicit-overload",     // Parameterized overloaded implicit methods arClusterComponent.scalae not visible as view bounds.
+  "-Xlint:private-shadow",             // A private field (or class parameter) shadows a superclass field.
+  "-Xlint:stars-align",                // Pattern sequence wildcard must align with sequence component.
+  "-Xlint:type-parameter-shadow",      // A local type parameter shadows a type already in scope.
+//  "-Yno-adapted-args",                 // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver.
+  "-Ywarn-dead-code",                  // Warn when dead code is identified.
+  "-Ywarn-extra-implicit",             // Warn when more than one implicit parameter section is defined.
+  "-Ywarn-numeric-widen",              // Warn when numerics are widened.
+  "-Ywarn-unused:implicits",           // Warn if an implicit parameter is unused.
+  "-Ywarn-unused:imports",             // Warn if an import selector is not referenced.
+  "-Ywarn-unused:locals",              // Warn if a local definition is unused.
+  "-Ywarn-unused:params",              // Warn if a value parameter is unused.
+  "-Ywarn-unused:patvars",             // Warn if a variable bound in a pattern is unused.
+  "-Ywarn-unused:privates",            // Warn if a private member is unused.
+//  "-Ywarn-value-discard",               // Warn when non-Unit expression results are unused.
+  "-language:postfixOps"
+)
 
-jacocoReportSettings in Test := JacocoReportSettings()
-  .withFormats(JacocoReportFormats.XML)
-
-// The reason why -Xmax-classfile-name is set is because this will fail
-// to build on Docker otherwise.  The reason why it's 200 is because it
-// fails if the value is too close to 256 (even 254 fails).  For more info:
-//
-// https://github.com/sbt/sbt-assembly/issues/69
-// https://github.com/scala/pickling/issues/10
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-Xmax-classfile-name", "200")
-
-shellPrompt := { state => "%s| %s> ".format(GitCommand.prompt.apply(state), version.value)}
-
-assemblyJarName in assembly := "thurloe-" + version.value + ".jar"
-
-logLevel in assembly := Level.Info
-
-// This appears to do some magic to configure itself. It consistently fails in some environments
-// unless it is loaded after the settings definitions above.
-Revolver.settings
-
-mainClass in Revolver.reStart := Some("thurloe.Main")
-
-Revolver.enableDebugging(port = 5050, suspend = false)
-
-// When JAVA_OPTS are specified in the environment, they are usually meant for the application
-// itself rather than sbt, but they are not passed by default to the application, which is a forked
-// process. This passes them through to the "re-start" command, which is probably what a developer
-// would normally expect.
-javaOptions in Revolver.reStart ++= sys.env("JAVA_OPTS").split(" ").toSeq
+assemblyJarName / assembly := file("thurloe-" + version.value + ".jar")

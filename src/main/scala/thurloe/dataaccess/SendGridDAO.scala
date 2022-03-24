@@ -1,10 +1,10 @@
 package thurloe.dataaccess
 
+import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import com.sendgrid.SendGrid
 import com.sendgrid.SendGrid.Response
 import com.typesafe.config.ConfigFactory
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
-import spray.http.{StatusCode, StatusCodes}
 import thurloe.service.Notification
 
 import scala.concurrent.Future
@@ -36,13 +36,13 @@ trait SendGridDAO {
         }
       } getOrElse Future.successful(None)
 
-      val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions) {
+      val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions.toList) {
         case (key, id) => lookupPreferredEmail(id).map { email =>
           key -> email.value
         }
       }
 
-      val nameSubstitutionsFuture = Future.traverse(notification.nameLookupSubstitution) {
+      val nameSubstitutionsFuture = Future.traverse(notification.nameLookupSubstitution.toList) {
         case(key, id) => lookupUserName(id).map { name =>
           key -> name
         }

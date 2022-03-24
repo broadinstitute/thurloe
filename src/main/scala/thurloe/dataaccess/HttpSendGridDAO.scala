@@ -1,9 +1,9 @@
 package thurloe.dataaccess
 
+import akka.http.scaladsl.model.StatusCodes
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
-import spray.http.StatusCodes
 import thurloe.database.ThurloeDatabaseConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -21,7 +21,7 @@ class HttpSendGridDAO extends SendGridDAO {
     Future {
       val response = sendGrid.send(email)
       if(response.getStatus) response
-      else throw new NotificationException(StatusCodes.InternalServerError, "Unable to send notification", email.getTos, email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id"))
+      else throw new NotificationException(StatusCodes.InternalServerError, "Unable to send notification", email.getTos.toSeq, email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id"))
     }
   }
 
