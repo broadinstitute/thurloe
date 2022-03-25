@@ -2,24 +2,25 @@ package thurloe.notification
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import org.broadinstitute.dsde.rawls.google.GooglePubSubDAO.PubSubMessage
-import org.broadinstitute.dsde.rawls.google.MockGooglePubSubDAO
 import org.broadinstitute.dsde.rawls.model.Notifications.{NotificationFormat, WorkspaceAddedNotification, WorkspaceInvitedNotification, WorkspaceRemovedNotification}
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId, WorkspaceName}
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
+import org.broadinstitute.dsde.workbench.google.mock.MockGooglePubSubDAO
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpecLike
+import org.scalatest.matchers.should.Matchers
 import thurloe.dataaccess.{MockSendGridDAO, MockSendGridDAOWithException}
 import thurloe.database.ThurloeDatabaseConnector
-import thurloe.service.{KeyValuePair, UserKeyValuePair, UserKeyValuePairs}
+import thurloe.service.{KeyValuePair, UserKeyValuePairs}
 
-import scala.collection.convert.decorateAsScala._
 import scala.concurrent.Await
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
 
 /**
  * Created by dvoet on 12/12/16.
  */
-class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) with FlatSpecLike with Matchers with BeforeAndAfterAll {
+class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) with AnyFlatSpecLike with Matchers with BeforeAndAfterAll {
   def this() = this(ActorSystem("NotificationMonitorSpec"))
 
   override def beforeAll(): Unit = {
@@ -37,7 +38,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val workerCount = 10
     val sendGridDAO = new MockSendGridDAO
-    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceInvitedNotification" -> "valid_notification_id1"), "foo", ThurloeDatabaseConnector))
+    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceInvitedNotification" -> "valid_notification_id1"), "foo"))
 
     // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
@@ -59,7 +60,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val workerCount = 1
     val sendGridDAO = new MockSendGridDAO
-    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceRemovedNotification" -> "valid_notification_id1", "WorkspaceAddedNotification" -> "valid_notification_id1"), "foo", ThurloeDatabaseConnector))
+    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceRemovedNotification" -> "valid_notification_id1", "WorkspaceAddedNotification" -> "valid_notification_id1"), "foo"))
 
     // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
@@ -86,7 +87,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val workerCount = 1
     val sendGridDAO = new MockSendGridDAO
-    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceRemovedNotification" -> "valid_notification_id1", "WorkspaceAddedNotification" -> "valid_notification_id1"), "foo", ThurloeDatabaseConnector))
+    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceRemovedNotification" -> "valid_notification_id1", "WorkspaceAddedNotification" -> "valid_notification_id1"), "foo"))
 
     // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
@@ -113,7 +114,7 @@ class NotificationMonitorSpec(_system: ActorSystem) extends TestKit(_system) wit
 
     val workerCount = 1
     val sendGridDAO = new MockSendGridDAOWithException // throws an KeyNotFoundException when calling `sendNotifications`
-    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceRemovedNotification" -> "valid_notification_id1", "WorkspaceAddedNotification" -> "valid_notification_id1"), "foo", ThurloeDatabaseConnector))
+    system.actorOf(NotificationMonitorSupervisor.props(10 milliseconds, 0 milliseconds, pubsubDao, topic, "subscription", workerCount, sendGridDAO, Map("WorkspaceRemovedNotification" -> "valid_notification_id1", "WorkspaceAddedNotification" -> "valid_notification_id1"), "foo"))
 
     // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)

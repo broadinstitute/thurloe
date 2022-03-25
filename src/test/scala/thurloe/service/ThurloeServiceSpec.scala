@@ -1,12 +1,12 @@
 package thurloe.service
 
-import org.scalatest.FunSpec
-import spray.http.StatusCodes
-import spray.testkit.ScalatestRouteTest
-import spray.httpx.SprayJsonSupport._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.scalatest.funspec.AnyFunSpec
 import thurloe.database.{MockUnhealthyThurloeDatabaseConnector, ThurloeDatabaseConnector}
 
-class ThurloeServiceSpec extends FunSpec with ScalatestRouteTest {
+class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol._
 

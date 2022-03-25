@@ -23,6 +23,7 @@ libraryDependencies ++= Seq(
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV,
   "com.typesafe.akka" %% "akka-http" % akkaHttpV,
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
+  "com.typesafe.akka" %% "akka-stream" % akkaV,
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
   "com.typesafe" % "config" % "1.4.2",
@@ -34,6 +35,7 @@ libraryDependencies ++= Seq(
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
   "ch.qos.logback" % "logback-classic" % "1.2.10",
   //---------- Test libraries -------------------//
+  "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,

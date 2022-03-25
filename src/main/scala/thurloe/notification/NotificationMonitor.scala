@@ -32,7 +32,6 @@ object NotificationMonitorSupervisor {
 }
 
 class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
-  import context.system
 
   self ! Init
 
@@ -51,7 +50,7 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollInterv
 
   def startOne(): Unit = {
     logger.info("starting NotificationMonitorActor")
-    system.actorOf(NotificationMonitor.props(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl, ThurloeDatabaseConnector))
+    context.actorOf(NotificationMonitor.props(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl, ThurloeDatabaseConnector))
   }
 
   override val supervisorStrategy =
@@ -77,7 +76,6 @@ object NotificationMonitor {
 }
 
 class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String, dataAccess: DataAccess)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
-  import context.system
 
   self ! StartMonitorPass
 
@@ -97,7 +95,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
     case None =>
       // there was no message so wait and try again
       val nextTime = pollInterval + pollIntervalJitter * Math.random()
-      system.scheduler.scheduleOnce(nextTime.asInstanceOf[FiniteDuration], self, StartMonitorPass)
+      context.system.scheduler.scheduleOnce(nextTime.asInstanceOf[FiniteDuration], self, StartMonitorPass)
 
     case (responseOption: Option[_], message: PubSubMessage) =>
       pubSubDao.acknowledgeMessagesById(pubSubSubscriptionName, Seq(message.ackId)).map(_ => StartMonitorPass) pipeTo self

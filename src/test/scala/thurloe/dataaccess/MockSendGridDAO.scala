@@ -1,14 +1,14 @@
 package thurloe.dataaccess
 
-import java.util
-import java.util.Collections
+import akka.http.scaladsl.model.StatusCodes
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
-import spray.http.StatusCodes
 import thurloe.database.KeyNotFoundException
 import thurloe.service.Notification
 
+import java.util
+import java.util.Collections
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

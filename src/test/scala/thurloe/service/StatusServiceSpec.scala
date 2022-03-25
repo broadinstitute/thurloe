@@ -1,11 +1,11 @@
 package thurloe.service
 
-import org.scalatest.FunSpec
-import spray.http.StatusCodes
-import spray.testkit.ScalatestRouteTest
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.scalatest.funspec.AnyFunSpec
 import thurloe.database.{MockThurloeDatabaseConnector, MockUnhealthyThurloeDatabaseConnector}
 
-class StatusServicePositiveSpec extends FunSpec with ScalatestRouteTest {
+class StatusServicePositiveSpec extends AnyFunSpec with ScalatestRouteTest {
 
   def statusService = new StatusService {
     val dataAccess = MockThurloeDatabaseConnector
@@ -27,7 +27,7 @@ class StatusServicePositiveSpec extends FunSpec with ScalatestRouteTest {
   }
 }
 
-class StatusServiceNegativeSpec extends FunSpec with ScalatestRouteTest {
+class StatusServiceNegativeSpec extends AnyFunSpec with ScalatestRouteTest {
 
   def statusService = new StatusService {
     val dataAccess = MockUnhealthyThurloeDatabaseConnector

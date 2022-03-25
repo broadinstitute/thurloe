@@ -1,4 +1,5 @@
 package thurloe.database
+
 import thurloe.service.{ThurloeQuery, UserKeyValuePairs}
 
 import scala.concurrent.Future
