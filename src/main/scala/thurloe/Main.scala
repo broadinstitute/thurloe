@@ -56,7 +56,7 @@ object Main extends App {
   val routes = new ThurloeServiceActor()
 
   for {
-    binding <- Http().newServerAt("0.0.0.0", 8080).bind(routes.route).recover {
+    binding <- Http().newServerAt("0.0.0.0", 8000).bind(routes.route).recover {
       case t: Throwable =>
         system.log.error("FATAL - failure starting http server", t)
         throw t
