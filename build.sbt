@@ -1,3 +1,5 @@
+import sbtassembly.MergeStrategy
+
 name := "thurloe"
 
 version := "0.1"
@@ -82,4 +84,15 @@ scalacOptions ++= Seq(
   "-language:postfixOps"
 )
 
-assemblyJarName / assembly := file("thurloe-" + version.value + ".jar")
+assemblyJarName := "thurloe-" + version.value + ".jar"
+
+val customMergeStrategy: String => MergeStrategy = {
+  case PathList("org", "joda", "time", "base", "BaseDateTime.class") => MergeStrategy.first
+  case PathList("io", "sundr", _@_*) => MergeStrategy.first
+  case PathList("google", "protobuf", _@_*) => MergeStrategy.first
+  case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.first
+  case "module-info.class" => MergeStrategy.discard
+  case _ => MergeStrategy.deduplicate
+}
+
+assemblyMergeStrategy := customMergeStrategy
