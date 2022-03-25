@@ -1,8 +1,9 @@
 package thurloe.service
 
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.stream.scaladsl.Flow
+import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import thurloe.dataaccess.HttpSendGridDAO
 import thurloe.database.ThurloeDatabaseConnector
@@ -12,27 +13,20 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
 
   override val dataAccess = ThurloeDatabaseConnector
   override val sendGridDAO = new HttpSendGridDAO
-  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/3.25.0"
+  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/4.1.3"
 
   def route: Route =
     swaggerUiService ~ statusRoute ~ fireCloudProtectedRoutes
 
-  def withResourceFileContents(path: String)(innerRoute: String => Route): Route =
-    innerRoute {
-      val source = scala.io.Source.fromInputStream(getClass.getResourceAsStream(path))
-      try source.mkString
-      finally source.close()
-    }
-
   val swaggerUiService = {
     path("") {
       get {
-        serveIndex()
+        serveIndex
       }
     } ~
-      path("thurloe.yaml") {
+      path("api-docs.yaml") {
         get {
-          withResourceFileContents("swagger/thurloe.yaml")(apiDocs => complete(apiDocs))
+          getFromResource("swagger/api-docs.yaml")
         }
       } ~
       // We have to be explicit about the paths here since we're matching at the root URL and we don't
@@ -46,26 +40,25 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
       }
   }
 
-  private def serveIndex(): Route =
-    withResourceFileContents(swaggerUiPath + "/index.html") { indexHtml =>
-      complete {
-        val swaggerOptions =
-          """
-            |        validatorUrl: null,
-            |        apisSorter: "alpha",
-            |        operationsSorter: "alpha"
-          """.stripMargin
+  private val serveIndex: Route = {
+    val swaggerOptions =
+      s"""
+         |        validatorUrl: null,
+         |        apisSorter: "alpha",
+         |        operationsSorter: "alpha"
+      """.stripMargin
 
-        HttpEntity(
-          ContentTypes.`text/html(UTF-8)`,
-          indexHtml
-            .replace("""url: "https://petstore.swagger.io/v2/swagger.json"""", "url: '/thurloe.yaml'")
+    mapResponseEntity { entityFromJar =>
+      entityFromJar.transformDataBytes(Flow.fromFunction[ByteString, ByteString] { original: ByteString =>
+        ByteString(
+          original.utf8String
+            .replace("""url: "https://petstore.swagger.io/v2/swagger.json"""", "url: '/api-docs.yaml'")
             .replace("""layout: "StandaloneLayout"""", s"""layout: "StandaloneLayout", $swaggerOptions""")
             .replace(
               "window.ui = ui",
               s"""ui.initOAuth({
                  |        clientId: "${authConfig.getString("googleClientId")}",
-                 |        appName: "thurloe",
+                 |        appName: "Thurloe",
                  |        scopeSeparator: " ",
                  |        additionalQueryStringParams: {}
                  |      })
@@ -73,6 +66,9 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
                  |      """.stripMargin
             )
         )
-      }
+      })
+    } {
+      getFromResource(s"$swaggerUiPath/index.html")
     }
+  }
 }
