@@ -21,11 +21,21 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "4.1.3",
-  "org.broadinstitute.dsde" %%  "rawls-model" % rawlsModelV,
-  "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV,
+  "org.broadinstitute.dsde" %%  "rawls-model" % rawlsModelV
+    exclude("bio.terra", "workspace-manager-client"),
+
+  "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
+    exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
+    exclude("com.google.protobuf", "protobuf-java")
+    exclude("org.bouncycastle", "bcprov-jdk15on")
+    exclude("org.bouncycastle", "bcprov-ext-jdk15on")
+    exclude("org.bouncycastle", "bcutil-jdk15on")
+    exclude("org.bouncycastle", "bcpkix-jdk15on"),
   "com.typesafe.akka" %% "akka-http" % akkaHttpV,
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-  "com.typesafe.akka" %% "akka-stream" % akkaV,
+  "com.typesafe.akka" %% "akka-stream" % akkaV
+    exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
+    exclude("com.google.protobuf", "protobuf-java"),
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
   "com.typesafe" % "config" % "1.4.2",
@@ -87,11 +97,14 @@ scalacOptions ++= Seq(
 assemblyJarName := "thurloe-" + version.value + ".jar"
 
 val customMergeStrategy: String => MergeStrategy = {
-  case PathList("org", "joda", "time", "base", "BaseDateTime.class") => MergeStrategy.first
-  case PathList("io", "sundr", _@_*) => MergeStrategy.first
-  case PathList("google", "protobuf", _@_*) => MergeStrategy.first
-  case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.first
+  case PathList("META-INF", xs @ _*) =>
+    (xs map {_.toLowerCase}) match {
+      case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) => MergeStrategy.discard
+      case _ => MergeStrategy.last
+    }
+  case "NOTICE" => MergeStrategy.discard
   case "module-info.class" => MergeStrategy.discard
+  case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.deduplicate
 }
 
