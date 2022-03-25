@@ -26,7 +26,7 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
     } ~
       path("api-docs.yaml") {
         get {
-          getFromResource("swagger/api-docs.yaml")
+          getFromResource("swagger/thurloe.yaml")
         }
       } ~
       // We have to be explicit about the paths here since we're matching at the root URL and we don't
