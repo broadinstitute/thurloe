@@ -18,10 +18,11 @@ trait StatusService {
             case Success(_) =>
               complete(HttpEntity(ContentTypes.`application/json`, """{"status": "up"}"""))
             case Failure(e) =>
-              complete(StatusCodes.InternalServerError, HttpEntity(ContentTypes.`application/json`, s"""{"status": "down", "error": "${e.getMessage()}"}"""))
+              complete(StatusCodes.InternalServerError,
+                       HttpEntity(ContentTypes.`application/json`,
+                                  s"""{"status": "down", "error": "${e.getMessage()}"}"""))
           }
         }
       }
     }
 }
-

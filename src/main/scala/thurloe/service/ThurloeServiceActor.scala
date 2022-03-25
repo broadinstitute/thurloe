@@ -21,7 +21,8 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
   def withResourceFileContents(path: String)(innerRoute: String => Route): Route =
     innerRoute {
       val source = scala.io.Source.fromInputStream(getClass.getResourceAsStream(path))
-      try source.mkString finally source.close()
+      try source.mkString
+      finally source.close()
     }
 
   val swaggerUiService = {
@@ -32,9 +33,7 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
     } ~
       path("thurloe.yaml") {
         get {
-          withResourceFileContents("swagger/thurloe.yaml") { apiDocs =>
-            complete(apiDocs)
-          }
+          withResourceFileContents("swagger/thurloe.yaml")(apiDocs => complete(apiDocs))
         }
       } ~
       // We have to be explicit about the paths here since we're matching at the root URL and we don't
@@ -48,7 +47,7 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
       }
   }
 
-  private def serveIndex(): Route = {
+  private def serveIndex(): Route =
     withResourceFileContents(swaggerUiPath + "/index.html") { indexHtml =>
       complete {
         val swaggerOptions =
@@ -58,19 +57,23 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
             |        operationsSorter: "alpha"
           """.stripMargin
 
-        HttpEntity(ContentTypes.`text/html(UTF-8)`,
+        HttpEntity(
+          ContentTypes.`text/html(UTF-8)`,
           indexHtml
             .replace("""url: "https://petstore.swagger.io/v2/swagger.json"""", "url: '/thurloe.yaml'")
             .replace("""layout: "StandaloneLayout"""", s"""layout: "StandaloneLayout", $swaggerOptions""")
-            .replace("window.ui = ui", s"""ui.initOAuth({
-                                          |        clientId: "${authConfig.getString("googleClientId")}",
-                                          |        appName: "thurloe",
-                                          |        scopeSeparator: " ",
-                                          |        additionalQueryStringParams: {}
-                                          |      })
-                                          |      window.ui = ui
-                                          |      """.stripMargin))
+            .replace(
+              "window.ui = ui",
+              s"""ui.initOAuth({
+                 |        clientId: "${authConfig.getString("googleClientId")}",
+                 |        appName: "thurloe",
+                 |        scopeSeparator: " ",
+                 |        additionalQueryStringParams: {}
+                 |      })
+                 |      window.ui = ui
+                 |      """.stripMargin
+            )
+        )
       }
     }
-  }
 }

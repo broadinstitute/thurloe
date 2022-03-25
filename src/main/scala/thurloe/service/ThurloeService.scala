@@ -31,8 +31,8 @@ trait ThurloeService extends LazyLogging {
           case Failure(e) =>
             handleError(e)
         }
+      }
     }
-  }
 
   val queryRoute: Route =
     path(ThurloePrefix) {
@@ -60,12 +60,11 @@ trait ThurloeService extends LazyLogging {
       }
     }
 
-  private def handleError(e: Throwable) = {
+  private def handleError(e: Throwable) =
     extract(_.request) { request =>
       logger.error(s"error handling request: ${request.method} ${request.uri}", e)
       complete(StatusCodes.InternalServerError, s"$Interjection $e")
     }
-  }
 
   val getAllRoute: Route =
     path(ThurloePrefix / Segment) { (userId) =>
@@ -77,16 +76,14 @@ trait ThurloeService extends LazyLogging {
             handleError(e)
         }
       }
-  }
+    }
 
-  private def statusCode(setKeyResponse: DatabaseOperation) = {
+  private def statusCode(setKeyResponse: DatabaseOperation) =
     setKeyResponse match {
       case DatabaseOperation.Insert => StatusCodes.Created
       case DatabaseOperation.Upsert => StatusCodes.Created
-      case _ => StatusCodes.OK
+      case _                        => StatusCodes.OK
     }
-  }
-
 
   val setRoute: Route =
     path(ThurloePrefix) {

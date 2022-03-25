@@ -41,28 +41,33 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
   initWithLiquibase()
 
-  private def databaseValuesToUserKeyValuePair(id: Option[Int], userId: String, key: String, value: String, iv: String): Try[UserKeyValuePairWithId] = {
+  private def databaseValuesToUserKeyValuePair(id: Option[Int],
+                                               userId: String,
+                                               key: String,
+                                               value: String,
+                                               iv: String): Try[UserKeyValuePairWithId] =
     Aes256Cbc.decrypt(EncryptedBytes(value, iv), secretKey) map { decryptedBytes =>
       UserKeyValuePairWithId(id, UserKeyValuePair(userId, KeyValuePair(key, new String(decryptedBytes, "UTF-8"))))
     }
-  }
 
-  private def interpretDatabaseResponse(resultSequence: Seq[DatabaseRow]): Seq[Future[UserKeyValuePairWithId]] = {
+  private def interpretDatabaseResponse(resultSequence: Seq[DatabaseRow]): Seq[Future[UserKeyValuePairWithId]] =
     resultSequence map {
-      case DatabaseRow(id, userId, key, value, iv) => Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
+      case DatabaseRow(id, userId, key, value, iv) =>
+        Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
     }
-  }
 
   private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[UserKeyValuePairWithId]] = {
     val query = keyValuePairTable.filter(constraint)
 
     for {
       responseSequence <- database.run(query.result.transactionally)
-      result <- Future.sequence(interpretDatabaseResponse(responseSequence map { case (id, userId, key, value, iv) => DatabaseRow(id,userId,key,value,iv) }))
+      result <- Future.sequence(interpretDatabaseResponse(responseSequence map {
+        case (id, userId, key, value, iv) => DatabaseRow(id, userId, key, value, iv)
+      }))
     } yield result
   }
 
-  def lookupIncludingDatabaseId(userId: String, key: String): Future[UserKeyValuePairWithId] = {
+  def lookupIncludingDatabaseId(userId: String, key: String): Future[UserKeyValuePairWithId] =
     for {
       results <- lookupWithConstraint(x => x.key === key && x.userId === userId)
       result <- if (results.isEmpty) {
@@ -73,15 +78,15 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         Future.failed(InvalidDatabaseStateException(s"Too many results: ${results.size}"))
       }
     } yield result
+
+  def lookup(userId: String, key: String): Future[UserKeyValuePair] = lookupIncludingDatabaseId(userId, key) map {
+    _.userKeyValuePair
   }
 
-  def lookup(userId: String, key: String): Future[UserKeyValuePair] = lookupIncludingDatabaseId(userId, key) map { _.userKeyValuePair }
-
-  def lookup(userId: String): Future[UserKeyValuePairs] = {
+  def lookup(userId: String): Future[UserKeyValuePairs] =
     for {
       results <- lookupWithConstraint(x => x.userId === userId)
     } yield UserKeyValuePairs(userId, results map { _.userKeyValuePair.keyValuePair })
-  }
 
   def lookup(queryParameters: ThurloeQuery): Future[Seq[UserKeyValuePair]] = {
     def userIdAndKeyConstraint(queryParameters: ThurloeQuery) = (x: DbKeyValuePair) => {
@@ -104,27 +109,32 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     for {
       filteredOnUserAndKey <- lookupWithConstraint(userIdAndKeyConstraint(queryParameters))
       // We have to filter out values outside of the Slick access because the values are encrypted until now.
-      valueFilter = (userKeyValuePair: UserKeyValuePairWithId) => queryParameters.value map { values =>
-        val valueFilters = values map { value => value.equals(userKeyValuePair.userKeyValuePair.keyValuePair.value) }
-        valueFilters.reduceLeft(_ || _)
-      } getOrElse true
+      valueFilter = (userKeyValuePair: UserKeyValuePairWithId) =>
+        queryParameters.value map { values =>
+          val valueFilters = values map { value => value.equals(userKeyValuePair.userKeyValuePair.keyValuePair.value) }
+          valueFilters.reduceLeft(_ || _)
+        } getOrElse true
       results = filteredOnUserAndKey filter valueFilter
 
     } yield results map { _.userKeyValuePair }
   }
 
   import thurloe.database.DatabaseOperation.DatabaseOperation
+
   /**
    * Writes the user key value pair to the database, with the exception of the 'value' which uses
    * the encrypted version instead. The IV also comes from the encryption result.
    *
    * @return The type of operation which was carried out (as a Future)
    */
-  private def databaseWrite(userKeyValuePair: UserKeyValuePair, encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+  private def databaseWrite(userKeyValuePair: UserKeyValuePair,
+                            encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
     val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
-    lookupExists flatMap { existingKvp => update(existingKvp, userKeyValuePair, encryptedValue) } recoverWith {
+    lookupExists flatMap { existingKvp =>
+      update(existingKvp, userKeyValuePair, encryptedValue)
+    } recoverWith {
       case _: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
-      case e => Future.failed(e)
+      case e                       => Future.failed(e)
     }
   }
 
@@ -136,7 +146,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         userKeyValuePair.keyValuePair.key,
         encryptedValue.base64CipherText,
         encryptedValue.base64Iv
-      )
+    )
 
     for {
       affectedRowsCount <- database.run(action.transactionally)
@@ -144,43 +154,46 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     } yield x
   }
 
-  private def update(oldKeyValuePair: UserKeyValuePairWithId, userKeyValuePair: UserKeyValuePair, newEncryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+  private def update(oldKeyValuePair: UserKeyValuePairWithId,
+                     userKeyValuePair: UserKeyValuePair,
+                     newEncryptedValue: EncryptedBytes): Future[DatabaseOperation] =
     // We've just looked up and found an entry, so this ID should never be None. However, belt and braces...
     oldKeyValuePair.id match {
-      case None => Future.failed(new KeyNotFoundException(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key))
+      case None        => Future.failed(new KeyNotFoundException(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key))
       case Some(rowId) =>
         // NB: Using sqlu"..." strings does clever DB magic to turn this into a proper parameterised DB command to avoid insertion attacks.
-        def sqlUpdateCommand: DBIO[Int] = sqlu"UPDATE KEY_VALUE_PAIR SET VALUE=${newEncryptedValue.base64CipherText}, IV=${newEncryptedValue.base64Iv} WHERE KVP_ID=$rowId"
+        def sqlUpdateCommand: DBIO[Int] =
+          sqlu"UPDATE KEY_VALUE_PAIR SET VALUE=${newEncryptedValue.base64CipherText}, IV=${newEncryptedValue.base64Iv} WHERE KVP_ID=$rowId"
 
         for {
           affectedRowsCount <- database.run(sqlUpdateCommand.transactionally)
           x <- handleDatabaseWriteResponse(affectedRowsCount, DatabaseOperation.Update)
         } yield x
     }
-  }
 
-  private def handleDatabaseWriteResponse(affectedRowsCount: Int, op: DatabaseOperation): Future[DatabaseOperation] = {
+  private def handleDatabaseWriteResponse(affectedRowsCount: Int, op: DatabaseOperation): Future[DatabaseOperation] =
     if (affectedRowsCount == 1) {
       Future.successful(op)
     } else {
-      Future.failed(InvalidDatabaseStateException(
-        s"Modified $affectedRowsCount rows in database (expected to modify 1)"))
+      Future.failed(
+        InvalidDatabaseStateException(s"Modified $affectedRowsCount rows in database (expected to modify 1)")
+      )
     }
-  }
 
-  def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] = {
-    Future.sequence(userKeyValuePairs.toKeyValueSeq.map { userKeyValuePair =>
-      Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
-        case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
-        case Failure(t) => Future.failed(t)
+  def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
+    Future
+      .sequence(userKeyValuePairs.toKeyValueSeq.map { userKeyValuePair =>
+        Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
+          case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
+          case Failure(t)              => Future.failed(t)
+        }
+      })
+      .map { operations =>
+        operations.distinct match {
+          case Seq(op) => op
+          case _       => DatabaseOperation.Upsert
+        }
       }
-    }).map { operations =>
-      operations.distinct match {
-        case Seq(op) => op
-        case _ => DatabaseOperation.Upsert
-      }
-    }
-  }
 
   def delete(userId: String, key: String): Future[Unit] = {
     val action = keyValuePairTable.filter(x => x.key === key && x.userId === userId).delete

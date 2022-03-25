@@ -23,7 +23,7 @@ class FireCloudProtectedServiceSpec extends AnyFunSpec with ScalatestRouteTest {
   describe("The Thurloe Service") {
 
     it("should return a valid response with a correct header") {
-      Get(uriPrefix+"?userId=fake") ~> addHeader(RawHeader(fcHeader, fcId)) ~> routes ~> check {
+      Get(uriPrefix + "?userId=fake") ~> addHeader(RawHeader(fcHeader, fcId)) ~> routes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
@@ -31,7 +31,7 @@ class FireCloudProtectedServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("should return a BadRequest response that indicates an incorrect header value") {
-      Get(uriPrefix+"?userId=fake") ~> addHeader(RawHeader(fcHeader, "invalid")) ~> routes ~> check {
+      Get(uriPrefix + "?userId=fake") ~> addHeader(RawHeader(fcHeader, "invalid")) ~> routes ~> check {
         assert(responseAs[String].contains("Invalid 'X-FireCloud-Id' Header Provided"))
         assertResult(StatusCodes.BadRequest) {
           status
@@ -40,7 +40,7 @@ class FireCloudProtectedServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("should return a BadRequest response that indicates a missing header") {
-      Get(uriPrefix+"?userId=fake") ~> routes ~> check {
+      Get(uriPrefix + "?userId=fake") ~> routes ~> check {
         assert(responseAs[String].contains("Request is missing required HTTP header 'X-FireCloud-Id'"))
         assertResult(StatusCodes.BadRequest) {
           status

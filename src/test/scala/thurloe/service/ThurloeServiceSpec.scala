@@ -154,9 +154,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       Get(s"$uriPrefix?userId=$user1") ~> thurloeService.keyValuePairRoutes ~> check {
         val r: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]
         assert(r.size == 2)
-        r foreach { x =>
-          assert(x.userId == user1)
-        }
+        r foreach { x => assert(x.userId == user1) }
         assertResult(StatusCodes.OK) {
           status
         }
@@ -175,9 +173,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       Get(s"$uriPrefix?userId=$user1&userId=$user2") ~> thurloeService.keyValuePairRoutes ~> check {
         val r: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]
         assert(r.size == 4)
-        r foreach { x =>
-          assert(x.userId == user1 || x.userId == user2)
-        }
+        r foreach { x => assert(x.userId == user1 || x.userId == user2) }
         assertResult(StatusCodes.OK) {
           status
         }
@@ -188,9 +184,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       Get(s"$uriPrefix?key=$key1") ~> thurloeService.keyValuePairRoutes ~> check {
         val r: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]
         assert(r.size == 2)
-        r foreach { x =>
-          assert(x.keyValuePair.key == key1)
-        }
+        r foreach { x => assert(x.keyValuePair.key == key1) }
         assertResult(StatusCodes.OK) {
           status
         }
@@ -201,9 +195,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       Get(s"$uriPrefix?key=$key1&key=$key2") ~> thurloeService.keyValuePairRoutes ~> check {
         val r: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]
         assert(r.size == 4)
-        r foreach { x =>
-          assert(x.keyValuePair.key == key1 || x.keyValuePair.key == key2)
-        }
+        r foreach { x => assert(x.keyValuePair.key == key1 || x.keyValuePair.key == key2) }
         assertResult(StatusCodes.OK) {
           status
         }
@@ -214,9 +206,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       Get(s"$uriPrefix?value=$value1") ~> thurloeService.keyValuePairRoutes ~> check {
         val response: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]
         assert(response.size == 2)
-        response foreach { x =>
-          assert(x.keyValuePair.value == value1)
-        }
+        response foreach { x => assert(x.keyValuePair.value == value1) }
         assertResult(StatusCodes.OK) {
           status
         }
@@ -227,9 +217,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       Get(s"$uriPrefix?value=$value1&value=$value2") ~> thurloeService.keyValuePairRoutes ~> check {
         val response: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]
         assert(response.size == 4)
-        response foreach { x =>
-          assert(x.keyValuePair.value == value1 || x.keyValuePair.value == value2)
-        }
+        response foreach { x => assert(x.keyValuePair.value == value1 || x.keyValuePair.value == value2) }
         assertResult(StatusCodes.OK) {
           status
         }
@@ -240,9 +228,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       Get(s"$uriPrefix?userId=$user1&key=$key1") ~> thurloeService.keyValuePairRoutes ~> check {
         val response: Seq[UserKeyValuePair] = responseAs[Seq[UserKeyValuePair]]
         assert(response.size == 1)
-        response foreach { x =>
-          assert(x.userId == user1 && x.keyValuePair.key == key1)
-        }
+        response foreach { x => assert(x.userId == user1 && x.keyValuePair.key == key1) }
         assertResult(StatusCodes.OK) {
           status
         }

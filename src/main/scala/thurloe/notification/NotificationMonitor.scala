@@ -26,31 +26,66 @@ object NotificationMonitorSupervisor {
   case object Init extends NotificationMonitorSupervisorMessage
   case object Start extends NotificationMonitorSupervisorMessage
 
-  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext): Props = {
-    Props(new NotificationMonitorSupervisor(pollInterval, pollIntervalJitter, pubSubDao, pubSubTopicName, pubSubSubscriptionName, workerCount, sendGridDAO, templateIdsByType, fireCloudPortalUrl))
-  }
+  def props(pollInterval: FiniteDuration,
+            pollIntervalJitter: FiniteDuration,
+            pubSubDao: GooglePubSubDAO,
+            pubSubTopicName: String,
+            pubSubSubscriptionName: String,
+            workerCount: Int,
+            sendGridDAO: SendGridDAO,
+            templateIdsByType: Map[String, String],
+            fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext): Props =
+    Props(
+      new NotificationMonitorSupervisor(pollInterval,
+                                        pollIntervalJitter,
+                                        pubSubDao,
+                                        pubSubTopicName,
+                                        pubSubSubscriptionName,
+                                        workerCount,
+                                        sendGridDAO,
+                                        templateIdsByType,
+                                        fireCloudPortalUrl)
+    )
 }
 
-class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubTopicName: String, pubSubSubscriptionName: String, workerCount: Int, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
+class NotificationMonitorSupervisor(val pollInterval: FiniteDuration,
+                                    pollIntervalJitter: FiniteDuration,
+                                    pubSubDao: GooglePubSubDAO,
+                                    pubSubTopicName: String,
+                                    pubSubSubscriptionName: String,
+                                    workerCount: Int,
+                                    sendGridDAO: SendGridDAO,
+                                    templateIdsByType: Map[String, String],
+                                    fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext)
+    extends Actor
+    with LazyLogging {
 
   self ! Init
 
   override def receive = {
-    case Init => init pipeTo self
-    case Start => for(_ <- 1 to workerCount) startOne()
+    case Init              => init pipeTo self
+    case Start             => for (_ <- 1 to workerCount) startOne()
     case Status.Failure(t) => logger.error("error initializing notification monitor", t)
   }
 
-  def init = {
+  def init =
     for {
       _ <- pubSubDao.createTopic(pubSubTopicName)
       _ <- pubSubDao.createSubscription(pubSubTopicName, pubSubSubscriptionName)
     } yield Start
-  }
 
   def startOne(): Unit = {
     logger.info("starting NotificationMonitorActor")
-    context.actorOf(NotificationMonitor.props(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl, ThurloeDatabaseConnector))
+    context.actorOf(
+      NotificationMonitor.props(pollInterval,
+                                pollIntervalJitter,
+                                pubSubDao,
+                                pubSubSubscriptionName,
+                                sendGridDAO,
+                                templateIdsByType,
+                                fireCloudPortalUrl,
+                                ThurloeDatabaseConnector)
+    )
   }
 
   override val supervisorStrategy =
@@ -68,14 +103,38 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration, pollInterv
 object NotificationMonitor {
   case object StartMonitorPass
 
-  def props(pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String, dataAccess: DataAccess)(implicit executionContext: ExecutionContext): Props = {
-    Props(new NotificationMonitorActor(pollInterval, pollIntervalJitter, pubSubDao, pubSubSubscriptionName, sendGridDAO, templateIdsByType, fireCloudPortalUrl, dataAccess))
-  }
+  def props(pollInterval: FiniteDuration,
+            pollIntervalJitter: FiniteDuration,
+            pubSubDao: GooglePubSubDAO,
+            pubSubSubscriptionName: String,
+            sendGridDAO: SendGridDAO,
+            templateIdsByType: Map[String, String],
+            fireCloudPortalUrl: String,
+            dataAccess: DataAccess)(implicit executionContext: ExecutionContext): Props =
+    Props(
+      new NotificationMonitorActor(pollInterval,
+                                   pollIntervalJitter,
+                                   pubSubDao,
+                                   pubSubSubscriptionName,
+                                   sendGridDAO,
+                                   templateIdsByType,
+                                   fireCloudPortalUrl,
+                                   dataAccess)
+    )
 
   val notificationsOffKey = "notifications.off"
 }
 
-class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJitter: FiniteDuration, pubSubDao: GooglePubSubDAO, pubSubSubscriptionName: String, sendGridDAO: SendGridDAO, templateIdsByType: Map[String, String], fireCloudPortalUrl: String, dataAccess: DataAccess)(implicit executionContext: ExecutionContext) extends Actor with LazyLogging {
+class NotificationMonitorActor(val pollInterval: FiniteDuration,
+                               pollIntervalJitter: FiniteDuration,
+                               pubSubDao: GooglePubSubDAO,
+                               pubSubSubscriptionName: String,
+                               sendGridDAO: SendGridDAO,
+                               templateIdsByType: Map[String, String],
+                               fireCloudPortalUrl: String,
+                               dataAccess: DataAccess)(implicit executionContext: ExecutionContext)
+    extends Actor
+    with LazyLogging {
 
   self ! StartMonitorPass
 
@@ -98,9 +157,14 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
       context.system.scheduler.scheduleOnce(nextTime.asInstanceOf[FiniteDuration], self, StartMonitorPass)
 
     case (responseOption: Option[_], message: PubSubMessage) =>
-      pubSubDao.acknowledgeMessagesById(pubSubSubscriptionName, Seq(message.ackId)).map(_ => StartMonitorPass) pipeTo self
+      pubSubDao
+        .acknowledgeMessagesById(pubSubSubscriptionName, Seq(message.ackId))
+        .map(_ => StartMonitorPass) pipeTo self
       responseOption match {
-        case Some(response: Response) if !response.getStatus => logger.error(s"could not send notification ${message.contents}, sendgrid code: ${response.getCode}, sendgrid message: ${response.getMessage}")
+        case Some(response: Response) if !response.getStatus =>
+          logger.error(
+            s"could not send notification ${message.contents}, sendgrid code: ${response.getCode}, sendgrid message: ${response.getMessage}"
+          )
         case _ => // log nothing
       }
 
@@ -126,79 +190,95 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration, pollIntervalJit
       } else {
         Future.successful(None)
       }
-    } map { responseOption =>
-      (responseOption, message)
-    }
+    } map { responseOption => (responseOption, message) }
   }
 
-  def lookupShouldNotify(notification: Notification): Future[Boolean] = {
+  def lookupShouldNotify(notification: Notification): Future[Boolean] =
     notification match {
       case UserNotification(recipientId) =>
         booleanLookup(recipientId, NotificationMonitor.notificationsOffKey, false) flatMap {
           case false => booleanLookup(recipientId, notification.key, true)
-          case true => Future.successful(false) // notifications off for this user
+          case true  => Future.successful(false) // notifications off for this user
         }
 
       case _ => Future.successful(true)
     }
-  }
 
-  def booleanLookup(userId: RawlsUserSubjectId, key: String, defaultValue: Boolean): Future[Boolean] = {
-    dataAccess.lookup(userId.value, key).map { kvp =>
-      kvp.keyValuePair.value.toBoolean
-    }.recover {
-      case _: KeyNotFoundException => defaultValue
+  def booleanLookup(userId: RawlsUserSubjectId, key: String, defaultValue: Boolean): Future[Boolean] =
+    dataAccess.lookup(userId.value, key).map(kvp => kvp.keyValuePair.value.toBoolean).recover {
+      case _: KeyNotFoundException     => defaultValue
       case _: IllegalArgumentException => defaultValue
     }
-  }
 
-  def workspacePortalUrl(workspaceName: WorkspaceName): String = s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
+  def workspacePortalUrl(workspaceName: WorkspaceName): String =
+    s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
   def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
   def bucketUrl(bucketName: String): String = s"https://console.cloud.google.com/storage/browser/${bucketName}"
 
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
     notification match {
-      case ActivationNotification(recipentUserId) => thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
+      case ActivationNotification(recipentUserId) =>
+        thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
 
       case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
-        thurloe.service.Notification(Option(recipientUserId), None, Option(Set(workspaceOwnerId)), templateId,
+        thurloe.service.Notification(
+          Option(recipientUserId),
+          None,
+          Option(Set(workspaceOwnerId)),
+          templateId,
           Map("accessLevel" -> accessLevel,
-            "namespace" -> workspaceName.namespace,
-            "name" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName)),
+              "namespace" -> workspaceName.namespace,
+              "name" -> workspaceName.name,
+              "wsUrl" -> workspacePortalUrl(workspaceName)),
           Map("originEmail" -> workspaceOwnerId),
-          Map("userNameFL" -> workspaceOwnerId))
+          Map("userNameFL" -> workspaceOwnerId)
+        )
 
       case WorkspaceInvitedNotification(recipientUserEmail, requesterId, workspaceName, bucketName) =>
-        thurloe.service.Notification(None, Option(recipientUserEmail), Option(Set(requesterId)), templateId,
+        thurloe.service.Notification(
+          None,
+          Option(recipientUserEmail),
+          Option(Set(requesterId)),
+          templateId,
           Map("wsName" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName),
-            "bucketName" -> bucketName,
-            "bucketUrl" -> bucketUrl(bucketName)),
+              "wsUrl" -> workspacePortalUrl(workspaceName),
+              "bucketName" -> bucketName,
+              "bucketUrl" -> bucketUrl(bucketName)),
           Map("originEmail" -> requesterId),
-          Map("userNameFL" -> requesterId))
+          Map("userNameFL" -> requesterId)
+        )
 
       case WorkspaceRemovedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
-        thurloe.service.Notification(Option(recipientUserId), None, Option(Set(workspaceOwnerId)), templateId,
+        thurloe.service.Notification(
+          Option(recipientUserId),
+          None,
+          Option(Set(workspaceOwnerId)),
+          templateId,
           Map("accessLevel" -> accessLevel,
-            "namespace" -> workspaceName.namespace,
-            "name" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName)),
+              "namespace" -> workspaceName.namespace,
+              "name" -> workspaceName.name,
+              "wsUrl" -> workspacePortalUrl(workspaceName)),
           Map("originEmail" -> workspaceOwnerId),
-          Map("userNameFL" -> workspaceOwnerId))
+          Map("userNameFL" -> workspaceOwnerId)
+        )
 
       case WorkspaceChangedNotification(recipientUserId, workspaceName) =>
-        thurloe.service.Notification(Option(recipientUserId), None, None, templateId,
-          Map("wsName" -> workspaceName.name,
-            "wsUrl" -> workspacePortalUrl(workspaceName)),
-          Map.empty,
-          Map.empty)
+        thurloe.service.Notification(Option(recipientUserId),
+                                     None,
+                                     None,
+                                     templateId,
+                                     Map("wsName" -> workspaceName.name, "wsUrl" -> workspacePortalUrl(workspaceName)),
+                                     Map.empty,
+                                     Map.empty)
 
       case GroupAccessRequestNotification(recipientUserId, groupName, replyTos, requesterId) =>
-        thurloe.service.Notification(Option(recipientUserId), None, Option(replyTos), templateId,
-          Map("groupName" -> groupName,
-            "groupUrl" -> groupManagementUrl(groupName)),
+        thurloe.service.Notification(
+          Option(recipientUserId),
+          None,
+          Option(replyTos),
+          templateId,
+          Map("groupName" -> groupName, "groupUrl" -> groupManagementUrl(groupName)),
           Map("originEmail" -> requesterId),
           Map("userNameFL" -> requesterId)
         )

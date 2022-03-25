@@ -24,7 +24,8 @@ object Main extends App {
 
   val jsonFactory = JacksonFactory.getDefaultInstance
 
-  val pem = GoogleCredentialModes.Pem(WorkbenchEmail(config.getString("clientEmail")), new File(config.getString("pathToPem")))
+  val pem =
+    GoogleCredentialModes.Pem(WorkbenchEmail(config.getString("clientEmail")), new File(config.getString("pathToPem")))
   val pubSubDAO = new HttpGooglePubSubDAO(
     gcsConfig.getString("appName"),
     pem,
@@ -32,17 +33,24 @@ object Main extends App {
     gcsConfig.getString("serviceProject")
   )
 
-  system.actorOf(NotificationMonitorSupervisor.props(
-    toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
-    toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollIntervalJitter")),
-    pubSubDAO,
-    gcsConfig.getString("notificationMonitor.topicName"),
-    gcsConfig.getString("notificationMonitor.subscriptionName"),
-    gcsConfig.getInt("notificationMonitor.workerCount"),
-    new HttpSendGridDAO,
-    config.getConfig("notification.templateIds").entrySet().asScala.map(entry => entry.getKey -> entry.getValue.unwrapped().toString).toMap,
-    config.getString("notification.fireCloudPortalUrl")
-  ))
+  system.actorOf(
+    NotificationMonitorSupervisor.props(
+      toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
+      toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollIntervalJitter")),
+      pubSubDAO,
+      gcsConfig.getString("notificationMonitor.topicName"),
+      gcsConfig.getString("notificationMonitor.subscriptionName"),
+      gcsConfig.getInt("notificationMonitor.workerCount"),
+      new HttpSendGridDAO,
+      config
+        .getConfig("notification.templateIds")
+        .entrySet()
+        .asScala
+        .map(entry => entry.getKey -> entry.getValue.unwrapped().toString)
+        .toMap,
+      config.getString("notification.fireCloudPortalUrl")
+    )
+  )
 
   val routes = new ThurloeServiceActor()
 

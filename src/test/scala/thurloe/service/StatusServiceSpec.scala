@@ -13,8 +13,8 @@ class StatusServicePositiveSpec extends AnyFunSpec with ScalatestRouteTest {
   }
 
   describe("A healthy Thurloe's status service") {
-    it ("should return successful status code, without requiring authentication") {
-      Get(s"/status") ~> statusService.statusRoute~> check {
+    it("should return successful status code, without requiring authentication") {
+      Get(s"/status") ~> statusService.statusRoute ~> check {
         assertResult(StatusCodes.OK) {
           status
         }

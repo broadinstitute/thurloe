@@ -18,32 +18,32 @@ object ThurloeQuery {
   private val UnrecognizedParams = "unrecogniZed"
   private val AllowedKeys = Seq(UserIdParam, KeyParam, ValueParam)
 
-  private def getKeys(maybeStrings: Option[Seq[(String, String)]]): Option[Seq[String]] = {
+  private def getKeys(maybeStrings: Option[Seq[(String, String)]]): Option[Seq[String]] =
     maybeStrings map { sequence => sequence map { case (key, _) => key } }
-  }
 
-  private def getValues(maybeStrings: Option[Seq[(String, String)]]): Option[Seq[String]] = {
+  private def getValues(maybeStrings: Option[Seq[(String, String)]]): Option[Seq[String]] =
     maybeStrings map { sequence => sequence map { case (_, value) => value } }
-  }
 
-  private def validKeyOrUnrecognized(maybeKey: String): String = {
-    AllowedKeys find { allowedKey => allowedKey.equalsIgnoreCase(maybeKey) } getOrElse UnrecognizedParams
-  }
+  private def validKeyOrUnrecognized(maybeKey: String): String =
+    AllowedKeys find { allowedKey =>
+      allowedKey.equalsIgnoreCase(maybeKey)
+    } getOrElse UnrecognizedParams
 
   def apply(params: Seq[(String, String)]): ThurloeQuery = {
-    val asMap = params groupBy {case (k,_) => validKeyOrUnrecognized(k) }
-    ThurloeQuery(
-      getValues(asMap.get(UserIdParam)),
-      getValues(asMap.get(KeyParam)),
-      getValues(asMap.get(ValueParam)),
-      getKeys(asMap.get(UnrecognizedParams)))
+    val asMap = params groupBy { case (k, _) => validKeyOrUnrecognized(k) }
+    ThurloeQuery(getValues(asMap.get(UserIdParam)),
+                 getValues(asMap.get(KeyParam)),
+                 getValues(asMap.get(ValueParam)),
+                 getKeys(asMap.get(UnrecognizedParams)))
   }
 }
 
-final case class ThurloeQuery(userId: Option[Seq[String]], key: Option[Seq[String]], value: Option[Seq[String]], unrecognizedFilters: Option[Seq[String]]) {
-  def isEmpty: Boolean = {
-     userId.isEmpty && key.isEmpty && value.isEmpty
-  }
+final case class ThurloeQuery(userId: Option[Seq[String]],
+                              key: Option[Seq[String]],
+                              value: Option[Seq[String]],
+                              unrecognizedFilters: Option[Seq[String]]) {
+  def isEmpty: Boolean =
+    userId.isEmpty && key.isEmpty && value.isEmpty
 }
 
 case class KeyValuePair(key: String, value: String)
@@ -53,4 +53,10 @@ case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
 case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair]) {
   def toKeyValueSeq: Seq[UserKeyValuePair] = keyValuePairs.map(UserKeyValuePair(userId, _))
 }
-case class Notification(userId: Option[RawlsUserSubjectId], userEmail: Option[RawlsUserEmail], replyTos: Option[Set[RawlsUserSubjectId]], notificationId: String, substitutions: Map[String, String], emailLookupSubstitutions: Map[String, RawlsUserSubjectId], nameLookupSubstitution: Map[String, RawlsUserSubjectId])
+case class Notification(userId: Option[RawlsUserSubjectId],
+                        userEmail: Option[RawlsUserEmail],
+                        replyTos: Option[Set[RawlsUserSubjectId]],
+                        notificationId: String,
+                        substitutions: Map[String, String],
+                        emailLookupSubstitutions: Map[String, RawlsUserSubjectId],
+                        nameLookupSubstitution: Map[String, RawlsUserSubjectId])

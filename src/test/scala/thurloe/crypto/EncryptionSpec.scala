@@ -34,7 +34,7 @@ class EncryptionSpec extends AnyFunSpec {
 
       Aes256Cbc.encrypt(plaintextBytes, badSecretKey) match {
         case Failure(_: IllegalArgumentException) => // Expected result
-        case x => fail(s"Expected IllegalArgumentException but got $x")
+        case x                                    => fail(s"Expected IllegalArgumentException but got $x")
       }
     }
 
@@ -44,7 +44,7 @@ class EncryptionSpec extends AnyFunSpec {
 
       Aes256Cbc.decrypt(EncryptedBytes(cipherTextBytes, invalidIv), secretKey) match {
         case Failure(_: IllegalArgumentException) => // Expected result
-        case x => fail(s"Expected IllegalArgumentException but got $x")
+        case x                                    => fail(s"Expected IllegalArgumentException but got $x")
       }
     }
   }

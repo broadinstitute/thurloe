@@ -9,7 +9,6 @@ import thurloe.service.ApiDataModelsJsonProtocol._
 
 import scala.util.{Failure, Success}
 
-
 trait NotificationService {
   val sendGridDAO: SendGridDAO
 
@@ -25,9 +24,9 @@ trait NotificationService {
             case Failure(err) =>
               complete(StatusCodes.InternalServerError, s"Unable to send notifications: ${err.getMessage}")
           }
+        }
       }
     }
-  }
 
   val notificationRoutes = postRoute
 }
