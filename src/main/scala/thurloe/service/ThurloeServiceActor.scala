@@ -15,8 +15,7 @@ class ThurloeServiceActor extends FireCloudProtectedServices with StatusService 
   protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/3.25.0"
 
   def route: Route =
-    swaggerUiService ~
-      fireCloudProtectedRoutes ~ statusRoute
+    swaggerUiService ~ statusRoute ~ fireCloudProtectedRoutes
 
   def withResourceFileContents(path: String)(innerRoute: String => Route): Route =
     innerRoute {
