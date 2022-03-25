@@ -22,8 +22,8 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "4.1.3",
   "org.broadinstitute.dsde" %%  "rawls-model" % rawlsModelV
-    exclude("bio.terra", "workspace-manager-client"),
-
+    exclude("bio.terra", "workspace-manager-client")
+    exclude("com.google.api-client", "google-api-client"),
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
     exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
     exclude("com.google.protobuf", "protobuf-java")
@@ -97,10 +97,12 @@ scalacOptions ++= Seq(
 assemblyJarName := "thurloe-" + version.value + ".jar"
 
 val customMergeStrategy: String => MergeStrategy = {
-  case PathList("META-INF", xs @ _*) =>
-    (xs map {_.toLowerCase}) match {
-      case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) => MergeStrategy.discard
-      case _ => MergeStrategy.last
+  case PathList("META-INF", p @ _*) =>
+    p.map(_.toLowerCase) match {
+      case p :: Nil if p == "manifest.mf" || p == "index.list" || p == "dependencies" || p.startsWith("license") || p.startsWith("notice") =>
+        MergeStrategy.discard
+      case p :: Nil if p.endsWith(".rsa") || p.endsWith(".sf") || p.endsWith(".dsa") => MergeStrategy.discard
+      case _ => MergeStrategy.first
     }
   case "NOTICE" => MergeStrategy.discard
   case "module-info.class" => MergeStrategy.discard
