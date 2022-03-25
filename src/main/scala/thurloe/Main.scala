@@ -25,7 +25,8 @@ object Main extends App {
   val jsonFactory = JacksonFactory.getDefaultInstance
 
   val pem =
-    GoogleCredentialModes.Pem(WorkbenchEmail(config.getString("clientEmail")), new File(config.getString("pathToPem")))
+    GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
+                              new File(gcsConfig.getString("pathToPem")))
   val pubSubDAO = new HttpGooglePubSubDAO(
     gcsConfig.getString("appName"),
     pem,
