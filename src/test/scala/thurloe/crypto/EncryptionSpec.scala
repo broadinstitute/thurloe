@@ -1,11 +1,11 @@
 package thurloe.crypto
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
 import scala.util.{Failure, Success}
 
-class EncryptionSpec extends FunSpec{
+class EncryptionSpec extends AnyFunSpec {
 
   val cryptoConfig = ConfigFactory.load().getConfig("crypto")
   val secretKey = SecretKey(cryptoConfig.getString("key"))
@@ -33,8 +33,8 @@ class EncryptionSpec extends FunSpec{
       val plaintextBytes = "Doesn't even matter what this string is".getBytes("UTF-8")
 
       Aes256Cbc.encrypt(plaintextBytes, badSecretKey) match {
-        case Failure(e: IllegalArgumentException) => // Expected result
-        case x => fail(s"Expected IllegalArgumentException but got $x")
+        case Failure(_: IllegalArgumentException) => // Expected result
+        case x                                    => fail(s"Expected IllegalArgumentException but got $x")
       }
     }
 
@@ -43,8 +43,8 @@ class EncryptionSpec extends FunSpec{
       val invalidIv = "Bad length".getBytes("UTF-8")
 
       Aes256Cbc.decrypt(EncryptedBytes(cipherTextBytes, invalidIv), secretKey) match {
-        case Failure(e: IllegalArgumentException) => // Expected result
-        case x => fail(s"Expected IllegalArgumentException but got $x")
+        case Failure(_: IllegalArgumentException) => // Expected result
+        case x                                    => fail(s"Expected IllegalArgumentException but got $x")
       }
     }
   }

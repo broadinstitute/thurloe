@@ -5,3 +5,4 @@ target
 /configure.rb
 
 *.pid
+.bsp

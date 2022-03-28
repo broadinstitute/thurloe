@@ -1,9 +1,9 @@
 package thurloe.dataaccess
 
+import akka.http.scaladsl.model.StatusCodes
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
-import spray.http.StatusCodes
 import thurloe.database.ThurloeDatabaseConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,28 +20,33 @@ class HttpSendGridDAO extends SendGridDAO {
 
     Future {
       val response = sendGrid.send(email)
-      if(response.getStatus) response
-      else throw new NotificationException(StatusCodes.InternalServerError, "Unable to send notification", email.getTos, email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id"))
+      if (response.getStatus) response
+      else
+        throw new NotificationException(
+          StatusCodes.InternalServerError,
+          "Unable to send notification",
+          email.getTos.toSeq,
+          email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")
+        )
     }
   }
 
-  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] = {
+  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] =
     for {
       contactEmail <- dataAccess.lookup(userId.value, "contactEmail")
       email <- dataAccess.lookup(userId.value, "email")
-    } yield if(contactEmail.keyValuePair.value.isEmpty) RawlsUserEmail(email.keyValuePair.value) else RawlsUserEmail(contactEmail.keyValuePair.value)
-  }
+    } yield
+      if (contactEmail.keyValuePair.value.isEmpty) RawlsUserEmail(email.keyValuePair.value)
+      else RawlsUserEmail(contactEmail.keyValuePair.value)
 
-  def lookupUserName(userId: RawlsUserSubjectId): Future[String] = {
+  def lookupUserName(userId: RawlsUserSubjectId): Future[String] =
     for {
       firstName <- dataAccess.lookup(userId.value, "firstName")
       lastName <- dataAccess.lookup(userId.value, "lastName")
     } yield s"${firstName.keyValuePair.value} ${lastName.keyValuePair.value}"
-  }
 
-  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String] = {
+  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String] =
     for {
       firstName <- dataAccess.lookup(userId.value, "firstName")
     } yield firstName.keyValuePair.value
-  }
 }

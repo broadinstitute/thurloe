@@ -1,22 +1,40 @@
 package thurloe.service
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import org.scalatest.funspec.AnyFunSpec
 import thurloe.dataaccess.MockSendGridDAO
-import org.scalatest.FunSpec
-import spray.http.StatusCodes
-import spray.testkit.ScalatestRouteTest
-import spray.httpx.SprayJsonSupport._
 
 /**
  * Created by mbemis on 6/23/16.
  */
-class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
+class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol._
 
-  val validNotification = Notification(Some(RawlsUserSubjectId("a_user_id")), None, None, "valid_notification_id1", Map.empty, Map.empty, Map.empty)
-  val validNotification2 = Notification(Some(RawlsUserSubjectId("a_user_id")), None, Option(Set(RawlsUserSubjectId("a_user_id"))), "valid_notification_id1", Map.empty, Map.empty, Map.empty)
-  val invalidNotification = Notification(Some(RawlsUserSubjectId("a_user_id")), None, None, "invalid_notification_id1", Map.empty, Map.empty, Map.empty)
+  val validNotification = Notification(Some(RawlsUserSubjectId("a_user_id")),
+                                       None,
+                                       None,
+                                       "valid_notification_id1",
+                                       Map.empty,
+                                       Map.empty,
+                                       Map.empty)
+  val validNotification2 = Notification(Some(RawlsUserSubjectId("a_user_id")),
+                                        None,
+                                        Option(Set(RawlsUserSubjectId("a_user_id"))),
+                                        "valid_notification_id1",
+                                        Map.empty,
+                                        Map.empty,
+                                        Map.empty)
+  val invalidNotification = Notification(Some(RawlsUserSubjectId("a_user_id")),
+                                         None,
+                                         None,
+                                         "invalid_notification_id1",
+                                         Map.empty,
+                                         Map.empty,
+                                         Map.empty)
 
   def notificationService = new NotificationService {
     val sendGridDAO = new MockSendGridDAO
@@ -82,7 +100,10 @@ class NotificationServiceSpec extends FunSpec with ScalatestRouteTest {
     }
 
     it("send a valid notification to an external user with no contact settings") {
-      Post("/notification", List(validNotification.copy(userId = None, userEmail = Some(RawlsUserEmail("foo@example.com"))))) ~> notificationService.notificationRoutes ~> check {
+      Post(
+        "/notification",
+        List(validNotification.copy(userId = None, userEmail = Some(RawlsUserEmail("foo@example.com"))))
+      ) ~> notificationService.notificationRoutes ~> check {
         assertResult(StatusCodes.OK) {
           status
         }
