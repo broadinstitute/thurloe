@@ -209,6 +209,17 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     } yield ()
   }
 
+  def delete(userId: String, keysToDelete: Seq[String]): Future[Unit] = {
+    for {
+      keys <- lookup(userId)
+      missingKeys = keys.keyValuePairs.map(_.key) diff keysToDelete
+      _ <- if(missingKeys.isEmpty) {
+        val action = keyValuePairTable.filter(x => x.key inSetBind keysToDelete).delete
+        database.run(action.transactionally)
+      } else Future.failed(KeyNotFoundException(userId, missingKeys.head))
+    } yield ()
+  }
+
   def status(): Future[Unit] = {
     // Check database connection by selecting version
     val action = sql"select version ()".as[String]
