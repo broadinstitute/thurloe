@@ -34,11 +34,12 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
 
   def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] =
     for {
-      email <- dataAccess.lookup(userId.value, "contactEmail")
-        .recoverWith(_ => {
+      email <- dataAccess
+        .lookup(userId.value, "contactEmail")
+        .recoverWith { _ =>
           logger.info(s"Failed to get stored contactEmail for ${userId.value}. Defaulting to stored email for user.")
           dataAccess.lookup(userId.value, "email")
-        })
+        }
     } yield RawlsUserEmail(email.keyValuePair.value)
 
   def lookupUserName(userId: RawlsUserSubjectId): Future[String] =
