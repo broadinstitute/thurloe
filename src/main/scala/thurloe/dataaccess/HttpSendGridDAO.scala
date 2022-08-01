@@ -37,8 +37,11 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
       email <- dataAccess
         .lookup(userId.value, "contactEmail")
         .recoverWith { _ =>
-          logger.info(s"Failed to get stored contactEmail for ${userId.value}. Defaulting to stored email for user.")
-          dataAccess.lookup(userId.value, "email")
+          val fallbackEmail = dataAccess.lookup(userId.value, "email")
+          logger.info(
+            s"Failed to get stored contactEmail for ${userId.value}. Defaulting to stored email ($fallbackEmail) for user."
+          )
+          fallbackEmail
         }
     } yield RawlsUserEmail(email.keyValuePair.value)
 
