@@ -3,6 +3,7 @@ package thurloe.dataaccess
 import akka.http.scaladsl.model.StatusCodes
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
+import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
 import thurloe.database.ThurloeDatabaseConnector
 
@@ -12,7 +13,7 @@ import scala.concurrent.Future
 /**
  * Created by mbemis on 6/16/16.
  */
-class HttpSendGridDAO extends SendGridDAO {
+class HttpSendGridDAO extends SendGridDAO with LazyLogging {
   val dataAccess = ThurloeDatabaseConnector
 
   override def sendEmail(email: SendGrid.Email): Future[Response] = {
@@ -33,11 +34,16 @@ class HttpSendGridDAO extends SendGridDAO {
 
   def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] =
     for {
-      contactEmail <- dataAccess.lookup(userId.value, "contactEmail")
-      email <- dataAccess.lookup(userId.value, "email")
-    } yield
-      if (contactEmail.keyValuePair.value.isEmpty) RawlsUserEmail(email.keyValuePair.value)
-      else RawlsUserEmail(contactEmail.keyValuePair.value)
+      email <- dataAccess
+        .lookup(userId.value, "contactEmail")
+        .recoverWith { _ =>
+          val fallbackEmail = dataAccess.lookup(userId.value, "email")
+          logger.info(
+            s"Failed to get stored contactEmail for ${userId.value}. Defaulting to stored email ($fallbackEmail) for user."
+          )
+          fallbackEmail
+        }
+    } yield RawlsUserEmail(email.keyValuePair.value)
 
   def lookupUserName(userId: RawlsUserSubjectId): Future[String] =
     for {
