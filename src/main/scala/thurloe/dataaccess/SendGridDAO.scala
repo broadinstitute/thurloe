@@ -90,8 +90,8 @@ trait SendGridDAO {
     email.setTemplateId(notificationId)
     email.setSubject(" ")
     email.setFromName(defaultFromName)
-    replyTos.map { rawlsAddrs =>
-      val addrs = rawlsAddrs.map(_.value)
+    replyTos.map { userEmails =>
+      val addrs = userEmails.map(_.value)
       email.addHeader("Reply-To", addrs.mkString(", "))
     }
     email.setHtml(" ")
