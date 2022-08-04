@@ -182,7 +182,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
       if (shouldNotify) {
         sendGridDAO.sendNotifications(List(toThurloeNotification(notification))).map(_.headOption) recoverWith {
           case e: KeyNotFoundException =>
-            println(s"Unable to send notification due to missing key: ${e.getMessage}")
+            logger.info(s"Unable to send notification due to missing key: ${e.getMessage}")
             Future.successful(None)
           case e => throw e
         }
