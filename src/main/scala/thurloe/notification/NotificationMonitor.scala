@@ -265,33 +265,21 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Map("userNameFL" -> workspaceOwnerId)
         )
 
-      case AbortedSubmissionNotification(recipientUserid, workspaceName, submissionId, dateSubmitted, workflowConfiguration, dataEntity, workflowCount, comment) =>
+      case AbortedSubmissionNotification(recipientUserid,
+                                         workspaceName,
+                                         submissionId,
+                                         dateSubmitted,
+                                         workflowConfiguration,
+                                         dataEntity,
+                                         workflowCount,
+                                         comment) =>
         thurloe.service.Notification(
           Option(recipientUserid),
           None,
           None,
           templateId,
-          Map("submissionUrl" -> submissionUrl(workspaceName, submissionId),
-              "submissionId" -> submissionId,
-              "dateSubmitted" -> dateSubmitted,
-              "namespace" -> workspaceName.namespace,
-              "name" -> workspaceName.name,
-              "wsUrl" -> workspacePortalUrl(workspaceName),
-              "workflowConfiguration" -> workflowConfiguration,
-              "dataEntity" -> dataEntity,
-              "workflowCount" -> workflowCount.toString,
-              "comment" -> comment),
-          Map.empty,
-          Map.empty
-        )
-
-      case SuccessfulSubmissionNotification(recipientUserid, workspaceName, submissionId, dateSubmitted, workflowConfiguration, dataEntity, workflowCount, comment) =>
-        thurloe.service.Notification(
-          Option(recipientUserid),
-          None,
-          None,
-          templateId,
-          Map("submissionUrl" -> submissionUrl(workspaceName, submissionId),
+          Map(
+            "submissionUrl" -> submissionUrl(workspaceName, submissionId),
             "submissionId" -> submissionId,
             "dateSubmitted" -> dateSubmitted,
             "namespace" -> workspaceName.namespace,
@@ -300,18 +288,27 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
             "workflowConfiguration" -> workflowConfiguration,
             "dataEntity" -> dataEntity,
             "workflowCount" -> workflowCount.toString,
-            "comment" -> comment),
+            "comment" -> comment
+          ),
           Map.empty,
           Map.empty
         )
 
-      case FailedSubmissionNotification(recipientUserid, workspaceName, submissionId, dateSubmitted, workflowConfiguration, dataEntity, workflowCount, comment) =>
+      case SuccessfulSubmissionNotification(recipientUserid,
+                                            workspaceName,
+                                            submissionId,
+                                            dateSubmitted,
+                                            workflowConfiguration,
+                                            dataEntity,
+                                            workflowCount,
+                                            comment) =>
         thurloe.service.Notification(
           Option(recipientUserid),
           None,
           None,
           templateId,
-          Map("submissionUrl" -> submissionUrl(workspaceName, submissionId),
+          Map(
+            "submissionUrl" -> submissionUrl(workspaceName, submissionId),
             "submissionId" -> submissionId,
             "dateSubmitted" -> dateSubmitted,
             "namespace" -> workspaceName.namespace,
@@ -320,7 +317,37 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
             "workflowConfiguration" -> workflowConfiguration,
             "dataEntity" -> dataEntity,
             "workflowCount" -> workflowCount.toString,
-            "comment" -> comment),
+            "comment" -> comment
+          ),
+          Map.empty,
+          Map.empty
+        )
+
+      case FailedSubmissionNotification(recipientUserid,
+                                        workspaceName,
+                                        submissionId,
+                                        dateSubmitted,
+                                        workflowConfiguration,
+                                        dataEntity,
+                                        workflowCount,
+                                        comment) =>
+        thurloe.service.Notification(
+          Option(recipientUserid),
+          None,
+          None,
+          templateId,
+          Map(
+            "submissionUrl" -> submissionUrl(workspaceName, submissionId),
+            "submissionId" -> submissionId,
+            "dateSubmitted" -> dateSubmitted,
+            "namespace" -> workspaceName.namespace,
+            "name" -> workspaceName.name,
+            "wsUrl" -> workspacePortalUrl(workspaceName),
+            "workflowConfiguration" -> workflowConfiguration,
+            "dataEntity" -> dataEntity,
+            "workflowCount" -> workflowCount.toString,
+            "comment" -> comment
+          ),
           Map.empty,
           Map.empty
         )

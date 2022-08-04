@@ -1,7 +1,10 @@
 package thurloe.service
 
 import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
-import org.broadinstitute.dsde.workbench.model.WorkbenchIdentityJsonSupport.{WorkbenchEmailFormat, WorkbenchUserIdFormat}
+import org.broadinstitute.dsde.workbench.model.WorkbenchIdentityJsonSupport.{
+  WorkbenchEmailFormat,
+  WorkbenchUserIdFormat
+}
 import spray.json.DefaultJsonProtocol
 
 object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
