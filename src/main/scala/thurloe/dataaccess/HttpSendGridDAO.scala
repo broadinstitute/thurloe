@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import thurloe.database.ThurloeDatabaseConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,7 +32,7 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
     }
   }
 
-  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] =
+  def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail] =
     for {
       email <- dataAccess
         .lookup(userId.value, "contactEmail")
@@ -43,15 +43,15 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
           )
           fallbackEmail
         }
-    } yield RawlsUserEmail(email.keyValuePair.value)
+    } yield WorkbenchEmail(email.keyValuePair.value)
 
-  def lookupUserName(userId: RawlsUserSubjectId): Future[String] =
+  def lookupUserName(userId: WorkbenchUserId): Future[String] =
     for {
       firstName <- dataAccess.lookup(userId.value, "firstName")
       lastName <- dataAccess.lookup(userId.value, "lastName")
     } yield s"${firstName.keyValuePair.value} ${lastName.keyValuePair.value}"
 
-  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String] =
+  def lookupUserFirstName(userId: WorkbenchUserId): Future[String] =
     for {
       firstName <- dataAccess.lookup(userId.value, "firstName")
     } yield firstName.keyValuePair.value

@@ -31,6 +31,7 @@ libraryDependencies ++= Seq(
     exclude("org.bouncycastle", "bcprov-ext-jdk15on")
     exclude("org.bouncycastle", "bcutil-jdk15on")
     exclude("org.bouncycastle", "bcpkix-jdk15on"),
+  "org.broadinstitute.dsde.workbench" %% "workbench-notifications" % "0.3-3086a4df-SNAP",
   "com.typesafe.akka" %% "akka-http" % akkaHttpV,
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
   "com.typesafe.akka" %% "akka-stream" % akkaV
