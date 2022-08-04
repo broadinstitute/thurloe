@@ -3,7 +3,7 @@ package thurloe.service
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import org.scalatest.funspec.AnyFunSpec
 import thurloe.dataaccess.MockSendGridDAO
 
@@ -14,21 +14,21 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol._
 
-  val validNotification = Notification(Some(RawlsUserSubjectId("a_user_id")),
+  val validNotification = Notification(Some(WorkbenchUserId("a_user_id")),
                                        None,
                                        None,
                                        "valid_notification_id1",
                                        Map.empty,
                                        Map.empty,
                                        Map.empty)
-  val validNotification2 = Notification(Some(RawlsUserSubjectId("a_user_id")),
+  val validNotification2 = Notification(Some(WorkbenchUserId("a_user_id")),
                                         None,
-                                        Option(Set(RawlsUserSubjectId("a_user_id"))),
+                                        Option(Set(WorkbenchUserId("a_user_id"))),
                                         "valid_notification_id1",
                                         Map.empty,
                                         Map.empty,
                                         Map.empty)
-  val invalidNotification = Notification(Some(RawlsUserSubjectId("a_user_id")),
+  val invalidNotification = Notification(Some(WorkbenchUserId("a_user_id")),
                                          None,
                                          None,
                                          "invalid_notification_id1",
@@ -81,7 +81,7 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("should send a valid notification to a user with no contactEmail set") {
-      Post("/notification", List(validNotification.copy(userId = Some(RawlsUserSubjectId("a_user_id2"))))) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification", List(validNotification.copy(userId = Some(WorkbenchUserId("a_user_id2"))))) ~> notificationService.notificationRoutes ~> check {
         assertResult("OK") {
           responseAs[String]
         }
@@ -92,7 +92,7 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("throw an exception when sending a valid notification to a user with no contact settings") {
-      Post("/notification", List(validNotification.copy(userId = Some(RawlsUserSubjectId("a_user_id3"))))) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification", List(validNotification.copy(userId = Some(WorkbenchUserId("a_user_id3"))))) ~> notificationService.notificationRoutes ~> check {
         assertResult(StatusCodes.InternalServerError) {
           status
         }
@@ -102,7 +102,7 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     it("send a valid notification to an external user with no contact settings") {
       Post(
         "/notification",
-        List(validNotification.copy(userId = None, userEmail = Some(RawlsUserEmail("foo@example.com"))))
+        List(validNotification.copy(userId = None, userEmail = Some(WorkbenchEmail("foo@example.com"))))
       ) ~> notificationService.notificationRoutes ~> check {
         assertResult(StatusCodes.OK) {
           status
