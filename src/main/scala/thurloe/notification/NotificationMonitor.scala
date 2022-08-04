@@ -219,6 +219,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
 
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
+
+    println("***")
+    println(templateId)
+    println("***")
+
     notification match {
       case ActivationNotification(recipentUserId) =>
         thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
