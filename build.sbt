@@ -12,7 +12,6 @@ val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.3.3"
 val workbenchGoogleV = "0.21-31be16e8-SNAP"
-val rawlsModelV = "0.1-384ab501b"
 val scalaTestV = "3.2.11"
 
 resolvers ++= Seq(
@@ -21,9 +20,8 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "4.1.3",
-  "org.broadinstitute.dsde" %%  "rawls-model" % rawlsModelV
-    exclude("bio.terra", "workspace-manager-client")
-    exclude("com.google.api-client", "google-api-client"),
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
     exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
     exclude("com.google.protobuf", "protobuf-java")
@@ -31,6 +29,9 @@ libraryDependencies ++= Seq(
     exclude("org.bouncycastle", "bcprov-ext-jdk15on")
     exclude("org.bouncycastle", "bcutil-jdk15on")
     exclude("org.bouncycastle", "bcpkix-jdk15on"),
+  "org.broadinstitute.dsde.workbench" %% "workbench-notifications" % "0.3-25c2179"
+    exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
+    exclude("com.google.protobuf", "protobuf-java"),
   "com.typesafe.akka" %% "akka-http" % akkaHttpV,
   "com.typesafe.akka" %% "akka-slf4j" % akkaV,
   "com.typesafe.akka" %% "akka-stream" % akkaV

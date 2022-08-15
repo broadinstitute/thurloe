@@ -3,7 +3,7 @@ package thurloe.dataaccess
 import akka.http.scaladsl.model.StatusCodes
 import com.sendgrid.SendGrid.Response
 import com.sendgrid._
-import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import thurloe.database.KeyNotFoundException
 import thurloe.service.Notification
 
@@ -64,22 +64,22 @@ class MockSendGridDAO extends SendGridDAO {
   val nameMap =
     Map(testUserId1 -> testUserName1, testUserId2 -> testUserName2, testUserId3 -> testUserName3) ++ notificationMonitorUserNames
 
-  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail] = Future {
+  def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail] = Future {
     preferredEmailMap get userId.value match {
       case Some((email, contactEmail)) =>
-        if (contactEmail.isEmpty) RawlsUserEmail(email) else RawlsUserEmail(contactEmail)
+        if (contactEmail.isEmpty) WorkbenchEmail(email) else WorkbenchEmail(contactEmail)
       case _ => throw new Exception("Not Found")
     }
   }
 
-  def lookupUserName(userId: RawlsUserSubjectId): Future[String] = Future {
+  def lookupUserName(userId: WorkbenchUserId): Future[String] = Future {
     nameMap get userId.value match {
       case Some((firstName, lastName)) => s"${firstName} ${lastName}"
       case _                           => throw new Exception("Not Found")
     }
   }
 
-  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String] = Future {
+  def lookupUserFirstName(userId: WorkbenchUserId): Future[String] = Future {
     nameMap get userId.value match {
       case Some((firstName, _)) => firstName
       case _                    => throw new Exception("Not Found")

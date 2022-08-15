@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import com.sendgrid.SendGrid
 import com.sendgrid.SendGrid.Response
 import com.typesafe.config.ConfigFactory
-import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import thurloe.service.Notification
 
 import scala.concurrent.Future
@@ -20,9 +20,9 @@ trait SendGridDAO {
   val defaultFromName = sendGridConfig.getString("defaultFromName")
 
   def sendEmail(email: SendGrid.Email): Future[Response]
-  def lookupPreferredEmail(userId: RawlsUserSubjectId): Future[RawlsUserEmail]
-  def lookupUserName(userId: RawlsUserSubjectId): Future[String]
-  def lookupUserFirstName(userId: RawlsUserSubjectId): Future[String]
+  def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail]
+  def lookupUserName(userId: WorkbenchUserId): Future[String]
+  def lookupUserFirstName(userId: WorkbenchUserId): Future[String]
 
   def sendNotifications(notifications: List[Notification]): Future[List[Response]] =
     Future.sequence(notifications.map { notification =>
@@ -79,8 +79,8 @@ trait SendGridDAO {
     Note: email.setSubject and email.setText must be set even if their values
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
-  def createEmail(toAddress: RawlsUserEmail,
-                  replyTos: Option[Set[RawlsUserEmail]],
+  def createEmail(toAddress: WorkbenchEmail,
+                  replyTos: Option[Set[WorkbenchEmail]],
                   notificationId: String,
                   substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
     val email = new SendGrid.Email()
@@ -90,8 +90,8 @@ trait SendGridDAO {
     email.setTemplateId(notificationId)
     email.setSubject(" ")
     email.setFromName(defaultFromName)
-    replyTos.map { rawlsAddrs =>
-      val addrs = rawlsAddrs.map(_.value)
+    replyTos.map { userEmails =>
+      val addrs = userEmails.map(_.value)
       email.addHeader("Reply-To", addrs.mkString(", "))
     }
     email.setHtml(" ")

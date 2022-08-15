@@ -1,7 +1,10 @@
 package thurloe.service
 
-import org.broadinstitute.dsde.rawls.model.UserModelJsonSupport.{RawlsUserEmailFormat, RawlsUserSubjectIdFormat}
-import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId}
+import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
+import org.broadinstitute.dsde.workbench.model.WorkbenchIdentityJsonSupport.{
+  WorkbenchEmailFormat,
+  WorkbenchUserIdFormat
+}
 import spray.json.DefaultJsonProtocol
 
 object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
@@ -53,10 +56,10 @@ case class UserKeyValuePair(userId: String, keyValuePair: KeyValuePair)
 case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair]) {
   def toKeyValueSeq: Seq[UserKeyValuePair] = keyValuePairs.map(UserKeyValuePair(userId, _))
 }
-case class Notification(userId: Option[RawlsUserSubjectId],
-                        userEmail: Option[RawlsUserEmail],
-                        replyTos: Option[Set[RawlsUserSubjectId]],
+case class Notification(userId: Option[WorkbenchUserId],
+                        userEmail: Option[WorkbenchEmail],
+                        replyTos: Option[Set[WorkbenchUserId]],
                         notificationId: String,
                         substitutions: Map[String, String],
-                        emailLookupSubstitutions: Map[String, RawlsUserSubjectId],
-                        nameLookupSubstitution: Map[String, RawlsUserSubjectId])
+                        emailLookupSubstitutions: Map[String, WorkbenchUserId],
+                        nameLookupSubstitution: Map[String, WorkbenchUserId])

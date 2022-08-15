@@ -2,13 +2,8 @@ package thurloe.notification
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import org.broadinstitute.dsde.rawls.model.Notifications.{
-  NotificationFormat,
-  WorkspaceAddedNotification,
-  WorkspaceInvitedNotification,
-  WorkspaceRemovedNotification
-}
-import org.broadinstitute.dsde.rawls.model.{RawlsUserEmail, RawlsUserSubjectId, WorkspaceName}
+import org.broadinstitute.dsde.workbench.model.Notifications._
+import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import org.broadinstitute.dsde.workbench.google.mock.MockGooglePubSubDAO
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
@@ -64,8 +59,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
     val testNotifications =
       (for (i <- 0 until workerCount * 4)
-        yield WorkspaceInvitedNotification(RawlsUserEmail(s"foo$i"),
-                                           RawlsUserSubjectId(s"bar$i"),
+        yield WorkspaceInvitedNotification(WorkbenchEmail(s"foo$i"),
+                                           WorkbenchUserId(s"bar$i"),
                                            WorkspaceName("namespace", "name"),
                                            "some-bucket-name"))
 
@@ -115,9 +110,9 @@ class NotificationMonitorSpec(_system: ActorSystem)
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val removedNotification =
-      WorkspaceRemovedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+      WorkspaceRemovedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
     val addedNotification =
-      WorkspaceAddedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+      WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(
       ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))),
@@ -161,9 +156,9 @@ class NotificationMonitorSpec(_system: ActorSystem)
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val removedNotification =
-      WorkspaceRemovedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+      WorkspaceRemovedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
     val addedNotification =
-      WorkspaceAddedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+      WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(ThurloeDatabaseConnector.set(
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))
@@ -207,9 +202,9 @@ class NotificationMonitorSpec(_system: ActorSystem)
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val removedNotification =
-      WorkspaceRemovedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+      WorkspaceRemovedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
     val addedNotification =
-      WorkspaceAddedNotification(RawlsUserSubjectId(userId), "foo", workspaceName, RawlsUserSubjectId("a_user_id2"))
+      WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     // Make sure notifications are turned on for the test user (notificationsOffKey -> false)
     Await.result(ThurloeDatabaseConnector.set(

@@ -5,10 +5,10 @@ import akka.actor._
 import akka.pattern._
 import com.sendgrid.SendGrid.Response
 import com.typesafe.scalalogging.LazyLogging
-import org.broadinstitute.dsde.rawls.model.Notifications._
-import org.broadinstitute.dsde.rawls.model.{RawlsUserSubjectId, WorkspaceName}
 import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO
 import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO.PubSubMessage
+import org.broadinstitute.dsde.workbench.model.Notifications._
+import org.broadinstitute.dsde.workbench.model.WorkbenchUserId
 import spray.json._
 import thurloe.dataaccess.SendGridDAO
 import thurloe.database.{DataAccess, KeyNotFoundException, ThurloeDatabaseConnector}
@@ -178,7 +178,6 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
 
   def maybeSendNotification(message: PubSubMessage): Future[(Option[Response], PubSubMessage)] = {
     val notification = message.contents.parseJson.convertTo[Notification]
-
     lookupShouldNotify(notification) flatMap { shouldNotify =>
       if (shouldNotify) {
         sendGridDAO.sendNotifications(List(toThurloeNotification(notification))).map(_.headOption) recoverWith {
@@ -204,7 +203,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
       case _ => Future.successful(true)
     }
 
-  def booleanLookup(userId: RawlsUserSubjectId, key: String, defaultValue: Boolean): Future[Boolean] =
+  def booleanLookup(userId: WorkbenchUserId, key: String, defaultValue: Boolean): Future[Boolean] =
     dataAccess.lookup(userId.value, key).map(kvp => kvp.keyValuePair.value.toBoolean).recover {
       case _: KeyNotFoundException     => defaultValue
       case _: IllegalArgumentException => defaultValue
@@ -212,11 +211,14 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
 
   def workspacePortalUrl(workspaceName: WorkspaceName): String =
     s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
+  def submissionUrl(workspaceName: WorkspaceName, submissionId: String): String =
+    s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}/job_history/$submissionId"
   def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
   def bucketUrl(bucketName: String): String = s"https://console.cloud.google.com/storage/browser/${bucketName}"
 
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
+
     notification match {
       case ActivationNotification(recipentUserId) =>
         thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
@@ -261,6 +263,93 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
               "wsUrl" -> workspacePortalUrl(workspaceName)),
           Map("originEmail" -> workspaceOwnerId),
           Map("userNameFL" -> workspaceOwnerId)
+        )
+
+      case AbortedSubmissionNotification(recipientUserid,
+                                         workspaceName,
+                                         submissionId,
+                                         dateSubmitted,
+                                         workflowConfiguration,
+                                         dataEntity,
+                                         workflowCount,
+                                         comment) =>
+        thurloe.service.Notification(
+          Option(recipientUserid),
+          None,
+          None,
+          templateId,
+          Map(
+            "submissionUrl" -> submissionUrl(workspaceName, submissionId),
+            "submissionId" -> submissionId,
+            "dateSubmitted" -> dateSubmitted,
+            "namespace" -> workspaceName.namespace,
+            "name" -> workspaceName.name,
+            "wsUrl" -> workspacePortalUrl(workspaceName),
+            "workflowConfiguration" -> workflowConfiguration,
+            "dataEntity" -> dataEntity,
+            "workflowCount" -> workflowCount.toString,
+            "comment" -> comment
+          ),
+          Map.empty,
+          Map.empty
+        )
+
+      case SuccessfulSubmissionNotification(recipientUserid,
+                                            workspaceName,
+                                            submissionId,
+                                            dateSubmitted,
+                                            workflowConfiguration,
+                                            dataEntity,
+                                            workflowCount,
+                                            comment) =>
+        thurloe.service.Notification(
+          Option(recipientUserid),
+          None,
+          None,
+          templateId,
+          Map(
+            "submissionUrl" -> submissionUrl(workspaceName, submissionId),
+            "submissionId" -> submissionId,
+            "dateSubmitted" -> dateSubmitted,
+            "namespace" -> workspaceName.namespace,
+            "name" -> workspaceName.name,
+            "wsUrl" -> workspacePortalUrl(workspaceName),
+            "workflowConfiguration" -> workflowConfiguration,
+            "dataEntity" -> dataEntity,
+            "workflowCount" -> workflowCount.toString,
+            "comment" -> comment
+          ),
+          Map.empty,
+          Map.empty
+        )
+
+      case FailedSubmissionNotification(recipientUserid,
+                                        workspaceName,
+                                        submissionId,
+                                        dateSubmitted,
+                                        workflowConfiguration,
+                                        dataEntity,
+                                        workflowCount,
+                                        comment) =>
+        thurloe.service.Notification(
+          Option(recipientUserid),
+          None,
+          None,
+          templateId,
+          Map(
+            "submissionUrl" -> submissionUrl(workspaceName, submissionId),
+            "submissionId" -> submissionId,
+            "dateSubmitted" -> dateSubmitted,
+            "namespace" -> workspaceName.namespace,
+            "name" -> workspaceName.name,
+            "wsUrl" -> workspacePortalUrl(workspaceName),
+            "workflowConfiguration" -> workflowConfiguration,
+            "dataEntity" -> dataEntity,
+            "workflowCount" -> workflowCount.toString,
+            "comment" -> comment
+          ),
+          Map.empty,
+          Map.empty
         )
 
       case WorkspaceChangedNotification(recipientUserId, workspaceName) =>
