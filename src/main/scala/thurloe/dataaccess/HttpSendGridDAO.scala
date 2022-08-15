@@ -33,12 +33,14 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
   }
 
   //Looks up a KVP, converting empty values or missing KVPs into None
-  private def lookupNonEmptyKeyValuePair(userId: String, key: String) = {
-    dataAccess.lookup(userId, key).map { kvp =>
-      if(kvp.keyValuePair.value.isEmpty) None
-      else Some(kvp)
-    }.recover { _ => None }
-  }
+  private def lookupNonEmptyKeyValuePair(userId: String, key: String) =
+    dataAccess
+      .lookup(userId, key)
+      .map { kvp =>
+        if (kvp.keyValuePair.value.isEmpty) None
+        else Some(kvp)
+      }
+      .recover(_ => None)
 
   //There are two cases that need to be handled when looking up the preferred contact email:
   // 1) If the contactEmail is not present at all, the DB query will throw an exception. So that needs to be handled.
@@ -50,17 +52,17 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
   //    defend against them here.
   //  ^-- note: the same can also all be said about the 'email' k/v pair, but a blank email is a less common case due to
   //      how profiles are populated.
-  def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail] = {
+  def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail] =
     lookupNonEmptyKeyValuePair(userId.value, "contactEmail") flatMap {
       case Some(kvp) => Future.successful(WorkbenchEmail(kvp.keyValuePair.value)) //contactEmail was found and non-empty
       case None =>
         logger.info(s"Failed to get stored contactEmail for ${userId.value}. Defaulting to account email for user.")
         lookupNonEmptyKeyValuePair(userId.value, "email") flatMap {
-          case Some(kvp) => Future.successful(WorkbenchEmail(kvp.keyValuePair.value)) //account email was found and non-empty
+          case Some(kvp) =>
+            Future.successful(WorkbenchEmail(kvp.keyValuePair.value)) //account email was found and non-empty
           case None => Future.failed(new KeyNotFoundException(userId.value, "email"))
         }
     }
-  }
 
   def lookupUserName(userId: WorkbenchUserId): Future[String] =
     for {
