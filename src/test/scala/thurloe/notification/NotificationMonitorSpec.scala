@@ -201,17 +201,34 @@ class NotificationMonitorSpec(_system: ActorSystem)
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val submissionNotification =
-      SuccessfulSubmissionNotification(WorkbenchUserId(userId), workspaceName, "some-submission-id", "some-date", "some-config", "some-entity", 15, "no comment")
+      SuccessfulSubmissionNotification(WorkbenchUserId(userId),
+                                       workspaceName,
+                                       "some-submission-id",
+                                       "some-date",
+                                       "some-config",
+                                       "some-entity",
+                                       15,
+                                       "no comment")
 
-    Await.result(ThurloeDatabaseConnector.set(
-      UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification/${workspaceName.namespace}/${workspaceName.name}", "false")))
-    ),
-      Duration.Inf)
+    Await.result(
+      ThurloeDatabaseConnector.set(
+        UserKeyValuePairs(
+          userId,
+          Seq(
+            KeyValuePair(
+              s"notifications/SuccessfulSubmissionNotification/${workspaceName.namespace}/${workspaceName.name}",
+              "false"
+            )
+          )
+        )
+      ),
+      Duration.Inf
+    )
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(submissionNotification)
     Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-      Duration.Inf)
+                 Duration.Inf)
     awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
     assertResult(0) {
       sendGridDAO.emails.size()
@@ -244,17 +261,26 @@ class NotificationMonitorSpec(_system: ActorSystem)
     val userId = sendGridDAO.testUserId1
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val submissionNotification =
-      SuccessfulSubmissionNotification(WorkbenchUserId(userId), workspaceName, "some-submission-id", "some-date", "some-config", "some-entity", 15, "no comment")
+      SuccessfulSubmissionNotification(WorkbenchUserId(userId),
+                                       workspaceName,
+                                       "some-submission-id",
+                                       "some-date",
+                                       "some-config",
+                                       "some-entity",
+                                       15,
+                                       "no comment")
 
-    Await.result(ThurloeDatabaseConnector.set(
-      UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification", "false")))
-    ),
-      Duration.Inf)
+    Await.result(
+      ThurloeDatabaseConnector.set(
+        UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification", "false")))
+      ),
+      Duration.Inf
+    )
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(submissionNotification)
     Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-      Duration.Inf)
+                 Duration.Inf)
     awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
     assertResult(0) {
       sendGridDAO.emails.size()
