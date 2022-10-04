@@ -195,9 +195,9 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
   def lookupShouldNotify(notification: Notification): Future[Boolean] =
     notification match {
       //For workspace notifications, there are three tiers of preferences to check:
-      // 1. has the user disabled *all* notifications for their account? if no,
+      // 1. has the user disabled *all* notifications for their account?
       //     key format: notifications.off
-      // 2. has the user disabled the notification at the type-level? if no,
+      // 2. has the user disabled the notification at the type-level?
       //     key format: notifications/<notification class name>
       // 3. has the user disabled the notification for the specified workspace?
       //     key format: notifications/<notification class name>/<workspace namespace>/<workspace name>
