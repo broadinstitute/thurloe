@@ -175,7 +175,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
     }
   }
 
-  it should "not send workspace notifications notifications when they are off for a specific workspace" in {
+  it should "not send workspace notifications when they are turned off for a specific workspace" in {
     val pubsubDao = new MockGooglePubSubDAO
     val topic = "topic"
 
@@ -218,7 +218,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
     }
   }
 
-  it should "not send workspace notifications notifications when they are off at the type-level" in {
+  it should "not send workspace notifications when they are turned off at the notification type-level" in {
     val pubsubDao = new MockGooglePubSubDAO
     val topic = "topic"
 
