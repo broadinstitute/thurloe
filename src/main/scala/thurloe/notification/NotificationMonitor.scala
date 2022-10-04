@@ -205,10 +205,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         val baseKey = s"notifications/${wsNotification.getClass.getSimpleName}"
         //Check #1
         booleanLookup(wsNotification.recipientUserId, NotificationMonitor.notificationsOffKey, false) flatMap {
-          case false => booleanLookup(wsNotification.recipientUserId, notification.key, true) flatMap {
-            case false => Future.successful(false)
-            case true => booleanLookup(wsNotification.recipientUserId, baseKey, true)
-          }
+          case false =>
+            booleanLookup(wsNotification.recipientUserId, notification.key, true) flatMap {
+              case false => Future.successful(false)
+              case true  => booleanLookup(wsNotification.recipientUserId, baseKey, true)
+            }
           case true => Future.successful(false) // notifications off for this user
         }
       case UserNotification(recipientId) =>
