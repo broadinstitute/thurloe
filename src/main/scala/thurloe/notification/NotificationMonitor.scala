@@ -196,8 +196,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
     notification match {
       //For workspace notifications, there are three tiers of preferences to check:
       // 1. has the user disabled *all* notifications for their account? if no,
+      //     key format: notifications.off
       // 2. has the user disabled the notification at the type-level? if no,
+      //     key format: notifications/<notification class name>
       // 3. has the user disabled the notification for the specified workspace?
+      //     key format: notifications/<notification class name>/<workspace namespace>/<workspace name>
       case wsNotification: WorkspaceNotification =>
         val baseKey = s"notifications/${wsNotification.getClass.getSimpleName}"
         //Check #1
