@@ -175,6 +175,92 @@ class NotificationMonitorSpec(_system: ActorSystem)
     }
   }
 
+  it should "not send workspace notifications notifications when they are off for a specific workspace" in {
+    val pubsubDao = new MockGooglePubSubDAO
+    val topic = "topic"
+
+    val workerCount = 1
+    val sendGridDAO = new MockSendGridDAO
+    system.actorOf(
+      NotificationMonitorSupervisor.props(
+        10 milliseconds,
+        0 milliseconds,
+        pubsubDao,
+        topic,
+        "subscription",
+        workerCount,
+        sendGridDAO,
+        Map("WorkspaceRemovedNotification" -> "valid_notification_id1"),
+        "foo"
+      )
+    )
+
+    // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
+    awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
+
+    val userId = sendGridDAO.testUserId1
+    val workspaceName = WorkspaceName("ws_ns", "ws_n")
+    val submissionNotification =
+      SuccessfulSubmissionNotification(WorkbenchUserId(userId), workspaceName, "some-submission-id", "some-date", "some-config", "some-entity", 15, "no comment")
+
+    Await.result(ThurloeDatabaseConnector.set(
+      UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification/${workspaceName.namespace}/${workspaceName.name}", "false")))
+    ),
+      Duration.Inf)
+
+    // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
+    val testNotifications = Seq(submissionNotification)
+    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
+      Duration.Inf)
+    awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
+    assertResult(0) {
+      sendGridDAO.emails.size()
+    }
+  }
+
+  it should "not send workspace notifications notifications when they are off at the type-level" in {
+    val pubsubDao = new MockGooglePubSubDAO
+    val topic = "topic"
+
+    val workerCount = 1
+    val sendGridDAO = new MockSendGridDAO
+    system.actorOf(
+      NotificationMonitorSupervisor.props(
+        10 milliseconds,
+        0 milliseconds,
+        pubsubDao,
+        topic,
+        "subscription",
+        workerCount,
+        sendGridDAO,
+        Map("WorkspaceRemovedNotification" -> "valid_notification_id1"),
+        "foo"
+      )
+    )
+
+    // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
+    awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
+
+    val userId = sendGridDAO.testUserId1
+    val workspaceName = WorkspaceName("ws_ns", "ws_n")
+    val submissionNotification =
+      SuccessfulSubmissionNotification(WorkbenchUserId(userId), workspaceName, "some-submission-id", "some-date", "some-config", "some-entity", 15, "no comment")
+
+    Await.result(ThurloeDatabaseConnector.set(
+      UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification", "false")))
+    ),
+      Duration.Inf)
+
+    // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
+    val testNotifications = Seq(submissionNotification)
+    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
+      Duration.Inf)
+    awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
+    assertResult(0) {
+      sendGridDAO.emails.size()
+    }
+  }
+
   it should "ignore SendGrid notifications when the monitor is unable to send them due to missing key/value pairs" in {
     val pubsubDao = new MockGooglePubSubDAO
     val topic = "topic"
