@@ -194,12 +194,28 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
 
   def lookupShouldNotify(notification: Notification): Future[Boolean] =
     notification match {
+      //For workspace notifications, there are three tiers of preferences to check:
+      // 1. has the user disabled *all* notifications for their account?
+      //     key format: notifications.off
+      // 2. has the user disabled the notification at the type-level?
+      //     key format: notifications/<notification class name>
+      // 3. has the user disabled the notification for the specified workspace?
+      //     key format: notifications/<notification class name>/<workspace namespace>/<workspace name>
+      case wsNotification: WorkspaceNotification =>
+        val baseKey = s"notifications/${wsNotification.getClass.getSimpleName}"
+        booleanLookup(wsNotification.recipientUserId, NotificationMonitor.notificationsOffKey, false) flatMap {
+          case false =>
+            booleanLookup(wsNotification.recipientUserId, baseKey, true) flatMap {
+              case false => Future.successful(false)
+              case true  => booleanLookup(wsNotification.recipientUserId, notification.key, true)
+            }
+          case true => Future.successful(false) // notifications off for this user
+        }
       case UserNotification(recipientId) =>
         booleanLookup(recipientId, NotificationMonitor.notificationsOffKey, false) flatMap {
           case false => booleanLookup(recipientId, notification.key, true)
           case true  => Future.successful(false) // notifications off for this user
         }
-
       case _ => Future.successful(true)
     }
 
