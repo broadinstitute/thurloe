@@ -1,7 +1,5 @@
 # Thurloe
 
-testing new branch name
-
 A simple service to store arbitrary key/value pairs
 
 ## Installation
