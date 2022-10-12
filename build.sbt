@@ -10,7 +10,7 @@ scalaVersion := "2.13.8"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
-val slickV = "3.3.3"
+val slickV = "3.4.1"
 val workbenchGoogleV = "0.21-31be16e8-SNAP"
 val scalaTestV = "3.2.11"
 
