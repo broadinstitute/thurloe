@@ -45,7 +45,7 @@ libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.28",
   "org.liquibase" % "liquibase-core" % "4.7.1",
   "org.hsqldb" % "hsqldb" % "2.6.1",
-  "com.sendgrid" % "sendgrid-java" % "2.2.2",
+  "com.sendgrid" % "sendgrid-java" % "4.9.3",
   "ch.qos.logback" % "logback-classic" % "1.2.10",
   //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
