@@ -12,7 +12,7 @@ val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.3.3"
 val workbenchGoogleV = "0.21-31be16e8-SNAP"
-val scalaTestV = "3.2.11"
+val scalaTestV = "3.2.14"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
