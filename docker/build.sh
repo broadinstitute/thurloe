@@ -109,9 +109,11 @@ function docker_cmd()
             docker push $DOCKERHUB_REGISTRY:${DOCKERTAG_SAFE_NAME}
 
             if [[ -n $GCR_REGISTRY ]]; then
+	        echo "pushing $GCR_REGISTRY:${HASH_TAG}..."
                 docker tag $DOCKERHUB_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${HASH_TAG}
                 gcloud docker -- push $GCR_REGISTRY:${HASH_TAG}
-            fi
+		gcloud container images add-tag $GCR_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${DOCKERTAG_SAFE_NAME}
+	    fi
         fi
     else
         echo "Not a valid docker option!  Choose either build or push (which includes build)"
