@@ -89,7 +89,7 @@ fi
 function make_jar()
 {
 	echo "building thurloe jar..."
-	docker run --rm -v $PWD:/working -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 broadinstitute/scala-baseimage:jdk11-2.13.5-1.4.7 /working/docker/install.sh /working
+	docker run --rm -v $PWD:/working -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 sbtscala/scala-sbt:openjdk-17.0.2_1.7.2_2.13.10 /working/docker/install.sh /working
 }
 
 function docker_cmd()
