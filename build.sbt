@@ -56,7 +56,7 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions ++= Seq(
-  "-target:jvm-11",
+  "-release:11",
   "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
   "-encoding", "utf-8",                // Specify character encoding used by source files.
   "-explaintypes",                     // Explain type errors in more detail.
