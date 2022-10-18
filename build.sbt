@@ -6,7 +6,7 @@ version := "0.2"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.10"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
@@ -56,7 +56,7 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions ++= Seq(
-  "-target:jvm-11",
+  "-release:11",
   "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
   "-encoding", "utf-8",                // Specify character encoding used by source files.
   "-explaintypes",                     // Explain type errors in more detail.
