@@ -2,6 +2,7 @@ package thurloe
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import com.google.api.client.json.jackson2.JacksonFactory
 import com.typesafe.config.ConfigFactory
 import org.broadinstitute.dsde.workbench.google.{GoogleCredentialModes, HttpGooglePubSubDAO}
 import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
@@ -20,6 +21,8 @@ object Main extends App {
 
   val config = ConfigFactory.load()
   val gcsConfig = config.getConfig("gcs")
+
+  val jsonFactory = JacksonFactory.getDefaultInstance
 
   val pem =
     GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
