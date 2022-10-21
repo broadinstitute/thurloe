@@ -89,7 +89,7 @@ fi
 function make_jar()
 {
 	echo "building thurloe jar..."
-	docker run --rm -v $PWD:/working -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 broadinstitute/scala-baseimage:jdk11-2.13.5-1.4.7 /working/docker/install.sh /working
+	docker run --rm -v $PWD:/working -v jar-cache:/root/.ivy -v jar-cache:/root/.ivy2 sbtscala/scala-sbt:openjdk-17.0.2_1.7.2_2.13.10 /working/docker/install.sh /working
 }
 
 function docker_cmd()
@@ -109,9 +109,11 @@ function docker_cmd()
             docker push $DOCKERHUB_REGISTRY:${DOCKERTAG_SAFE_NAME}
 
             if [[ -n $GCR_REGISTRY ]]; then
+	        echo "pushing $GCR_REGISTRY:${HASH_TAG}..."
                 docker tag $DOCKERHUB_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${HASH_TAG}
                 gcloud docker -- push $GCR_REGISTRY:${HASH_TAG}
-            fi
+		gcloud container images add-tag $GCR_REGISTRY:${HASH_TAG} $GCR_REGISTRY:${DOCKERTAG_SAFE_NAME}
+	    fi
         fi
     else
         echo "Not a valid docker option!  Choose either build or push (which includes build)"
