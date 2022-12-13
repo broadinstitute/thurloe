@@ -2,8 +2,8 @@ package thurloe
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import com.google.api.client.json.jackson2.JacksonFactory
 import com.typesafe.config.ConfigFactory
+import io.sentry.{Sentry, SentryOptions}
 import org.broadinstitute.dsde.workbench.google.{GoogleCredentialModes, HttpGooglePubSubDAO}
 import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import org.broadinstitute.dsde.workbench.util.toScalaDuration
@@ -16,13 +16,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
 
 object Main extends App {
+  sys.env.get("SENTRY_DSN").foreach { dsn =>
+    val options = new SentryOptions()
+    options.setDsn(dsn)
+    Sentry.init()
+  }
+
   // We need an ActorSystem to host our application in
   implicit val system = ActorSystem("thurloe")
 
   val config = ConfigFactory.load()
   val gcsConfig = config.getConfig("gcs")
-
-  val jsonFactory = JacksonFactory.getDefaultInstance
 
   val pem =
     GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),

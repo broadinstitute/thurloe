@@ -6,12 +6,12 @@ version := "0.2"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.10"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.3.3"
-val workbenchGoogleV = "0.21-31be16e8-SNAP"
+val workbenchGoogleV = "0.22-e6ad8a1"
 val scalaTestV = "3.2.11"
 
 resolvers ++= Seq(
@@ -22,6 +22,8 @@ libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "4.1.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
+  "com.google.protobuf" % "protobuf-java" % "4.0.0-rc-2",
+  "io.sentry" % "sentry" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
     exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
     exclude("com.google.protobuf", "protobuf-java")
@@ -52,11 +54,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
-  "org.yaml" % "snakeyaml" % "1.30" % Test
+  "org.yaml" % "snakeyaml" % "1.33" % Test
 )
 
 scalacOptions ++= Seq(
-  "-target:jvm-11",
+  "-release:11",
   "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
   "-encoding", "utf-8",                // Specify character encoding used by source files.
   "-explaintypes",                     // Explain type errors in more detail.
