@@ -230,7 +230,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
   def submissionUrl(workspaceName: WorkspaceName, submissionId: String): String =
     s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}/job_history/$submissionId"
   def billingProjectUrl(billingProjectName: String): String =
-    s"$fireCloudPortalUrl/#billing/$billingProjectName&type=project"
+    s"$fireCloudPortalUrl/#billing?selectedName=$billingProjectName&type=project"
   def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
   def bucketUrl(bucketName: String): String = s"https://console.cloud.google.com/storage/browser/${bucketName}"
 
