@@ -241,6 +241,9 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
       case ActivationNotification(recipentUserId) =>
         thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
 
+      case AzurePreviewActivationNotification(recipentUserId) =>
+        thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
+
       case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
         thurloe.service.Notification(
           Option(recipientUserId),
