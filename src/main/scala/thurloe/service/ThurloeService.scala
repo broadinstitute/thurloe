@@ -5,6 +5,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
+import io.sentry.Sentry
 import spray.json._
 import thurloe.database.DatabaseOperation.DatabaseOperation
 import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
@@ -62,6 +63,7 @@ trait ThurloeService extends LazyLogging {
 
   private def handleError(e: Throwable) =
     extract(_.request) { request =>
+      Sentry.captureException(e)
       logger.error(s"error handling request: ${request.method} ${request.uri}", e)
       complete(StatusCodes.InternalServerError, s"$Interjection $e")
     }
