@@ -19,7 +19,8 @@ object Main extends App {
   sys.env.get("SENTRY_DSN").foreach { dsn =>
     val options = new SentryOptions()
     options.setDsn(dsn)
-    Sentry.init()
+    options.setEnvironment(sys.env.getOrElse("SENTRY_ENVIRONMENT", "unknown"))
+    Sentry.init(options)
   }
 
   // We need an ActorSystem to host our application in
