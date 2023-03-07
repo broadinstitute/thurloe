@@ -16,10 +16,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
 
 object Main extends App {
+  val releaseHash: Option[String] = sys.env.get("GIT_SHA")
   sys.env.get("SENTRY_DSN").foreach { dsn =>
     val options = new SentryOptions()
     options.setDsn(dsn)
     options.setEnvironment(sys.env.getOrElse("SENTRY_ENVIRONMENT", "unknown"))
+    releaseHash.foreach(options.setRelease)
+
     Sentry.init(options)
   }
 

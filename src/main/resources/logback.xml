@@ -35,6 +35,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
+        <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
     </appender>
 
     <logger name="org.broadinstitute.dsde" level="info" additivity="false">
