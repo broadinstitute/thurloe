@@ -16,10 +16,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
 
 object Main extends App {
+  val version: Option[String] = Option(getClass.getPackage.getImplementationVersion)
+
   sys.env.get("SENTRY_DSN").foreach { dsn =>
     val options = new SentryOptions()
     options.setDsn(dsn)
     options.setEnvironment(sys.env.getOrElse("SENTRY_ENVIRONMENT", "unknown"))
+    options.setRelease(version.getOrElse("unknown"))
+
     Sentry.init(options)
   }
 
