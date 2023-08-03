@@ -6,20 +6,32 @@ import com.typesafe.scalalogging.LazyLogging
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.{ClassLoaderResourceAccessor, ResourceAccessor}
 import liquibase.{Contexts, Liquibase}
+import org.broadinstitute.dsde.workbench.client.sam
+import org.broadinstitute.dsde.workbench.google.GoogleCredentialModes
+import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import sun.security.provider.certpath.SunCertPathBuilderException
 import thurloe.crypto.{Aes256Cbc, EncryptedBytes, SecretKey}
+import thurloe.dataaccess.HttpSamDAO
 import thurloe.service._
 
+import java.io.File
 import java.sql.SQLTimeoutException
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
 
 case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
   val configFile = ConfigFactory.load()
+  val gcsConfig = configFile.getConfig("gcs")
+
+  // GCS config
+  val pem =
+    GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
+                              new File(gcsConfig.getString("pathToPem")))
 
   // DB Config:
   val dbConfigName =
@@ -39,6 +51,8 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
   val database = slickConfig.db
   val keyValuePairTable = TableQuery[DbKeyValuePair]
 
+  val samDAO = new HttpSamDAO(configFile.getConfig("sam").getString("baseUrl"), pem, 60 seconds)
+
   initWithLiquibase()
 
   private def databaseValuesToUserKeyValuePair(id: Option[Int],
@@ -56,6 +70,28 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
     }
 
+  private def lookupSamUser(userId: String): Future[sam.model.User] = {
+    val results = samDAO.getUserById(userId)
+
+    if (results.isEmpty) {
+      Future.failed(new KeyNotFoundException(userId, "n/a"))
+    } else if (results.size == 1) {
+      Future.successful(results.head)
+    } else {
+      // TODO once we have the newly generated models update this to use them
+      results
+        .find(x => Option(x.getAzureB2CId).isDefined)
+        .map(Future.successful)
+        .getOrElse(
+          Future.failed(
+            new InvalidDatabaseStateException(
+              s"Too many results returned from sam, none of which have a b2c id: ${results.size}"
+            )
+          )
+        )
+    }
+  }
+
   private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[UserKeyValuePairWithId]] = {
     val query = keyValuePairTable.filter(constraint)
 
@@ -69,7 +105,10 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
   def lookupIncludingDatabaseId(userId: String, key: String): Future[UserKeyValuePairWithId] =
     for {
-      results <- lookupWithConstraint(x => x.key === key && x.userId === userId)
+      samUser <- lookupSamUser(userId)
+      results <- lookupWithConstraint(x =>
+        x.key === key && (x.userId === samUser.getId || x.userId === samUser.getGoogleSubjectId || x.userId === samUser.getAzureB2CId)
+      )
       result <- if (results.isEmpty) {
         Future.failed(new KeyNotFoundException(userId, key))
       } else if (results.size == 1) {
@@ -85,7 +124,10 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
   def lookup(userId: String): Future[UserKeyValuePairs] =
     for {
-      results <- lookupWithConstraint(x => x.userId === userId)
+      samUser <- lookupSamUser(userId)
+      results <- lookupWithConstraint(x =>
+        x.userId === samUser.getId || x.userId === samUser.getGoogleSubjectId || x.userId === samUser.getAzureB2CId
+      )
     } yield UserKeyValuePairs(userId, results map { _.userKeyValuePair.keyValuePair })
 
   def lookup(queryParameters: ThurloeQuery): Future[Seq[UserKeyValuePair]] = {
@@ -93,7 +135,12 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       val include: Rep[Boolean] = true
 
       val userIdFilter = queryParameters.userId.map { userIds =>
-        val userIdFilters = userIds map { userId => x.userId === userId }
+        val userIdFilters = userIds map { userId =>
+          val samUser = Await.result(lookupSamUser(userId), 60 seconds)
+          x.userId === samUser.getId ||
+          x.userId === samUser.getGoogleSubjectId || x.userId === samUser.getAzureB2CId
+
+        }
         userIdFilters.reduceLeft(_ || _)
       }
       val keyFilter = queryParameters.key.map { keys =>
@@ -115,7 +162,6 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
           valueFilters.reduceLeft(_ || _)
         } getOrElse true
       results = filteredOnUserAndKey filter valueFilter
-
     } yield results map { _.userKeyValuePair }
   }
 

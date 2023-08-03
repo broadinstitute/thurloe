@@ -49,11 +49,13 @@ libraryDependencies ++= Seq(
   "org.hsqldb" % "hsqldb" % "2.6.1",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
   "ch.qos.logback" % "logback-classic" % "1.2.10",
-  //---------- Test libraries -------------------//
+  "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-e57a8f1-SNAP",
+//---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
+  "org.mockito" %% "mockito-scala-scalatest" % "1.17.12" % Test,
   "org.yaml" % "snakeyaml" % "1.33" % Test
 )
 
