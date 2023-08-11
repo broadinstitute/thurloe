@@ -10,7 +10,7 @@ import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO.PubSubMessage
 import org.broadinstitute.dsde.workbench.model.Notifications._
 import org.broadinstitute.dsde.workbench.model.WorkbenchUserId
 import spray.json._
-import thurloe.dataaccess.SendGridDAO
+import thurloe.dataaccess.{SamDAO, SendGridDAO}
 import thurloe.database.{DataAccess, KeyNotFoundException, ThurloeDatabaseConnector}
 import thurloe.notification.NotificationMonitor.StartMonitorPass
 import thurloe.notification.NotificationMonitorSupervisor._
@@ -34,7 +34,7 @@ object NotificationMonitorSupervisor {
             workerCount: Int,
             sendGridDAO: SendGridDAO,
             templateIdsByType: Map[String, String],
-            fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext): Props =
+            fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext, samDAO: SamDAO): Props =
     Props(
       new NotificationMonitorSupervisor(pollInterval,
                                         pollIntervalJitter,
@@ -48,15 +48,17 @@ object NotificationMonitorSupervisor {
     )
 }
 
-class NotificationMonitorSupervisor(val pollInterval: FiniteDuration,
-                                    pollIntervalJitter: FiniteDuration,
-                                    pubSubDao: GooglePubSubDAO,
-                                    pubSubTopicName: String,
-                                    pubSubSubscriptionName: String,
-                                    workerCount: Int,
-                                    sendGridDAO: SendGridDAO,
-                                    templateIdsByType: Map[String, String],
-                                    fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext)
+class NotificationMonitorSupervisor(
+  val pollInterval: FiniteDuration,
+  pollIntervalJitter: FiniteDuration,
+  pubSubDao: GooglePubSubDAO,
+  pubSubTopicName: String,
+  pubSubSubscriptionName: String,
+  workerCount: Int,
+  sendGridDAO: SendGridDAO,
+  templateIdsByType: Map[String, String],
+  fireCloudPortalUrl: String
+)(implicit executionContext: ExecutionContext, samDao: SamDAO)
     extends Actor
     with LazyLogging {
 
@@ -110,7 +112,7 @@ object NotificationMonitor {
             sendGridDAO: SendGridDAO,
             templateIdsByType: Map[String, String],
             fireCloudPortalUrl: String,
-            dataAccess: DataAccess)(implicit executionContext: ExecutionContext): Props =
+            dataAccess: DataAccess)(implicit executionContext: ExecutionContext, samDAO: SamDAO): Props =
     Props(
       new NotificationMonitorActor(pollInterval,
                                    pollIntervalJitter,
@@ -132,7 +134,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                sendGridDAO: SendGridDAO,
                                templateIdsByType: Map[String, String],
                                fireCloudPortalUrl: String,
-                               dataAccess: DataAccess)(implicit executionContext: ExecutionContext)
+                               dataAccess: DataAccess)(implicit executionContext: ExecutionContext, samDao: SamDAO)
     extends Actor
     with LazyLogging {
 

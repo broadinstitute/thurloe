@@ -13,7 +13,7 @@ import scala.concurrent.Future
 /**
  * Created by mbemis on 6/16/16.
  */
-class HttpSendGridDAO extends SendGridDAO with LazyLogging {
+class HttpSendGridDAO(implicit samDAO: SamDAO) extends SendGridDAO with LazyLogging {
   val dataAccess = ThurloeDatabaseConnector
 
   override def sendEmail(email: SendGrid.Email): Future[Response] = {

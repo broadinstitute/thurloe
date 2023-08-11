@@ -7,16 +7,13 @@ import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.{ClassLoaderResourceAccessor, ResourceAccessor}
 import liquibase.{Contexts, Liquibase}
 import org.broadinstitute.dsde.workbench.client.sam
-import org.broadinstitute.dsde.workbench.google.GoogleCredentialModes
-import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import sun.security.provider.certpath.SunCertPathBuilderException
 import thurloe.crypto.{Aes256Cbc, EncryptedBytes, SecretKey}
-import thurloe.dataaccess.HttpSamDAO
+import thurloe.dataaccess.SamDAO
 import thurloe.service._
 
-import java.io.File
 import java.sql.SQLTimeoutException
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
@@ -26,12 +23,6 @@ import scala.util.{Failure, Success, Try}
 case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
   val configFile = ConfigFactory.load()
-  val gcsConfig = configFile.getConfig("gcs")
-
-  // GCS config
-  val pem =
-    GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
-                              new File(gcsConfig.getString("pathToPem")))
 
   // DB Config:
   val dbConfigName =
@@ -51,8 +42,6 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
   val database = slickConfig.db
   val keyValuePairTable = TableQuery[DbKeyValuePair]
 
-  val samDAO = new HttpSamDAO(configFile.getConfig("sam").getString("baseUrl"), pem, 60 seconds)
-
   initWithLiquibase()
 
   private def databaseValuesToUserKeyValuePair(id: Option[Int],
@@ -70,7 +59,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
     }
 
-  private def lookupSamUser(userId: String): Future[sam.model.User] = {
+  private def lookupSamUser(userId: String)(implicit samDAO: SamDAO): Future[sam.model.User] = {
     val results = samDAO.getUserById(userId)
 
     if (results.isEmpty) {
@@ -103,7 +92,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     } yield result
   }
 
-  def lookupIncludingDatabaseId(userId: String, key: String): Future[UserKeyValuePairWithId] =
+  def lookupIncludingDatabaseId(userId: String, key: String)(implicit samDAO: SamDAO): Future[UserKeyValuePairWithId] =
     for {
       samUser <- lookupSamUser(userId)
       results <- lookupWithConstraint(x =>
@@ -118,11 +107,12 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       }
     } yield result
 
-  def lookup(userId: String, key: String): Future[UserKeyValuePair] = lookupIncludingDatabaseId(userId, key) map {
-    _.userKeyValuePair
-  }
+  def lookup(userId: String, key: String)(implicit samDAO: SamDAO): Future[UserKeyValuePair] =
+    lookupIncludingDatabaseId(userId, key) map {
+      _.userKeyValuePair
+    }
 
-  def lookup(userId: String): Future[UserKeyValuePairs] =
+  def lookup(userId: String)(implicit samDAO: SamDAO): Future[UserKeyValuePairs] =
     for {
       samUser <- lookupSamUser(userId)
       results <- lookupWithConstraint(x =>
@@ -130,7 +120,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       )
     } yield UserKeyValuePairs(userId, results map { _.userKeyValuePair.keyValuePair })
 
-  def lookup(queryParameters: ThurloeQuery): Future[Seq[UserKeyValuePair]] = {
+  def lookup(queryParameters: ThurloeQuery)(implicit samDAO: SamDAO): Future[Seq[UserKeyValuePair]] = {
     def userIdAndKeyConstraint(queryParameters: ThurloeQuery) = (x: DbKeyValuePair) => {
       val include: Rep[Boolean] = true
 
@@ -157,10 +147,10 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       filteredOnUserAndKey <- lookupWithConstraint(userIdAndKeyConstraint(queryParameters))
       // We have to filter out values outside of the Slick access because the values are encrypted until now.
       valueFilter = (userKeyValuePair: UserKeyValuePairWithId) =>
-        queryParameters.value map { values =>
+        queryParameters.value forall { values =>
           val valueFilters = values map { value => value.equals(userKeyValuePair.userKeyValuePair.keyValuePair.value) }
           valueFilters.reduceLeft(_ || _)
-        } getOrElse true
+        }
       results = filteredOnUserAndKey filter valueFilter
     } yield results map { _.userKeyValuePair }
   }
@@ -174,7 +164,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * @return The type of operation which was carried out (as a Future)
    */
   private def databaseWrite(userKeyValuePair: UserKeyValuePair,
-                            encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+                            encryptedValue: EncryptedBytes)(implicit samDAO: SamDAO): Future[DatabaseOperation] = {
     val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
     lookupExists flatMap { existingKvp =>
       update(existingKvp, userKeyValuePair, encryptedValue)
@@ -226,7 +216,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       )
     }
 
-  def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
+  def set(userKeyValuePairs: UserKeyValuePairs)(implicit samDAO: SamDAO): Future[DatabaseOperation] =
     Future
       .sequence(userKeyValuePairs.toKeyValueSeq.map { userKeyValuePair =>
         Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {

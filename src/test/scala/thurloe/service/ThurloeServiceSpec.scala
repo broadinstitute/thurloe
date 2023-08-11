@@ -3,17 +3,16 @@ package thurloe.service
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.mockito.Mockito.when
+import org.mockito.MockitoSugar.mock
 import org.scalatest.funspec.AnyFunSpec
+import thurloe.dataaccess.{HttpSamDAO, SamDAO}
 import thurloe.database.{MockUnhealthyThurloeDatabaseConnector, ThurloeDatabaseConnector}
+import org.broadinstitute.dsde.workbench.client.sam
 
 class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol._
-
-  def thurloeService = new ThurloeService {
-    val dataAccess = ThurloeDatabaseConnector
-    def actorRefFactory = system
-  }
 
   val uriPrefix = "/thurloe"
   val user1 = "username"
@@ -39,6 +38,28 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
   val u2k2v1 = UserKeyValuePairs(user2, Seq(k2v1))
 
   val u3k3v3 = UserKeyValuePairs("NEVER FOUND", Seq(KeyValuePair("NEvER", "FOUND")))
+
+  def thurloeService = new ThurloeService {
+    implicit val samDao: SamDAO = mock[SamDAO]
+
+    val samUser1 = new sam.model.User()
+    val samUser2 = new sam.model.User()
+
+    samUser1.setId(user1)
+    samUser1.setAzureB2CId(user1)
+    samUser1.setGoogleSubjectId(user1)
+
+    samUser2.setId(user2)
+    samUser2.setAzureB2CId(user2)
+    samUser2.setGoogleSubjectId(user2)
+
+    when(samDao.getUserById(user1)).thenReturn(List(samUser1))
+    when(samDao.getUserById(user2)).thenReturn(List(samUser2))
+    when(samDao.getUserById("NEVER FOUND")).thenReturn(List.empty)
+
+    val dataAccess = ThurloeDatabaseConnector
+    def actorRefFactory = system
+  }
 
   describe("The Thurloe Service") {
     it("should allow key/value pairs to be set") {
@@ -330,6 +351,8 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
     it("should fail with internal server error") {
       val errorThurloe = new ThurloeService {
+        implicit val samDao: SamDAO = mock[HttpSamDAO]
+        when(samDao.getUserById(user1)).thenReturn(List.empty)
         val dataAccess = MockUnhealthyThurloeDatabaseConnector
         def actorRefFactory = system
       }

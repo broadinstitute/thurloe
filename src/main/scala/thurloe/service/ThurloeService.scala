@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
 import io.sentry.Sentry
 import spray.json._
+import thurloe.dataaccess.SamDAO
 import thurloe.database.DatabaseOperation.DatabaseOperation
 import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
@@ -16,6 +17,7 @@ import scala.util.{Failure, Success}
 
 trait ThurloeService extends LazyLogging {
 
+  implicit val samDao: SamDAO
   val dataAccess: DataAccess
   val ThurloePrefix = "thurloe"
   val Interjection = "Harumph!"
