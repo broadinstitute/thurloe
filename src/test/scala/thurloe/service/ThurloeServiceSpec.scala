@@ -389,8 +389,12 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       }
 
       val u1k1v1B2cId = UserKeyValuePairs(userB2cId, Seq(k1v1))
+      val u1k1v1SubjectId = UserKeyValuePairs(userSubjectId, Seq(k1v1))
+      val u1k1v1SamId = UserKeyValuePairs(userSamId, Seq(k1v1))
+
       val u1k2v2B2cId = UserKeyValuePairs(userB2cId, Seq(k2v2))
       val u1k2v2subjectId = UserKeyValuePairs(userSubjectId, Seq(k2v2))
+      val u1k2v2SamId = UserKeyValuePairs(userSamId, Seq(k2v2))
 
       Post(uriPrefix, u1k1v1B2cId) ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
@@ -411,7 +415,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       }
 
       Get(s"$uriPrefix/$userSubjectId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1B2cId.toKeyValueSeq.head) {
+        assertResult(u1k1v1SubjectId.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -427,7 +431,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         }
       }
       Get(s"$uriPrefix/$userSamId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v1B2cId.toKeyValueSeq.head) {
+        assertResult(u1k1v1SamId.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -436,7 +440,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       }
 
       Get(s"$uriPrefix/$userSamId/$key2") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k2v2B2cId.toKeyValueSeq.head) {
+        assertResult(u1k2v2SamId.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {
@@ -444,7 +448,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         }
       }
       Get(s"$uriPrefix/$userSubjectId/$key2") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k2v2B2cId.toKeyValueSeq.head) {
+        assertResult(u1k2v2subjectId.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
         }
         assertResult(StatusCodes.OK) {

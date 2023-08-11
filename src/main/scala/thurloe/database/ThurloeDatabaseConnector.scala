@@ -105,7 +105,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       } else {
         Future.failed(InvalidDatabaseStateException(s"Too many results: ${results.size}"))
       }
-    } yield result
+    } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
 
   def lookup(userId: String, key: String)(implicit samDAO: SamDAO): Future[UserKeyValuePair] =
     lookupIncludingDatabaseId(userId, key) map {
