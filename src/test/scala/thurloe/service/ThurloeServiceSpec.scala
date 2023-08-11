@@ -3,12 +3,12 @@ package thurloe.service
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.broadinstitute.dsde.workbench.client.sam
 import org.mockito.Mockito.when
 import org.mockito.MockitoSugar.mock
 import org.scalatest.funspec.AnyFunSpec
 import thurloe.dataaccess.{HttpSamDAO, SamDAO}
 import thurloe.database.{MockUnhealthyThurloeDatabaseConnector, ThurloeDatabaseConnector}
-import org.broadinstitute.dsde.workbench.client.sam
 
 class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
@@ -363,5 +363,102 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       }
     }
 
+    it("should handle users with differing ids") {
+      val userSamId = "samId"
+      val userSubjectId = "subjectId"
+      val userB2cId = "b2cId"
+      val user1 = new sam.model.User()
+
+      user1.setId(userSamId)
+      user1.setGoogleSubjectId(userSubjectId)
+      user1.setAzureB2CId(userB2cId)
+
+      val key1 = "key1"
+      val value1 = "value1"
+      val k1v1 = KeyValuePair(key1, value1)
+      val key2 = "key1"
+      val value2 = "value1"
+      val k2v2 = KeyValuePair(key2, value2)
+      val thurloeService = new ThurloeService {
+        implicit val samDao: SamDAO = mock[HttpSamDAO]
+        when(samDao.getUserById(userB2cId)).thenReturn(List(user1))
+        when(samDao.getUserById(userSubjectId)).thenReturn(List(user1))
+        when(samDao.getUserById(userSamId)).thenReturn(List(user1))
+        val dataAccess = ThurloeDatabaseConnector
+        def actorRefFactory = system
+      }
+
+      val u1k1v1B2cId = UserKeyValuePairs(userB2cId, Seq(k1v1))
+      val u1k2v2B2cId = UserKeyValuePairs(userB2cId, Seq(k2v2))
+      val u1k2v2subjectId = UserKeyValuePairs(userSubjectId, Seq(k2v2))
+
+      Post(uriPrefix, u1k1v1B2cId) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      Post(uriPrefix, u1k2v2subjectId) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+
+      Get(s"$uriPrefix/$userSubjectId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v1B2cId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+      Get(s"$uriPrefix/$userB2cId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v1B2cId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+      Get(s"$uriPrefix/$userSamId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v1B2cId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+
+      Get(s"$uriPrefix/$userSamId/$key2") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k2v2B2cId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+      Get(s"$uriPrefix/$userSubjectId/$key2") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k2v2B2cId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+      Get(s"$uriPrefix/$userB2cId/$key2") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k2v2B2cId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+    }
   }
 }
