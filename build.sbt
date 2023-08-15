@@ -109,6 +109,7 @@ val customMergeStrategy: String => MergeStrategy = {
       case p :: Nil if p.endsWith(".rsa") || p.endsWith(".sf") || p.endsWith(".dsa") => MergeStrategy.discard
       case _ => MergeStrategy.first
     }
+  case PathList("javax", "annotation", _@_*) => MergeStrategy.first
   case "NOTICE" => MergeStrategy.discard
   case "module-info.class" => MergeStrategy.discard
   case "reference.conf" => MergeStrategy.concat
