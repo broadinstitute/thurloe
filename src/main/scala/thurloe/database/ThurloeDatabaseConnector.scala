@@ -147,10 +147,10 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       filteredOnUserAndKey <- lookupWithConstraint(userIdAndKeyConstraint(queryParameters))
       // We have to filter out values outside of the Slick access because the values are encrypted until now.
       valueFilter = (userKeyValuePair: UserKeyValuePairWithId) =>
-        queryParameters.value forall { values =>
+        queryParameters.value map { values =>
           val valueFilters = values map { value => value.equals(userKeyValuePair.userKeyValuePair.keyValuePair.value) }
           valueFilters.reduceLeft(_ || _)
-        }
+        } getOrElse true
       results = filteredOnUserAndKey filter valueFilter
     } yield results map { _.userKeyValuePair }
   }

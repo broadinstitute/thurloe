@@ -40,7 +40,7 @@ object Main extends App {
     gcsConfig.getString("serviceProject")
   )
 
-  implicit val samDao = new HttpSamDAO(config)
+  implicit val samDao = new HttpSamDAO(config, pem)
   private val httpSendGridDAO = new HttpSendGridDAO
   system.actorOf(
     NotificationMonitorSupervisor.props(
