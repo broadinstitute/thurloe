@@ -28,9 +28,6 @@ class HttpSamDAO(config: Config) extends SamDAO with LazyLogging {
 
   private val okHttpClient = new ApiClient().getHttpClient
 
-  val scopes =
-    List("https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile")
-
   protected def getApiClient(): ApiClient = {
 
     val okHttpClientWithTracingBuilder = okHttpClient.newBuilder
@@ -38,7 +35,7 @@ class HttpSamDAO(config: Config) extends SamDAO with LazyLogging {
 
     val samApiClient = new ApiClient(okHttpClientWithTracingBuilder.protocols(Seq(Protocol.HTTP_1_1).asJava).build())
     samApiClient.setBasePath(samServiceURL)
-    samApiClient.setAccessToken(credentials.toGoogleCredential(scopes).getAccessToken)
+    samApiClient.setAccessToken(credentials.toGoogleCredential(List.empty).getAccessToken)
 
     samApiClient
   }

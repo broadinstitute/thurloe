@@ -363,7 +363,8 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       }
     }
 
-    it("should handle users with differing ids") {
+    it("should handle sam users with differing ids") {
+      // prepare values and mocks
       val userSamId = "samId"
       val userSubjectId = "subjectId"
       val userB2cId = "b2cId"
@@ -396,6 +397,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       val u1k2v2subjectId = UserKeyValuePairs(userSubjectId, Seq(k2v2))
       val u1k2v2SamId = UserKeyValuePairs(userSamId, Seq(k2v2))
 
+      // Create key values for same user with different ids
       Post(uriPrefix, u1k1v1B2cId) ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult("") {
           responseAs[String]
@@ -414,6 +416,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         }
       }
 
+      // Assert that all ids can be used to get the same key value
       Get(s"$uriPrefix/$userSubjectId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(u1k1v1SubjectId.toKeyValueSeq.head) {
           responseAs[UserKeyValuePair]
