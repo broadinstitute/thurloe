@@ -59,22 +59,38 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
     }
 
+  /**
+   * Consumers of thurloe are not cinsistent in what type of userId they send. Sometimes it is the user's
+   * googleSubjectId and sometimes it is the user's azureB2cId. This method will look up the user in sam to get
+   * all of their ids in order to properly do the lookup and support azure b2c users.
+   *
+   * NOTE: Once all consumers of thurloe are using sam id to store and lookup user data this method can be removed.
+   *
+   * @param userId We dont know what type of user id this is, could be gsid, b2cid, or sam id
+   * @param samDAO
+   * @return
+   */
   private def lookupSamUser(userId: String)(implicit samDAO: SamDAO): Future[sam.model.User] = {
     val results = samDAO.getUserById(userId)
 
     if (results.isEmpty) {
       Future.failed(new KeyNotFoundException(userId, "n/a"))
     } else if (results.size == 1) {
+      // If we get exactly one result we have found the user we want.
       Future.successful(results.head)
     } else {
-      // TODO once we have the newly generated models update this to use them
+      // If we get back multiple results, we assume the record with the b2c id is the most recent and return that one.
       results
-        .find(x => Option(x.getAzureB2CId).isDefined)
+      // The user record is a java obj so we need to handle nulls properly
+        .find(samUserRecord => Option(samUserRecord.getAzureB2CId).isDefined)
         .map(Future.successful)
         .getOrElse(
           Future.failed(
-            new InvalidDatabaseStateException(
-              s"Too many results returned from sam, none of which have a b2c id: ${results.size}"
+            InvalidDatabaseStateException(
+              s"Too many results returned from sam, none of which have an AzureB2cId: ${results.size}." +
+                s"Results: ${results
+                  .map(samRecord => s"GoogleSubjectId: ${samRecord.getGoogleSubjectId}, AzureB2cId: ${samRecord.getAzureB2CId}, SamId: ${samRecord.getId}")}" +
+                s"Query: $userId"
             )
           )
         )
@@ -92,18 +108,28 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     } yield result
   }
 
+  /*
+   * For historical reasons, we don't know which 'type' of userId was used when creating any given record in Thurloe.
+   * It could be the Sam UserID, GoogleSubject ID, or the Azure B2C ID, so we need to try find records with all three for now.
+   * In the future, we are going to migrate/normalize Thurloe's DB to only use Sam User ID
+   */
   def lookupIncludingDatabaseId(userId: String, key: String)(implicit samDAO: SamDAO): Future[UserKeyValuePairWithId] =
     for {
       samUser <- lookupSamUser(userId)
-      results <- lookupWithConstraint(x =>
-        x.key === key && (x.userId === samUser.getId || x.userId === samUser.getGoogleSubjectId || x.userId === samUser.getAzureB2CId)
+      results <- lookupWithConstraint(thurloeRecord =>
+        thurloeRecord.key === key && (thurloeRecord.userId === samUser.getId || thurloeRecord.userId === samUser.getGoogleSubjectId || thurloeRecord.userId === samUser.getAzureB2CId)
       )
       result <- if (results.isEmpty) {
-        Future.failed(new KeyNotFoundException(userId, key))
+        Future.failed(KeyNotFoundException(userId, key))
       } else if (results.size == 1) {
         Future.successful(results.head)
       } else {
-        Future.failed(InvalidDatabaseStateException(s"Too many results: ${results.size}"))
+        Future.failed(
+          InvalidDatabaseStateException(
+            s"Too many results returned from Thurloe's DB (${results.size}) for userId: $userId and key: $key" +
+              s"Results: ${results.map(thurloeRecord => s"KeyValuePair: ${thurloeRecord.userKeyValuePair}")}"
+          )
+        )
       }
     } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
 
@@ -112,29 +138,39 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       _.userKeyValuePair
     }
 
+  /*
+   * For historical reasons, we don't know which 'type' of userId was used when creating any given record in Thurloe.
+   * It could be the Sam UserID, GoogleSubject ID, or the Azure B2C ID, so we need to try find records with all three for now.
+   * In the future, we are going to migrate/normalize Thurloe's DB to only use Sam User ID
+   */
   def lookup(userId: String)(implicit samDAO: SamDAO): Future[UserKeyValuePairs] =
     for {
       samUser <- lookupSamUser(userId)
-      results <- lookupWithConstraint(x =>
-        x.userId === samUser.getId || x.userId === samUser.getGoogleSubjectId || x.userId === samUser.getAzureB2CId
+      results <- lookupWithConstraint(thurloeRecord =>
+        thurloeRecord.userId === samUser.getId || thurloeRecord.userId === samUser.getGoogleSubjectId || thurloeRecord.userId === samUser.getAzureB2CId
       )
     } yield UserKeyValuePairs(userId, results map { _.userKeyValuePair.keyValuePair })
 
+  /*
+   * For historical reasons, we don't know which 'type' of userId was used when creating any given record in Thurloe.
+   * It could be the Sam UserID, GoogleSubject ID, or the Azure B2C ID, so we need to try find records with all three for now.
+   * In the future, we are going to migrate/normalize Thurloe's DB to only use Sam User ID
+   */
   def lookup(queryParameters: ThurloeQuery)(implicit samDAO: SamDAO): Future[Seq[UserKeyValuePair]] = {
-    def userIdAndKeyConstraint(queryParameters: ThurloeQuery) = (x: DbKeyValuePair) => {
+    def userIdAndKeyConstraint(queryParameters: ThurloeQuery) = (thurloeRecord: DbKeyValuePair) => {
       val include: Rep[Boolean] = true
 
       val userIdFilter = queryParameters.userId.map { userIds =>
         val userIdFilters = userIds map { userId =>
           val samUser = Await.result(lookupSamUser(userId), 60 seconds)
-          x.userId === samUser.getId ||
-          x.userId === samUser.getGoogleSubjectId || x.userId === samUser.getAzureB2CId
+          thurloeRecord.userId === samUser.getId ||
+          thurloeRecord.userId === samUser.getGoogleSubjectId || thurloeRecord.userId === samUser.getAzureB2CId
 
         }
         userIdFilters.reduceLeft(_ || _)
       }
       val keyFilter = queryParameters.key.map { keys =>
-        val keyFilters = keys map { key => x.key === key }
+        val keyFilters = keys map { key => thurloeRecord.key === key }
         keyFilters.reduceLeft(_ || _)
       }
 
@@ -232,7 +268,8 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       }
 
   def delete(userId: String, key: String): Future[Unit] = {
-    val action = keyValuePairTable.filter(x => x.key === key && x.userId === userId).delete
+    val action =
+      keyValuePairTable.filter(thurloeRecord => thurloeRecord.key === key && thurloeRecord.userId === userId).delete
     val affectedRowsCountFuture: Future[Int] = database.run(action.transactionally)
 
     for {
