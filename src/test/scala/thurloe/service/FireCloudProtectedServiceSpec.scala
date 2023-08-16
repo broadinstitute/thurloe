@@ -14,7 +14,7 @@ class FireCloudProtectedServiceSpec extends AnyFunSpec with ScalatestRouteTest {
   val userId = "fake"
 
   def protectedServices = new FireCloudProtectedServices {
-    implicit val samDao: SamDAO = mock[SamDAO]
+    val samDao: SamDAO = mock[SamDAO]
     val samUser1 = new sam.model.User()
     samUser1.setId(userId)
     samUser1.setAzureB2CId(userId)

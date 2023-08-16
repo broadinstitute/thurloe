@@ -8,12 +8,12 @@ import com.typesafe.config.ConfigFactory
 import thurloe.dataaccess.{HttpSendGridDAO, SamDAO}
 import thurloe.database.ThurloeDatabaseConnector
 
-class ThurloeServiceActor(implicit httpSamDao: SamDAO) extends FireCloudProtectedServices with StatusService {
+class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices with StatusService {
   val authConfig = ConfigFactory.load().getConfig("auth")
 
-  implicit val samDao = httpSamDao
+  val samDao = httpSamDao
   override val dataAccess = ThurloeDatabaseConnector
-  override val sendGridDAO = new HttpSendGridDAO()(samDao)
+  override val sendGridDAO = new HttpSendGridDAO(samDao)
   protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/4.1.3"
 
   def route: Route =

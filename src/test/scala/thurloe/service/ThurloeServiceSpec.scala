@@ -40,7 +40,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
   val u3k3v3 = UserKeyValuePairs("NEVER FOUND", Seq(KeyValuePair("NEvER", "FOUND")))
 
   def thurloeService = new ThurloeService {
-    implicit val samDao: SamDAO = mock[SamDAO]
+    val samDao: SamDAO = mock[SamDAO]
 
     val samUser1 = new sam.model.User()
     val samUser2 = new sam.model.User()
@@ -351,7 +351,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
     it("should fail with internal server error") {
       val errorThurloe = new ThurloeService {
-        implicit val samDao: SamDAO = mock[HttpSamDAO]
+        val samDao: SamDAO = mock[HttpSamDAO]
         when(samDao.getUserById(user1)).thenReturn(List.empty)
         val dataAccess = MockUnhealthyThurloeDatabaseConnector
         def actorRefFactory = system
@@ -381,7 +381,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       val value2 = "value1"
       val k2v2 = KeyValuePair(key2, value2)
       val thurloeService = new ThurloeService {
-        implicit val samDao: SamDAO = mock[HttpSamDAO]
+        val samDao: SamDAO = mock[HttpSamDAO]
         when(samDao.getUserById(userB2cId)).thenReturn(List(user1))
         when(samDao.getUserById(userSubjectId)).thenReturn(List(user1))
         when(samDao.getUserById(userSamId)).thenReturn(List(user1))

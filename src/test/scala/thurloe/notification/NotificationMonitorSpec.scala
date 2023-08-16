@@ -30,7 +30,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
     with BeforeAndAfterAll {
   def this() = this(ActorSystem("NotificationMonitorSpec"))
 
-  implicit val samDao = mock[HttpSamDAO]
+  val samDao = mock[HttpSamDAO]
 
   override def beforeAll(): Unit =
     super.beforeAll()
@@ -56,7 +56,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceInvitedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -113,7 +114,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
             "WorkspaceAddedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -142,7 +144,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
       WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(
-      ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))),
+      ThurloeDatabaseConnector.set(samDao,
+                                   UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))),
       Duration.Inf
     )
 
@@ -173,7 +176,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
             "WorkspaceAddedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -195,6 +199,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
       WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(ThurloeDatabaseConnector.set(
+                   samDao,
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))
                  ),
                  Duration.Inf)
@@ -225,7 +230,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -246,6 +252,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     Await.result(
       ThurloeDatabaseConnector.set(
+        samDao,
         UserKeyValuePairs(
           userId,
           Seq(
@@ -285,7 +292,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -313,6 +321,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     Await.result(
       ThurloeDatabaseConnector.set(
+        samDao,
         UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification", "false")))
       ),
       Duration.Inf
@@ -345,7 +354,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
             "WorkspaceAddedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -361,6 +371,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     // Make sure notifications are turned on for the test user (notificationsOffKey -> false)
     Await.result(ThurloeDatabaseConnector.set(
+                   samDao,
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "false")))
                  ),
                  Duration.Inf)

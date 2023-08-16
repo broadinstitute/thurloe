@@ -34,7 +34,8 @@ object NotificationMonitorSupervisor {
             workerCount: Int,
             sendGridDAO: SendGridDAO,
             templateIdsByType: Map[String, String],
-            fireCloudPortalUrl: String)(implicit executionContext: ExecutionContext, samDAO: SamDAO): Props =
+            fireCloudPortalUrl: String,
+            samDao: SamDAO)(implicit executionContext: ExecutionContext): Props =
     Props(
       new NotificationMonitorSupervisor(pollInterval,
                                         pollIntervalJitter,
@@ -44,7 +45,8 @@ object NotificationMonitorSupervisor {
                                         workerCount,
                                         sendGridDAO,
                                         templateIdsByType,
-                                        fireCloudPortalUrl)
+                                        fireCloudPortalUrl,
+                                        samDao: SamDAO)
     )
 }
 
@@ -57,8 +59,9 @@ class NotificationMonitorSupervisor(
   workerCount: Int,
   sendGridDAO: SendGridDAO,
   templateIdsByType: Map[String, String],
-  fireCloudPortalUrl: String
-)(implicit executionContext: ExecutionContext, samDao: SamDAO)
+  fireCloudPortalUrl: String,
+  samDao: SamDAO
+)(implicit executionContext: ExecutionContext)
     extends Actor
     with LazyLogging {
 
@@ -79,14 +82,17 @@ class NotificationMonitorSupervisor(
   def startOne(): Unit = {
     logger.info("starting NotificationMonitorActor")
     context.actorOf(
-      NotificationMonitor.props(pollInterval,
-                                pollIntervalJitter,
-                                pubSubDao,
-                                pubSubSubscriptionName,
-                                sendGridDAO,
-                                templateIdsByType,
-                                fireCloudPortalUrl,
-                                ThurloeDatabaseConnector)
+      NotificationMonitor.props(
+        pollInterval,
+        pollIntervalJitter,
+        pubSubDao,
+        pubSubSubscriptionName,
+        sendGridDAO,
+        templateIdsByType,
+        fireCloudPortalUrl,
+        ThurloeDatabaseConnector,
+        samDao: SamDAO
+      )
     )
   }
 
@@ -112,7 +118,8 @@ object NotificationMonitor {
             sendGridDAO: SendGridDAO,
             templateIdsByType: Map[String, String],
             fireCloudPortalUrl: String,
-            dataAccess: DataAccess)(implicit executionContext: ExecutionContext, samDAO: SamDAO): Props =
+            dataAccess: DataAccess,
+            samDao: SamDAO)(implicit executionContext: ExecutionContext): Props =
     Props(
       new NotificationMonitorActor(pollInterval,
                                    pollIntervalJitter,
@@ -121,7 +128,8 @@ object NotificationMonitor {
                                    sendGridDAO,
                                    templateIdsByType,
                                    fireCloudPortalUrl,
-                                   dataAccess)
+                                   dataAccess,
+                                   samDao: SamDAO)
     )
 
   val notificationsOffKey = "notifications.off"
@@ -134,7 +142,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                sendGridDAO: SendGridDAO,
                                templateIdsByType: Map[String, String],
                                fireCloudPortalUrl: String,
-                               dataAccess: DataAccess)(implicit executionContext: ExecutionContext, samDao: SamDAO)
+                               dataAccess: DataAccess,
+                               samDao: SamDAO)(implicit executionContext: ExecutionContext)
     extends Actor
     with LazyLogging {
 
@@ -222,7 +231,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
     }
 
   def booleanLookup(userId: WorkbenchUserId, key: String, defaultValue: Boolean): Future[Boolean] =
-    dataAccess.lookup(userId.value, key).map(kvp => kvp.keyValuePair.value.toBoolean).recover {
+    dataAccess.lookup(samDao, userId.value, key).map(kvp => kvp.keyValuePair.value.toBoolean).recover {
       case _: KeyNotFoundException     => defaultValue
       case _: IllegalArgumentException => defaultValue
     }

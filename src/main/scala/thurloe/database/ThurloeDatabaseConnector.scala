@@ -67,11 +67,11 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * NOTE: Once all consumers of thurloe are using sam id to store and lookup user data this method can be removed.
    *
    * @param userId We dont know what type of user id this is, could be gsid, b2cid, or sam id
-   * @param samDAO
+   * @param samDao
    * @return
    */
-  private def lookupSamUser(userId: String)(implicit samDAO: SamDAO): Future[sam.model.User] = {
-    val results = samDAO.getUserById(userId)
+  private def lookupSamUser(userId: String, samDao: SamDAO): Future[sam.model.User] = {
+    val results = samDao.getUserById(userId)
 
     if (results.isEmpty) {
       Future.failed(new KeyNotFoundException(userId, "n/a"))
@@ -113,9 +113,9 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * It could be the Sam UserID, GoogleSubject ID, or the Azure B2C ID, so we need to try find records with all three for now.
    * In the future, we are going to migrate/normalize Thurloe's DB to only use Sam User ID
    */
-  def lookupIncludingDatabaseId(userId: String, key: String)(implicit samDAO: SamDAO): Future[UserKeyValuePairWithId] =
+  def lookupIncludingDatabaseId(userId: String, key: String, samDAO: SamDAO): Future[UserKeyValuePairWithId] =
     for {
-      samUser <- lookupSamUser(userId)
+      samUser <- lookupSamUser(userId, samDAO)
       results <- lookupWithConstraint(thurloeRecord =>
         thurloeRecord.key === key && (thurloeRecord.userId === samUser.getId || thurloeRecord.userId === samUser.getGoogleSubjectId || thurloeRecord.userId === samUser.getAzureB2CId)
       )
@@ -133,8 +133,8 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       }
     } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
 
-  def lookup(userId: String, key: String)(implicit samDAO: SamDAO): Future[UserKeyValuePair] =
-    lookupIncludingDatabaseId(userId, key) map {
+  def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair] =
+    lookupIncludingDatabaseId(userId, key, samDao) map {
       _.userKeyValuePair
     }
 
@@ -143,9 +143,9 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * It could be the Sam UserID, GoogleSubject ID, or the Azure B2C ID, so we need to try find records with all three for now.
    * In the future, we are going to migrate/normalize Thurloe's DB to only use Sam User ID
    */
-  def lookup(userId: String)(implicit samDAO: SamDAO): Future[UserKeyValuePairs] =
+  def lookup(samDao: SamDAO, userId: String): Future[UserKeyValuePairs] =
     for {
-      samUser <- lookupSamUser(userId)
+      samUser <- lookupSamUser(userId, samDao)
       results <- lookupWithConstraint(thurloeRecord =>
         thurloeRecord.userId === samUser.getId || thurloeRecord.userId === samUser.getGoogleSubjectId || thurloeRecord.userId === samUser.getAzureB2CId
       )
@@ -156,13 +156,13 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * It could be the Sam UserID, GoogleSubject ID, or the Azure B2C ID, so we need to try find records with all three for now.
    * In the future, we are going to migrate/normalize Thurloe's DB to only use Sam User ID
    */
-  def lookup(queryParameters: ThurloeQuery)(implicit samDAO: SamDAO): Future[Seq[UserKeyValuePair]] = {
+  def lookup(samDao: SamDAO, queryParameters: ThurloeQuery): Future[Seq[UserKeyValuePair]] = {
     def userIdAndKeyConstraint(queryParameters: ThurloeQuery) = (thurloeRecord: DbKeyValuePair) => {
       val include: Rep[Boolean] = true
 
       val userIdFilter = queryParameters.userId.map { userIds =>
         val userIdFilters = userIds map { userId =>
-          val samUser = Await.result(lookupSamUser(userId), 60 seconds)
+          val samUser = Await.result(lookupSamUser(userId, samDao), 60 seconds)
           thurloeRecord.userId === samUser.getId ||
           thurloeRecord.userId === samUser.getGoogleSubjectId || thurloeRecord.userId === samUser.getAzureB2CId
 
@@ -200,8 +200,9 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * @return The type of operation which was carried out (as a Future)
    */
   private def databaseWrite(userKeyValuePair: UserKeyValuePair,
-                            encryptedValue: EncryptedBytes)(implicit samDAO: SamDAO): Future[DatabaseOperation] = {
-    val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key)
+                            encryptedValue: EncryptedBytes,
+                            samDao: SamDAO): Future[DatabaseOperation] = {
+    val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key, samDao)
     lookupExists flatMap { existingKvp =>
       update(existingKvp, userKeyValuePair, encryptedValue)
     } recoverWith {
@@ -252,11 +253,11 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       )
     }
 
-  def set(userKeyValuePairs: UserKeyValuePairs)(implicit samDAO: SamDAO): Future[DatabaseOperation] =
+  def set(samDao: SamDAO, userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
     Future
       .sequence(userKeyValuePairs.toKeyValueSeq.map { userKeyValuePair =>
         Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
-          case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
+          case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue, samDao)
           case Failure(t)              => Future.failed(t)
         }
       })

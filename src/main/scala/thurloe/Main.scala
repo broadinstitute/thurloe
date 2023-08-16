@@ -40,8 +40,8 @@ object Main extends App {
     gcsConfig.getString("serviceProject")
   )
 
-  implicit val samDao = new HttpSamDAO(config, pem)
-  private val httpSendGridDAO = new HttpSendGridDAO
+  val samDao = new HttpSamDAO(config, pem)
+  private val httpSendGridDAO = new HttpSendGridDAO(samDao)
   system.actorOf(
     NotificationMonitorSupervisor.props(
       toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
@@ -57,11 +57,12 @@ object Main extends App {
         .asScala
         .map(entry => entry.getKey -> entry.getValue.unwrapped().toString)
         .toMap,
-      config.getString("notification.fireCloudPortalUrl")
+      config.getString("notification.fireCloudPortalUrl"),
+      samDao
     )
   )
 
-  val routes = new ThurloeServiceActor()
+  val routes = new ThurloeServiceActor(samDao)
 
   for {
     binding <- Http().newServerAt("0.0.0.0", 8000).bind(routes.route).recover {
