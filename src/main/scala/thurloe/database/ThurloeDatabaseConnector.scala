@@ -88,9 +88,9 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
           Future.failed(
             InvalidDatabaseStateException(
               s"Too many results returned from sam, none of which have an AzureB2cId: ${results.size}." +
-                s"Results: ${results
+                s"\nResults: ${results
                   .map(samRecord => s"GoogleSubjectId: ${samRecord.getGoogleSubjectId}, AzureB2cId: ${samRecord.getAzureB2CId}, SamId: ${samRecord.getId}")}" +
-                s"Query: $userId"
+                s"\nQuery: $userId"
             )
           )
         )
@@ -127,7 +127,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         Future.failed(
           InvalidDatabaseStateException(
             s"Too many results returned from Thurloe's DB (${results.size}) for userId: $userId and key: $key" +
-              s"Results: ${results.map(thurloeRecord => s"KeyValuePair: ${thurloeRecord.userKeyValuePair}")}"
+              s"\nResults: ${results.map(thurloeRecord => s"KeyValuePair: ${thurloeRecord.userKeyValuePair}")}"
           )
         )
       }

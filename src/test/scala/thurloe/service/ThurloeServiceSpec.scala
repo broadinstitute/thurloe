@@ -467,5 +467,98 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         }
       }
     }
+
+    it("should gracefully handle sam record collision when one of the sam records has a b2c id") {
+      // prepare values and mocks
+      val userSamId = "samId"
+      val userSubjectId = "subjectId"
+      val userB2cId = "b2cId"
+      val user1 = new sam.model.User()
+      user1.setId(userSamId)
+      user1.setGoogleSubjectId(userSubjectId)
+
+      val user2 = new sam.model.User()
+      user2.setId(userSamId)
+      user2.setGoogleSubjectId(userSubjectId)
+      user2.setAzureB2CId(userB2cId)
+
+      val key1 = "key1"
+      val value1 = "value1"
+      val k1v1 = KeyValuePair(key1, value1)
+
+      val thurloeService = new ThurloeService {
+        val samDao: SamDAO = mock[HttpSamDAO]
+        when(samDao.getUserById(userB2cId)).thenReturn(List(user1, user2))
+        when(samDao.getUserById(userSubjectId)).thenReturn(List(user1, user2))
+        when(samDao.getUserById(userSamId)).thenReturn(List(user1, user2))
+        val dataAccess = ThurloeDatabaseConnector
+
+        def actorRefFactory = system
+      }
+
+      val u1k1v1B2cId = UserKeyValuePairs(userB2cId, Seq(k1v1))
+      val u1k1v1SubjectId = UserKeyValuePairs(userSubjectId, Seq(k1v1))
+
+      // Create key values for the user
+      Post(uriPrefix, u1k1v1B2cId) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      // Assert that a bad response is returned on sam id collision
+      Get(s"$uriPrefix/$userSubjectId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v1SubjectId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+    }
+
+    it("should fail when multiple records are returned and none have an azure b2c id") {
+      // prepare values and mocks
+      val userSamId = "samId"
+      val userSubjectId = "subjectId"
+      val user1 = new sam.model.User()
+      user1.setId(userSamId)
+      user1.setGoogleSubjectId(userSubjectId)
+
+      val user2 = new sam.model.User()
+      user2.setId(userSamId)
+      user2.setGoogleSubjectId(userSubjectId)
+
+      val key1 = "key1"
+      val value1 = "value1"
+      val k1v1 = KeyValuePair(key1, value1)
+
+      val thurloeService = new ThurloeService {
+        val samDao: SamDAO = mock[HttpSamDAO]
+        when(samDao.getUserById(userSubjectId)).thenReturn(List(user1, user2))
+        when(samDao.getUserById(userSamId)).thenReturn(List(user1, user2))
+        val dataAccess = ThurloeDatabaseConnector
+
+        def actorRefFactory = system
+      }
+
+      val u1k1v1SubjectId = UserKeyValuePairs(userSubjectId, Seq(k1v1))
+
+      // Assert that a bad response is returned on sam id collision
+      Post(uriPrefix, u1k1v1SubjectId) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(
+          "Harumph! thurloe.database.InvalidDatabaseStateException: Too many results returned from sam, none of which have an AzureB2cId: 2.\nResults: List(GoogleSubjectId: subjectId, AzureB2cId: null, SamId: samId, GoogleSubjectId: subjectId, AzureB2cId: null, SamId: samId)\nQuery: subjectId"
+        ) {
+
+          responseAs[String]
+        }
+        assertResult(StatusCodes.InternalServerError) {
+          status
+        }
+      }
+    }
   }
 }
