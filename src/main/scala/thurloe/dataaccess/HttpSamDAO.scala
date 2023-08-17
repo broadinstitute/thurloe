@@ -30,6 +30,6 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem) extends
   protected def adminApi() = new AdminApi(samApiClient)
 
   override def getUserById(userId: String): List[sam.model.User] =
-    adminApi().adminGetUserByQuery(userId, userId, userId).asScala.toList
+    adminApi().adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
 
 }
