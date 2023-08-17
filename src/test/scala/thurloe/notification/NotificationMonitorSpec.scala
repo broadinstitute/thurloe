@@ -2,6 +2,7 @@ package thurloe.notification
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
+import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO.MessageRequest
 import org.broadinstitute.dsde.workbench.model.Notifications._
 import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import org.broadinstitute.dsde.workbench.google.mock.MockGooglePubSubDAO
@@ -65,8 +66,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
                                            "some-bucket-name"))
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
-    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-                 Duration.Inf)
+    Await.result(
+      pubsubDao.publishMessages(
+        topic,
+        testNotifications.map(notification => MessageRequest(NotificationFormat.write(notification).compactPrint))
+      ),
+      Duration.Inf
+    )
     awaitAssert(
       testNotifications
         .map(n => n.recipientUserEmail.value)
@@ -121,8 +127,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(removedNotification, addedNotification)
-    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-                 Duration.Inf)
+    Await.result(
+      pubsubDao.publishMessages(
+        topic,
+        testNotifications.map(notification => MessageRequest(NotificationFormat.write(notification).compactPrint))
+      ),
+      Duration.Inf
+    )
     awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
     assertResult(1) {
       sendGridDAO.emails.size()
@@ -167,8 +178,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(removedNotification, addedNotification)
-    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-                 Duration.Inf)
+    Await.result(
+      pubsubDao.publishMessages(
+        topic,
+        testNotifications.map(notification => MessageRequest(NotificationFormat.write(notification).compactPrint))
+      ),
+      Duration.Inf
+    )
     awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
     assertResult(0) {
       sendGridDAO.emails.size()
@@ -227,8 +243,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(submissionNotification)
-    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-                 Duration.Inf)
+    Await.result(
+      pubsubDao.publishMessages(
+        topic,
+        testNotifications.map(notification => MessageRequest(NotificationFormat.write(notification).compactPrint))
+      ),
+      Duration.Inf
+    )
     awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
     assertResult(0) {
       sendGridDAO.emails.size()
@@ -279,8 +300,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(submissionNotification)
-    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-                 Duration.Inf)
+    Await.result(
+      pubsubDao.publishMessages(
+        topic,
+        testNotifications.map(notification => MessageRequest(NotificationFormat.write(notification).compactPrint))
+      ),
+      Duration.Inf
+    )
     awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
     assertResult(0) {
       sendGridDAO.emails.size()
@@ -325,8 +351,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
                  Duration.Inf)
 
     val testNotifications = Seq(removedNotification, addedNotification)
-    Await.result(pubsubDao.publishMessages(topic, testNotifications.map(NotificationFormat.write(_).compactPrint)),
-                 Duration.Inf)
+    Await.result(
+      pubsubDao.publishMessages(
+        topic,
+        testNotifications.map(notification => MessageRequest(NotificationFormat.write(notification).compactPrint))
+      ),
+      Duration.Inf
+    )
     awaitAssert(assertResult(testNotifications.size)(pubsubDao.acks.size()), 10 seconds)
     assertResult(0) {
       sendGridDAO.emails.size()
