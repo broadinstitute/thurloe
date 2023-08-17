@@ -60,7 +60,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     }
 
   /**
-   * Consumers of thurloe are not cinsistent in what type of userId they send. Sometimes it is the user's
+   * Consumers of thurloe are not consistent in what type of userId they send. Sometimes it is the user's
    * googleSubjectId and sometimes it is the user's azureB2cId. This method will look up the user in sam to get
    * all of their ids in order to properly do the lookup and support azure b2c users.
    *

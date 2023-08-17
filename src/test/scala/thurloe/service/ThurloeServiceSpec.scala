@@ -482,8 +482,8 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       user2.setGoogleSubjectId(userSubjectId)
       user2.setAzureB2CId(userB2cId)
 
-      val key1 = "key1"
-      val value1 = "value1"
+      val key1 = "k1"
+      val value1 = "v1"
       val k1v1 = KeyValuePair(key1, value1)
 
       val thurloeService = new ThurloeService {
