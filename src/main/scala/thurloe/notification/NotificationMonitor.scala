@@ -71,7 +71,7 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration,
   def init =
     for {
       _ <- pubSubDao.createTopic(pubSubTopicName)
-      _ <- pubSubDao.createSubscription(pubSubTopicName, pubSubSubscriptionName)
+      _ <- pubSubDao.createSubscription(pubSubTopicName, pubSubSubscriptionName, None)
     } yield Start
 
   def startOne(): Unit = {
@@ -229,6 +229,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
     s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}"
   def submissionUrl(workspaceName: WorkspaceName, submissionId: String): String =
     s"$fireCloudPortalUrl/#workspaces/${workspaceName.namespace}/${workspaceName.name}/job_history/$submissionId"
+  def billingProjectUrl(billingProjectName: String): String =
+    s"$fireCloudPortalUrl/#billing?selectedName=$billingProjectName&type=project"
   def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
   def bucketUrl(bucketName: String): String = s"https://console.cloud.google.com/storage/browser/${bucketName}"
 
@@ -237,6 +239,9 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
 
     notification match {
       case ActivationNotification(recipentUserId) =>
+        thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
+
+      case AzurePreviewActivationNotification(recipentUserId) =>
         thurloe.service.Notification(Option(recipentUserId), None, None, templateId, Map.empty, Map.empty, Map.empty)
 
       case WorkspaceAddedNotification(recipientUserId, accessLevel, workspaceName, workspaceOwnerId) =>
@@ -263,6 +268,18 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
               "wsUrl" -> workspacePortalUrl(workspaceName),
               "bucketName" -> bucketName,
               "bucketUrl" -> bucketUrl(bucketName)),
+          Map("originEmail" -> requesterId),
+          Map("userNameFL" -> requesterId)
+        )
+
+      case BillingProjectInvitedNotification(recipientUserEmail, requesterId, billingProjectName) =>
+        thurloe.service.Notification(
+          None,
+          Option(recipientUserEmail),
+          Option(Set(requesterId)),
+          templateId,
+          Map("billingProjectName" -> billingProjectName,
+              "billingProjectNameUrl" -> billingProjectUrl(billingProjectName)),
           Map("originEmail" -> requesterId),
           Map("userNameFL" -> requesterId)
         )

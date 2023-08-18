@@ -3,6 +3,7 @@ package thurloe
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import com.typesafe.config.ConfigFactory
+import io.sentry.{Sentry, SentryOptions}
 import org.broadinstitute.dsde.workbench.google.{GoogleCredentialModes, HttpGooglePubSubDAO}
 import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import org.broadinstitute.dsde.workbench.util.toScalaDuration
@@ -15,6 +16,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
 
 object Main extends App {
+  sys.env.get("SENTRY_DSN").foreach { dsn =>
+    val options = new SentryOptions()
+    options.setDsn(dsn)
+    options.setEnvironment(sys.env.getOrElse("SENTRY_ENVIRONMENT", "unknown"))
+    Sentry.init(options)
+  }
+
   // We need an ActorSystem to host our application in
   implicit val system = ActorSystem("thurloe")
 
