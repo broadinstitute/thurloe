@@ -7,7 +7,7 @@ import io.sentry.{Sentry, SentryOptions}
 import org.broadinstitute.dsde.workbench.google.{GoogleCredentialModes, HttpGooglePubSubDAO}
 import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import org.broadinstitute.dsde.workbench.util.toScalaDuration
-import thurloe.dataaccess.HttpSendGridDAO
+import thurloe.dataaccess.{HttpSamDAO, HttpSendGridDAO}
 import thurloe.notification.NotificationMonitorSupervisor
 import thurloe.service.ThurloeServiceActor
 
@@ -16,7 +16,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
 
 object Main extends App {
-  sys.env.get("SENTRY_DSN").foreach { dsn =>
+  val sentryDsn = sys.env.get("SENTRY_DSN")
+  sentryDsn.foreach { dsn =>
     val options = new SentryOptions()
     options.setDsn(dsn)
     options.setEnvironment(sys.env.getOrElse("SENTRY_ENVIRONMENT", "unknown"))
@@ -39,6 +40,8 @@ object Main extends App {
     gcsConfig.getString("serviceProject")
   )
 
+  val samDao = new HttpSamDAO(config, pem)
+  private val httpSendGridDAO = new HttpSendGridDAO(samDao)
   system.actorOf(
     NotificationMonitorSupervisor.props(
       toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
@@ -47,18 +50,19 @@ object Main extends App {
       gcsConfig.getString("notificationMonitor.topicName"),
       gcsConfig.getString("notificationMonitor.subscriptionName"),
       gcsConfig.getInt("notificationMonitor.workerCount"),
-      new HttpSendGridDAO,
+      httpSendGridDAO,
       config
         .getConfig("notification.templateIds")
         .entrySet()
         .asScala
         .map(entry => entry.getKey -> entry.getValue.unwrapped().toString)
         .toMap,
-      config.getString("notification.fireCloudPortalUrl")
+      config.getString("notification.fireCloudPortalUrl"),
+      samDao
     )
   )
 
-  val routes = new ThurloeServiceActor()
+  val routes = new ThurloeServiceActor(samDao)
 
   for {
     binding <- Http().newServerAt("0.0.0.0", 8000).bind(routes.route).recover {

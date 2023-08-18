@@ -5,14 +5,15 @@ import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
-import thurloe.dataaccess.HttpSendGridDAO
+import thurloe.dataaccess.{HttpSendGridDAO, SamDAO}
 import thurloe.database.ThurloeDatabaseConnector
 
-class ThurloeServiceActor extends FireCloudProtectedServices with StatusService {
+class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices with StatusService {
   val authConfig = ConfigFactory.load().getConfig("auth")
 
+  val samDao = httpSamDao
   override val dataAccess = ThurloeDatabaseConnector
-  override val sendGridDAO = new HttpSendGridDAO
+  override val sendGridDAO = new HttpSendGridDAO(samDao)
   protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/4.1.3"
 
   def route: Route =

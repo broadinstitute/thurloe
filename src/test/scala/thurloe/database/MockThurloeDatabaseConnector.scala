@@ -1,17 +1,27 @@
 package thurloe.database
 
-import thurloe.service.{ThurloeQuery, UserKeyValuePairs}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
+import thurloe.dataaccess.{HttpSamDAO, SamDAO}
+import thurloe.service.{ThurloeQuery, UserKeyValuePair, UserKeyValuePairs}
 
 import scala.concurrent.Future
+import org.mockito.MockitoSugar.mock
+import thurloe.database.DatabaseOperation.DatabaseOperation
 
 case object MockThurloeDatabaseConnector extends DataAccess {
-  override def set(keyValuePairs: UserKeyValuePairs) = ???
+  val samDAO = mock[HttpSamDAO]
 
-  override def lookup(userId: String, key: String) = ???
+  // By default return no users
+  when(samDAO.getUserById(any[String])).thenReturn(List.empty)
 
-  override def lookup(userId: String) = ???
+  override def set(samDao: SamDAO, keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] = ???
 
-  override def lookup(query: ThurloeQuery) = ???
+  override def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair] = ???
+
+  override def lookup(samDao: SamDAO, userId: String): Future[UserKeyValuePairs] = ???
+
+  override def lookup(samDao: SamDAO, query: ThurloeQuery): Future[Seq[UserKeyValuePair]] = ???
 
   override def delete(userId: String, key: String) = ???
 

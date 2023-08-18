@@ -6,12 +6,15 @@ import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO.MessageRequest
 import org.broadinstitute.dsde.workbench.model.Notifications._
 import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import org.broadinstitute.dsde.workbench.google.mock.MockGooglePubSubDAO
+import org.mockito.MockitoSugar.mock
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpecLike
 import org.scalatest.matchers.should.Matchers
-import thurloe.dataaccess.{MockSendGridDAO, MockSendGridDAOWithException}
+import thurloe.dataaccess.{HttpSamDAO, MockSendGridDAO, MockSendGridDAOWithException}
 import thurloe.database.ThurloeDatabaseConnector
 import thurloe.service.{KeyValuePair, UserKeyValuePairs}
+import org.broadinstitute.dsde.workbench.client.sam
+import org.mockito.Mockito.when
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -27,6 +30,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
     with Matchers
     with BeforeAndAfterAll {
   def this() = this(ActorSystem("NotificationMonitorSpec"))
+
+  val samDao = mock[HttpSamDAO]
 
   override def beforeAll(): Unit =
     super.beforeAll()
@@ -52,18 +57,27 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceInvitedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
     // NotificationMonitorSupervisor creates the topic, need to wait for it to exist before publishing messages
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
     val testNotifications =
-      (for (i <- 0 until workerCount * 4)
-        yield WorkspaceInvitedNotification(WorkbenchEmail(s"foo$i"),
-                                           WorkbenchUserId(s"bar$i"),
-                                           WorkspaceName("namespace", "name"),
-                                           "some-bucket-name"))
+      for (i <- 0 until 4) yield {
+        val id = WorkbenchUserId(s"bar$i")
+        val samUser = new sam.model.User()
+        samUser.setId(id.value)
+        samUser.setAzureB2CId(id.value)
+        samUser.setGoogleSubjectId(id.value)
+
+        when(samDao.getUserById(id.value)).thenReturn(List(samUser))
+        WorkspaceInvitedNotification(WorkbenchEmail(s"foo$i"),
+                                     id,
+                                     WorkspaceName("namespace", "name"),
+                                     "some-bucket-name")
+      }
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     Await.result(
@@ -106,7 +120,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
             "WorkspaceAddedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -114,6 +129,20 @@ class NotificationMonitorSpec(_system: ActorSystem)
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
 
     val userId = sendGridDAO.testUserId1
+    val samUser1 = new sam.model.User()
+    samUser1.setId(userId)
+    samUser1.setAzureB2CId(userId)
+    samUser1.setGoogleSubjectId(userId)
+
+    val userId2 = "a_user_id2"
+    val samUser2 = new sam.model.User()
+    samUser2.setId(userId2)
+    samUser2.setAzureB2CId(userId2)
+    samUser2.setGoogleSubjectId(userId2)
+
+    when(samDao.getUserById(userId)).thenReturn(List(samUser1))
+    when(samDao.getUserById(userId2)).thenReturn(List(samUser2))
+
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val removedNotification =
       WorkspaceRemovedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
@@ -121,7 +150,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
       WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(
-      ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))),
+      ThurloeDatabaseConnector.set(samDao,
+                                   UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))),
       Duration.Inf
     )
 
@@ -157,7 +187,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
             "WorkspaceAddedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -165,6 +196,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
 
     val userId = sendGridDAO.testUserId1
+    val samUser = new sam.model.User()
+    samUser.setId(userId)
+    samUser.setAzureB2CId(userId)
+    samUser.setGoogleSubjectId(userId)
+
+    when(samDao.getUserById(userId)).thenReturn(List(samUser))
+
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val removedNotification =
       WorkspaceRemovedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
@@ -172,6 +210,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
       WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(ThurloeDatabaseConnector.set(
+                   samDao,
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))
                  ),
                  Duration.Inf)
@@ -207,7 +246,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -228,6 +268,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     Await.result(
       ThurloeDatabaseConnector.set(
+        samDao,
         UserKeyValuePairs(
           userId,
           Seq(
@@ -272,7 +313,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -280,6 +322,13 @@ class NotificationMonitorSpec(_system: ActorSystem)
     awaitCond(pubsubDao.topics.contains(topic), 10 seconds)
 
     val userId = sendGridDAO.testUserId1
+    val samUser = new sam.model.User()
+    samUser.setId(userId)
+    samUser.setAzureB2CId(userId)
+    samUser.setGoogleSubjectId(userId)
+
+    when(samDao.getUserById(userId)).thenReturn(List(samUser))
+
     val workspaceName = WorkspaceName("ws_ns", "ws_n")
     val submissionNotification =
       SuccessfulSubmissionNotification(WorkbenchUserId(userId),
@@ -293,6 +342,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     Await.result(
       ThurloeDatabaseConnector.set(
+        samDao,
         UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification", "false")))
       ),
       Duration.Inf
@@ -330,7 +380,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
             "WorkspaceAddedNotification" -> "valid_notification_id1"),
-        "foo"
+        "foo",
+        samDao
       )
     )
 
@@ -346,6 +397,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     // Make sure notifications are turned on for the test user (notificationsOffKey -> false)
     Await.result(ThurloeDatabaseConnector.set(
+                   samDao,
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "false")))
                  ),
                  Duration.Inf)
