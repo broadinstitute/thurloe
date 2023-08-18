@@ -71,7 +71,7 @@ class NotificationMonitorSupervisor(val pollInterval: FiniteDuration,
   def init =
     for {
       _ <- pubSubDao.createTopic(pubSubTopicName)
-      _ <- pubSubDao.createSubscription(pubSubTopicName, pubSubSubscriptionName)
+      _ <- pubSubDao.createSubscription(pubSubTopicName, pubSubSubscriptionName, None)
     } yield Start
 
   def startOne(): Unit = {
