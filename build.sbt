@@ -11,7 +11,7 @@ scalaVersion := "2.13.10"
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.3.3"
-val workbenchGoogleV = "0.22-e6ad8a1"
+val workbenchGoogleV = "0.28-3ad3700"
 val scalaTestV = "3.2.11"
 
 resolvers ++= Seq(
@@ -49,11 +49,13 @@ libraryDependencies ++= Seq(
   "org.hsqldb" % "hsqldb" % "2.6.1",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
   "ch.qos.logback" % "logback-classic" % "1.2.10",
-  //---------- Test libraries -------------------//
+  "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
+//---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
+  "org.mockito" %% "mockito-scala-scalatest" % "1.17.12" % Test,
   "org.yaml" % "snakeyaml" % "1.33" % Test
 )
 
@@ -107,6 +109,7 @@ val customMergeStrategy: String => MergeStrategy = {
       case p :: Nil if p.endsWith(".rsa") || p.endsWith(".sf") || p.endsWith(".dsa") => MergeStrategy.discard
       case _ => MergeStrategy.first
     }
+  case PathList("javax", "annotation", _@_*) => MergeStrategy.first
   case "NOTICE" => MergeStrategy.discard
   case "module-info.class" => MergeStrategy.discard
   case "reference.conf" => MergeStrategy.concat
