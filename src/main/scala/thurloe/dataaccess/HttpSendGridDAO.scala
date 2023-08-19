@@ -13,7 +13,7 @@ import scala.concurrent.Future
 /**
  * Created by mbemis on 6/16/16.
  */
-class HttpSendGridDAO extends SendGridDAO with LazyLogging {
+class HttpSendGridDAO(samDao: SamDAO) extends SendGridDAO with LazyLogging {
   val dataAccess = ThurloeDatabaseConnector
 
   override def sendEmail(email: SendGrid.Email): Future[Response] = {
@@ -35,7 +35,7 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
   //Looks up a KVP, converting empty values or missing KVPs into None
   private def lookupNonEmptyKeyValuePair(userId: String, key: String) =
     dataAccess
-      .lookup(userId, key)
+      .lookup(samDao, userId, key)
       .map { kvp =>
         if (kvp.keyValuePair.value.isEmpty) None
         else Some(kvp)
@@ -66,12 +66,12 @@ class HttpSendGridDAO extends SendGridDAO with LazyLogging {
 
   def lookupUserName(userId: WorkbenchUserId): Future[String] =
     for {
-      firstName <- dataAccess.lookup(userId.value, "firstName")
-      lastName <- dataAccess.lookup(userId.value, "lastName")
+      firstName <- dataAccess.lookup(samDao, userId.value, "firstName")
+      lastName <- dataAccess.lookup(samDao, userId.value, "lastName")
     } yield s"${firstName.keyValuePair.value} ${lastName.keyValuePair.value}"
 
   def lookupUserFirstName(userId: WorkbenchUserId): Future[String] =
     for {
-      firstName <- dataAccess.lookup(userId.value, "firstName")
+      firstName <- dataAccess.lookup(samDao, userId.value, "firstName")
     } yield firstName.keyValuePair.value
 }

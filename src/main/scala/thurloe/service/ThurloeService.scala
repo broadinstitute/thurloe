@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
 import io.sentry.Sentry
 import spray.json._
+import thurloe.dataaccess.SamDAO
 import thurloe.database.DatabaseOperation.DatabaseOperation
 import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
@@ -16,6 +17,7 @@ import scala.util.{Failure, Success}
 
 trait ThurloeService extends LazyLogging {
 
+  val samDao: SamDAO
   val dataAccess: DataAccess
   val ThurloePrefix = "thurloe"
   val Interjection = "Harumph!"
@@ -23,7 +25,7 @@ trait ThurloeService extends LazyLogging {
   val getRoute: Route =
     path(ThurloePrefix / Segment / Segment) { (userId, key) =>
       get {
-        val query: Future[UserKeyValuePair] = dataAccess.lookup(userId, key)
+        val query: Future[UserKeyValuePair] = dataAccess.lookup(samDao, userId, key)
         onComplete(query) {
           case Success(keyValuePair) =>
             complete(HttpEntity(ContentTypes.`application/json`, keyValuePair.toJson.prettyPrint))
@@ -48,7 +50,7 @@ trait ThurloeService extends LazyLogging {
               case Some(invalidFilters) =>
                 complete(StatusCodes.BadRequest, "Bad query parameter(s): " + invalidFilters.mkString(","))
               case None =>
-                val query: Future[Seq[UserKeyValuePair]] = dataAccess.lookup(ThurloeQuery(parameters))
+                val query: Future[Seq[UserKeyValuePair]] = dataAccess.lookup(samDao, ThurloeQuery(parameters))
                 onComplete(query) {
                   case Success(keyValuePairs: Seq[UserKeyValuePair]) =>
                     complete(HttpEntity(ContentTypes.`application/json`, keyValuePairs.toJson.prettyPrint))
@@ -71,7 +73,7 @@ trait ThurloeService extends LazyLogging {
   val getAllRoute: Route =
     path(ThurloePrefix / Segment) { (userId) =>
       get {
-        onComplete(dataAccess.lookup(userId)) {
+        onComplete(dataAccess.lookup(samDao, userId)) {
           case Success(userKeyValuePairs) =>
             complete(HttpEntity(ContentTypes.`application/json`, userKeyValuePairs.toJson.prettyPrint))
           case Failure(e) =>
@@ -91,7 +93,7 @@ trait ThurloeService extends LazyLogging {
     path(ThurloePrefix) {
       post {
         entity(as[UserKeyValuePairs]) { keyValuePairs =>
-          onComplete(dataAccess.set(keyValuePairs)) {
+          onComplete(dataAccess.set(samDao, keyValuePairs)) {
             case Success(setKeyResponse) =>
               complete(statusCode(setKeyResponse), HttpEntity(ContentTypes.`application/json`, ""))
             case Failure(e) =>
