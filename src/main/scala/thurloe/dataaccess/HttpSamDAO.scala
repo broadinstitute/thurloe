@@ -8,7 +8,6 @@ import org.broadinstitute.dsde.workbench.client.sam
 import org.broadinstitute.dsde.workbench.client.sam.ApiClient
 import org.broadinstitute.dsde.workbench.client.sam.api.AdminApi
 import org.broadinstitute.dsde.workbench.google.GoogleCredentialModes
-import thurloe.Main.system
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
