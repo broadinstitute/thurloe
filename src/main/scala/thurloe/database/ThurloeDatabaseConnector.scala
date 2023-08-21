@@ -95,9 +95,11 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
           )
         )
     }
+
+    // Fallback on the userId if we can't find the user in sam, this vastly simplifies the logic in the rest of the code
     samUser.recoverWith({
-      case e: Exception =>
-        logger.error(s"Api error while looking up user $userId in sam", e)
+      case _: Exception =>
+        logger.warn(s"Unable to find user in sam, falling back on userId: $userId")
         val dummySamUser = new sam.model.User()
         dummySamUser.setGoogleSubjectId(userId)
         dummySamUser.setAzureB2CId(userId)

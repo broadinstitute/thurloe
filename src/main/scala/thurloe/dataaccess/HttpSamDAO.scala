@@ -12,7 +12,7 @@ import org.broadinstitute.dsde.workbench.google.GoogleCredentialModes
 import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
 
-class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implicit val system: ActorSystem)
+class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)
     extends SamDAO
     with LazyLogging {
 
@@ -20,6 +20,7 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
 
   private val samServiceURL = samConfig.getString("samBaseUrl")
   private val timeout = samConfig.getDuration("timeout").toScala
+
   val USERINFO_EMAIL = "https://www.googleapis.com/auth/userinfo.email"
   val USERINFO_PROFILE = "https://www.googleapis.com/auth/userinfo.profile"
 
@@ -42,8 +43,6 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
     } else {
       saPemCredentials.getAccessToken
     }
-
-    system.log.info(s"Using credentials for sam: $token")
     samApiClient.setAccessToken(token)
     samApiClient
   }
@@ -55,7 +54,7 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
       adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
     } catch {
       case e: Exception =>
-        logger.warn(s"User not found: $userId", e)
+        logger.warn(s"Sam user not found: $userId", e)
         List.empty
     }
 
