@@ -7,7 +7,6 @@ import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.{ClassLoaderResourceAccessor, ResourceAccessor}
 import liquibase.{Contexts, Liquibase}
 import org.broadinstitute.dsde.workbench.client.sam
-import org.broadinstitute.dsde.workbench.client.sam.ApiException
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import sun.security.provider.certpath.SunCertPathBuilderException
@@ -97,7 +96,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         )
     }
     samUser.recoverWith({
-      case e: ApiException =>
+      case e: Exception =>
         logger.error(s"Api error while looking up user $userId in sam", e)
         val dummySamUser = new sam.model.User()
         dummySamUser.setGoogleSubjectId(userId)
