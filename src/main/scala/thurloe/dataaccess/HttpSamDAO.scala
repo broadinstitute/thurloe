@@ -12,7 +12,9 @@ import org.broadinstitute.dsde.workbench.google.GoogleCredentialModes
 import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
 
-class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implicit val system: ActorSystem) extends SamDAO with LazyLogging {
+class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implicit val system: ActorSystem)
+    extends SamDAO
+    with LazyLogging {
 
   val samConfig = config.getConfig("sam")
 
