@@ -20,6 +20,8 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
 
   private val samServiceURL = samConfig.getString("samBaseUrl")
   private val timeout = samConfig.getDuration("timeout").toScala
+  val USERINFO_EMAIL = "https://www.googleapis.com/auth/userinfo.email"
+  val USERINFO_PROFILE = "https://www.googleapis.com/auth/userinfo.profile"
 
   private def getApiClient = {
     val okHttpClient = new ApiClient().getHttpClient
@@ -31,7 +33,7 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
     samApiClient.setBasePath(samServiceURL)
 
     //Set credentials
-    val scopes = List.empty
+    val scopes = List(USERINFO_EMAIL, USERINFO_PROFILE)
     val saPemCredentials = credentials.toGoogleCredential(scopes)
     val expiresInSeconds = Option(saPemCredentials.getExpiresInSeconds).map(_.longValue()).getOrElse(0L)
     val token = if (expiresInSeconds < 60 * 5) {
