@@ -20,16 +20,25 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem) extends
 
   private val okHttpClient = new ApiClient().getHttpClient
 
-  val okHttpClientWithTracingBuilder = okHttpClient.newBuilder
+  val okHttpClientBuilder = okHttpClient.newBuilder
     .readTimeout(timeout.toJava)
 
-  val samApiClient = new ApiClient(okHttpClientWithTracingBuilder.protocols(Seq(Protocol.HTTP_1_1).asJava).build())
+  val samApiClient = new ApiClient(okHttpClientBuilder.protocols(Seq(Protocol.HTTP_1_1).asJava).build())
   samApiClient.setBasePath(samServiceURL)
-  samApiClient.setAccessToken(credentials.toGoogleCredential(List.empty).getAccessToken)
+
+  //Set credentials
+  val scopes = List.empty
+  val token = credentials.toGoogleCredential(scopes).getAccessToken
+  samApiClient.setAccessToken(credentials.toGoogleCredential(scopes).getAccessToken)
 
   protected def adminApi() = new AdminApi(samApiClient)
 
-  override def getUserById(userId: String): List[sam.model.User] =
+  logger.info(s"Using access token: $token")
+
+  override def getUserById(userId: String): List[sam.model.User] = {
+    logger.info(s"Using access token: $token")
+    logger.info(samApiClient.getAuthentications.asScala.mkString("\n"))
     adminApi().adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
+  }
 
 }
