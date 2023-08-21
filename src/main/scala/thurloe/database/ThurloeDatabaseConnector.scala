@@ -7,6 +7,7 @@ import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.{ClassLoaderResourceAccessor, ResourceAccessor}
 import liquibase.{Contexts, Liquibase}
 import org.broadinstitute.dsde.workbench.client.sam
+import org.broadinstitute.dsde.workbench.client.sam.ApiException
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import sun.security.provider.certpath.SunCertPathBuilderException
@@ -73,7 +74,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
   private def lookupSamUser(userId: String, samDao: SamDAO): Future[sam.model.User] = {
     val results = samDao.getUserById(userId)
 
-    if (results.isEmpty) {
+    val samUser = if (results.isEmpty) {
       Future.failed(new KeyNotFoundException(userId, "n/a"))
     } else if (results.size == 1) {
       // If we get exactly one result we have found the user we want.
@@ -95,6 +96,16 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
           )
         )
     }
+    samUser.recoverWith({
+      case e: ApiException =>
+        logger.error(s"Api error while looking up user $userId in sam", e)
+        val dummySamUser = new sam.model.User()
+        dummySamUser.setGoogleSubjectId(userId)
+        dummySamUser.setAzureB2CId(userId)
+        dummySamUser.setId(userId)
+
+        Future.successful(dummySamUser)
+    })
   }
 
   private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[UserKeyValuePairWithId]] = {
