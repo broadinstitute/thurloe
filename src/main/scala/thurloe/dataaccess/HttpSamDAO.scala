@@ -54,12 +54,9 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
     try {
       adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
     } catch {
-      case e: ApiException if e.getCode == 404 =>
+      case e: ApiException =>
         logger.error(s"User not found: $userId", e)
         List.empty
-      case e: Exception =>
-        logger.error(s"Error getting user by id: $userId", e)
-        throw e
     }
 
 }
