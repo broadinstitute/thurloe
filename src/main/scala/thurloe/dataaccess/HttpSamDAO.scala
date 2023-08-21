@@ -5,7 +5,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import okhttp3.Protocol
 import org.broadinstitute.dsde.workbench.client.sam
-import org.broadinstitute.dsde.workbench.client.sam.ApiClient
+import org.broadinstitute.dsde.workbench.client.sam.{ApiClient, ApiException}
 import org.broadinstitute.dsde.workbench.client.sam.api.AdminApi
 import org.broadinstitute.dsde.workbench.google.GoogleCredentialModes
 
@@ -51,6 +51,15 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
   protected def adminApi(samApiClient: ApiClient) = new AdminApi(samApiClient)
 
   override def getUserById(userId: String): List[sam.model.User] =
-    adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
+    try {
+      adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
+    } catch {
+      case e: ApiException if e.getCode == 404 =>
+        logger.error(s"User not found: $userId", e)
+        List.empty
+      case e: Exception =>
+        logger.error(s"Error getting user by id: $userId", e)
+        throw e
+    }
 
 }
