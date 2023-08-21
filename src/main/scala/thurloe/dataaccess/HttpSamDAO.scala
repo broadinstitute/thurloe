@@ -1,7 +1,6 @@
 package thurloe.dataaccess
 
 import akka.actor.ActorSystem
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import okhttp3.Protocol
@@ -33,19 +32,18 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)(implici
 
     //Set credentials
     val scopes = List.empty
-    val saPemCredentials: GoogleCredential = credentials.toGoogleCredential(scopes)
-    val token = getServiceAccountAccessToken(saPemCredentials)
-    system.log.info(s"Using credentials for sam: $token")
-    samApiClient.setAccessToken(getServiceAccountAccessToken(saPemCredentials))
-    samApiClient
-  }
-
-  private def getServiceAccountAccessToken(saPemCredentials: GoogleCredential): String = {
+    val saPemCredentials = credentials.toGoogleCredential(scopes)
     val expiresInSeconds = Option(saPemCredentials.getExpiresInSeconds).map(_.longValue()).getOrElse(0L)
-    if (expiresInSeconds < 60 * 5) {
+    val token = if (expiresInSeconds < 60 * 5) {
       saPemCredentials.refreshToken()
+      saPemCredentials.getAccessToken
+    } else {
+      saPemCredentials.getAccessToken
     }
-    saPemCredentials.getAccessToken
+
+    system.log.info(s"Using credentials for sam: $token")
+    samApiClient.setAccessToken(token)
+    samApiClient
   }
 
   protected def adminApi(samApiClient: ApiClient) = new AdminApi(samApiClient)

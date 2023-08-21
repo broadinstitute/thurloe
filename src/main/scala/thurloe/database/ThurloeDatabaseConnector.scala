@@ -71,7 +71,6 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * @return
    */
   private def lookupSamUser(userId: String, samDao: SamDAO): Future[sam.model.User] = {
-    logger.info(s"Looking up user $userId in sam to get all ids")
     val results = samDao.getUserById(userId)
 
     if (results.isEmpty) {
