@@ -1,6 +1,5 @@
 package thurloe.dataaccess
 
-import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import okhttp3.Protocol
@@ -12,9 +11,7 @@ import org.broadinstitute.dsde.workbench.google.GoogleCredentialModes
 import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
 
-class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem)
-    extends SamDAO
-    with LazyLogging {
+class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem) extends SamDAO with LazyLogging {
 
   val samConfig = config.getConfig("sam")
 

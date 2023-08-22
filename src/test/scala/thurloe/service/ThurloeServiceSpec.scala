@@ -554,7 +554,6 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         assertResult(
           ""
         ) {
-
           responseAs[String]
         }
         assertResult(StatusCodes.Created) {
