@@ -73,7 +73,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
   private def lookupSamUser(userId: String, samDao: SamDAO): Future[sam.model.User] = {
     val results = samDao.getUserById(userId)
 
-    if (results.isEmpty) {
+    val samUser = if (results.isEmpty) {
       Future.failed(new KeyNotFoundException(userId, "n/a"))
     } else if (results.size == 1) {
       // If we get exactly one result we have found the user we want.
@@ -95,6 +95,18 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
           )
         )
     }
+
+    // Fallback on the userId if we can't find the user in sam, this vastly simplifies the logic in the rest of the code
+    samUser.recoverWith({
+      case _: Exception =>
+        logger.warn(s"Unable to find user in sam, falling back on userId: $userId")
+        val dummySamUser = new sam.model.User()
+        dummySamUser.setGoogleSubjectId(userId)
+        dummySamUser.setAzureB2CId(userId)
+        dummySamUser.setId(userId)
+
+        Future.successful(dummySamUser)
+    })
   }
 
   private def lookupWithConstraint(constraint: DbKeyValuePair => Rep[Boolean]): Future[Seq[UserKeyValuePairWithId]] = {

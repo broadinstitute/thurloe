@@ -18,18 +18,41 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem) extends
   private val samServiceURL = samConfig.getString("samBaseUrl")
   private val timeout = samConfig.getDuration("timeout").toScala
 
-  private val okHttpClient = new ApiClient().getHttpClient
+  val USERINFO_EMAIL = "https://www.googleapis.com/auth/userinfo.email"
+  val USERINFO_PROFILE = "https://www.googleapis.com/auth/userinfo.profile"
 
-  val okHttpClientWithTracingBuilder = okHttpClient.newBuilder
-    .readTimeout(timeout.toJava)
+  private def getApiClient = {
+    val okHttpClient = new ApiClient().getHttpClient
 
-  val samApiClient = new ApiClient(okHttpClientWithTracingBuilder.protocols(Seq(Protocol.HTTP_1_1).asJava).build())
-  samApiClient.setBasePath(samServiceURL)
-  samApiClient.setAccessToken(credentials.toGoogleCredential(List.empty).getAccessToken)
+    val okHttpClientBuilder = okHttpClient.newBuilder
+      .readTimeout(timeout.toJava)
 
-  protected def adminApi() = new AdminApi(samApiClient)
+    val samApiClient = new ApiClient(okHttpClientBuilder.protocols(Seq(Protocol.HTTP_1_1).asJava).build())
+    samApiClient.setBasePath(samServiceURL)
+
+    //Set credentials
+    val scopes = List(USERINFO_EMAIL, USERINFO_PROFILE)
+    val saPemCredentials = credentials.toGoogleCredential(scopes)
+    val expiresInSeconds = Option(saPemCredentials.getExpiresInSeconds).map(_.longValue()).getOrElse(0L)
+    val token = if (expiresInSeconds < 60 * 5) {
+      saPemCredentials.refreshToken()
+      saPemCredentials.getAccessToken
+    } else {
+      saPemCredentials.getAccessToken
+    }
+    samApiClient.setAccessToken(token)
+    samApiClient
+  }
+
+  protected def adminApi(samApiClient: ApiClient) = new AdminApi(samApiClient)
 
   override def getUserById(userId: String): List[sam.model.User] =
-    adminApi().adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
+    try {
+      adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
+    } catch {
+      case e: Exception =>
+        logger.warn(s"Sam user not found: $userId", e)
+        List.empty
+    }
 
 }

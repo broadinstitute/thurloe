@@ -520,7 +520,9 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       }
     }
 
-    it("should fail when multiple records are returned and none have an azure b2c id") {
+    it(
+      "should fallback on the userId in the request when multiple records are returned from sam and none have an azure b2c id"
+    ) {
       // prepare values and mocks
       val userSamId = "samId"
       val userSubjectId = "subjectId"
@@ -550,12 +552,11 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       // Assert that a bad response is returned on sam id collision
       Post(uriPrefix, u1k1v1SubjectId) ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(
-          "Harumph! thurloe.database.InvalidDatabaseStateException: Too many results returned from sam, none of which have an AzureB2cId: 2.\nResults: List(GoogleSubjectId: subjectId, AzureB2cId: null, SamId: samId, GoogleSubjectId: subjectId, AzureB2cId: null, SamId: samId)\nQuery: subjectId"
+          ""
         ) {
-
           responseAs[String]
         }
-        assertResult(StatusCodes.InternalServerError) {
+        assertResult(StatusCodes.Created) {
           status
         }
       }
