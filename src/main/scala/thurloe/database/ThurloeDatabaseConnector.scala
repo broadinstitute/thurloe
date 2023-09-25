@@ -136,14 +136,21 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       } else if (results.size == 1) {
         Future.successful(results.head)
       } else {
-        Future.failed(
-          InvalidDatabaseStateException(
-            s"Too many results returned from Thurloe's DB (${results.size}) for userId: $userId and key: $key" +
-              s"\nResults: ${results.map(thurloeRecord => s"KeyValuePair: ${thurloeRecord.userKeyValuePair}")}"
-          )
-        )
+        handleMultipleThurloeRecords(results)
       }
     } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
+
+  private def handleMultipleThurloeRecords(results: Seq[UserKeyValuePairWithId]) = {
+    val recordWithEmail = results.filter(thurloeRecord => thurloeRecord.userKeyValuePair.keyValuePair.key == "email" || thurloeRecord.userKeyValuePair.keyValuePair.key == "contactEmail")
+    if (recordWithEmail.nonEmpty) {
+      Future.successful(results.head)
+    } else {
+      Future.failed(InvalidDatabaseStateException(
+        s"Too many results returned from Thurloe's DB (${results.size})" +
+          s"\nResults: ${results.map(thurloeRecord => s"KeyValuePair: ${thurloeRecord.userKeyValuePair}")}"
+      ))
+    }
+  }
 
   def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair] =
     lookupIncludingDatabaseId(userId, key, samDao) map {
