@@ -48,7 +48,7 @@ libraryDependencies ++= Seq(
   "org.liquibase" % "liquibase-core" % "4.7.1",
   "org.hsqldb" % "hsqldb" % "2.6.1",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
-  "ch.qos.logback" % "logback-classic" % "1.2.10",
+  "ch.qos.logback" % "logback-classic" % "1.2.13",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
