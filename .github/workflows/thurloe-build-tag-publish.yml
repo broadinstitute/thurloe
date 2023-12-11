@@ -1,0 +1,97 @@
+# Github action to Build thurloe, add/promote semantic tagging and then run tests
+
+name: thurloe-build-tag-publish-and-run-tests
+
+on:
+  pull_request:
+    paths-ignore: ['**.md']
+  push:
+    branches:
+      - develop
+    paths-ignore: ['**.md']
+env:
+    GCR_REGISTRY: gcr.io/broad-dsp-gcr-public/thurloe
+    # Region-specific Google Docker repository where GOOGLE_PROJECT/REPOSITORY_NAME can be found
+    GOOGLE_DOCKER_REPOSITORY: us-central1-docker.pkg.dev
+    
+jobs:
+  thurloe-build-tag-publish-job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: 'actions/checkout@v3'
+
+      - name: Bump the tag to a new version
+        uses: databiosphere/github-actions/actions/bumper@bumper-0.0.6
+        id: tag
+        env:
+          DEFAULT_BUMP: patch
+          GITHUB_TOKEN: ${{ secrets.BROADBOT_TOKEN }}
+          RELEASE_BRANCHES: develop
+          WITH_V: true
+      
+      
+      - name: Auth to GCP
+        id: 'auth'
+        uses: google-github-actions/auth@v2
+
+        with:
+          token_format: 'id_token'
+          workload_identity_provider: 'projects/1038484894585/locations/global/workloadIdentityPools/github-wi-pool/providers/github-wi-provider'
+          service_account: 'gcr-publish@broad-dsp-gcr-public.iam.gserviceaccount.com'
+          id_token_audience: "1038484894585-k8qvf7l876733laev0lm8kenfa2lj6bn.apps.googleusercontent.com"
+
+
+      # Install gcloud, `setup-gcloud` automatically picks up authentication from `auth`.
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: Explicitly auth Docker for Artifact Registry
+        run: gcloud auth configure-docker $GOOGLE_DOCKER_REPOSITORY --quiet      
+      
+
+      # Build jar to GCR
+      - id: build-thurloe
+        name: Build and publish Thurloe jar
+        run: |
+          cd $GITHUB_WORKSPACE
+          ./docker/build_jar.sh
+
+      # Publish jar to GCR
+      - id: publish-thurloe
+        name: Publish Thurloe
+        run: |
+            cd $GITHUB_WORKSPACE
+            docker build -t ${{ github.event.repository.full_name }}:${DOCKER_TAG} --pull .
+            docker tag ${{ github.event.repository.full_name }}:${DOCKER_TAG} ${{ env.GCR_REGISTRY }}:${DOCKER_TAG}
+            gcloud docker -- push $GCR_REGISTRY:${DOCKER_TAG}
+    
+ 
+  report-to-sherlock:
+    # Report new thurloe version to Broad DevOps
+    uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
+    needs: thurloe-build-tag-publish-job
+    with:
+      new-version: ${{ needs.thurloe-build-tag-publish-job.outputs.tag }}
+      chart-name: 'thurloe'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+  set-version-in-dev:
+    # Put new thurloe version in Broad dev environment
+    uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
+    needs: [thurloe-build-tag-publish-job, report-to-sherlock]
+    with:
+      new-version: ${{ needs.thurloe-build-tag-publish-job.outputs.tag }}
+      chart-name: 'thurloe'
+      environment-name: 'dev'
+    secrets:
+      sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
+    permissions:
+      id-token: 'write'
+          
