@@ -34,7 +34,12 @@ jobs:
           RELEASE_BRANCHES: develop
           WITH_V: true
       
-      
+      # Persist output tag from bumper to $GITHUB_ENV.
+      - id: persist-tag
+        name: Persist tag
+        run: |
+          echo "DOCKER_TAG=${{ steps.tag.outputs.tag }}" >> $GITHUB_ENV
+                
       - name: Auth to GCP
         id: 'auth'
         uses: google-github-actions/auth@v2
@@ -56,7 +61,7 @@ jobs:
 
       # Build jar to GCR
       - id: build-thurloe
-        name: Build and publish Thurloe jar
+        name: Build Thurloe jar
         run: |
           cd $GITHUB_WORKSPACE
           ./docker/build_jar.sh
@@ -65,10 +70,10 @@ jobs:
       - id: publish-thurloe
         name: Publish Thurloe
         run: |
-            cd $GITHUB_WORKSPACE
-            docker build -t ${{ github.event.repository.full_name }}:${DOCKER_TAG} --pull .
-            docker tag ${{ github.event.repository.full_name }}:${DOCKER_TAG} ${{ env.GCR_REGISTRY }}:${DOCKER_TAG}
-            gcloud docker -- push $GCR_REGISTRY:${DOCKER_TAG}
+          cd $GITHUB_WORKSPACE
+          docker build -t ${{ github.event.repository.full_name }}:${DOCKER_TAG} --pull .
+          docker tag ${{ github.event.repository.full_name }}:${DOCKER_TAG} ${{ env.GCR_REGISTRY }}:${DOCKER_TAG}
+          gcloud docker -- push $GCR_REGISTRY:${DOCKER_TAG}
     
  
   report-to-sherlock:
