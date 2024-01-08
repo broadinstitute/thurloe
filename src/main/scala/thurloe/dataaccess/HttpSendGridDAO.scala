@@ -25,7 +25,7 @@ class HttpSendGridDAO(samDao: SamDAO) extends SendGridDAO with LazyLogging {
       else
         throw new NotificationException(
           StatusCodes.InternalServerError,
-          "Unable to send notification",
+          "Unable to send notification, unexpected error occurred: " + response.getMessage,
           email.getTos.toSeq,
           email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")
         )
