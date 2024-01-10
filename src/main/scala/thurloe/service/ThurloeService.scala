@@ -67,7 +67,7 @@ trait ThurloeService extends LazyLogging {
     extract(_.request) { request =>
       Sentry.captureException(e)
       logger.error(s"error handling request: ${request.method} ${request.uri}", e)
-      complete(StatusCodes.InternalServerError, s"$Interjection $e")
+      complete(StatusCodes.InternalServerError, s"$Interjection")
     }
 
   val getAllRoute: Route =
