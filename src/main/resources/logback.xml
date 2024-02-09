@@ -37,6 +37,17 @@
         </filter>
     </appender>
 
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder>
+            <pattern>%date [%thread] - 5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="errors" level="ERROR ">
+        <appender-ref ref="STDERR"/>
+    </logger>
+
     <logger name="org.broadinstitute.dsde" level="info" additivity="false">
         <appender-ref ref="file"/>
         <appender-ref ref="console"/>

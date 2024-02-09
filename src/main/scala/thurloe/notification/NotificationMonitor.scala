@@ -4,6 +4,7 @@ import akka.actor.SupervisorStrategy.{Escalate, Stop}
 import akka.actor._
 import akka.pattern._
 import com.sendgrid.SendGrid.Response
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO
 import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO.PubSubMessage
@@ -147,6 +148,10 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
     extends Actor
     with LazyLogging {
 
+  val configFile = ConfigFactory.load()
+  val sendGridConfig = configFile.getConfig("sendgrid")
+  val shouldSendEmails = sendGridConfig.getBoolean("shouldSendEmails")
+
   self ! StartMonitorPass
 
   // fail safe in case this actor is idle too long but not too fast (1 second lower limit)
@@ -203,7 +208,9 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
     } map { responseOption => (responseOption, message) }
   }
 
-  def lookupShouldNotify(notification: Notification): Future[Boolean] =
+  def lookupShouldNotify(notification: Notification): Future[Boolean] = {
+    // shouldSendEmails is a per-environment flag to turn off all email sending
+    if (!shouldSendEmails) return Future.successful(false)
     notification match {
       //For workspace notifications, there are three tiers of preferences to check:
       // 1. has the user disabled *all* notifications for their account?
@@ -229,6 +236,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         }
       case _ => Future.successful(true)
     }
+  }
 
   def booleanLookup(userId: WorkbenchUserId, key: String, defaultValue: Boolean): Future[Boolean] =
     dataAccess.lookup(samDao, userId.value, key).map(kvp => kvp.keyValuePair.value.toBoolean).recover {
