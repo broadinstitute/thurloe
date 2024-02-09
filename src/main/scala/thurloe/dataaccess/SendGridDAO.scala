@@ -18,14 +18,13 @@ trait SendGridDAO {
   val substitutionChar = sendGridConfig.getString("substitutionChar")
   val defaultFromAddress = sendGridConfig.getString("defaultFromAddress")
   val defaultFromName = sendGridConfig.getString("defaultFromName")
-  val shouldSendEmails = sendGridConfig.getBoolean("shouldSendEmails")
 
   def sendEmail(email: SendGrid.Email): Future[Response]
   def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail]
   def lookupUserName(userId: WorkbenchUserId): Future[String]
   def lookupUserFirstName(userId: WorkbenchUserId): Future[String]
 
-  def sendNotifications(notifications: List[Notification]): Future[List[Option[Response]]] =
+  def sendNotifications(notifications: List[Notification]): Future[List[Response]] =
     Future.sequence(notifications.map { notification =>
       val toAddressFuture = notification.userEmail
         .map(Future.successful)
@@ -59,25 +58,21 @@ trait SendGridDAO {
         case None         => Future.successful(Map.empty)
       }
 
-      if (shouldSendEmails) {
-        for {
-          toAddress <- toAddressFuture
-          replyTos <- replyTosFuture
-          emailSubstitutions <- emailSubstitutionsFuture
-          nameSubstitution <- nameSubstitutionsFuture
-          recipientFirstNameSubstitution <- recipientFirstNameSubstitutionFuture
-          response <- sendEmail(
-            createEmail(
-              toAddress,
-              replyTos,
-              notification.notificationId,
-              notification.substitutions ++ emailSubstitutions ++ nameSubstitution ++ recipientFirstNameSubstitution
-            )
+      for {
+        toAddress <- toAddressFuture
+        replyTos <- replyTosFuture
+        emailSubstitutions <- emailSubstitutionsFuture
+        nameSubstitution <- nameSubstitutionsFuture
+        recipientFirstNameSubstitution <- recipientFirstNameSubstitutionFuture
+        response <- sendEmail(
+          createEmail(
+            toAddress,
+            replyTos,
+            notification.notificationId,
+            notification.substitutions ++ emailSubstitutions ++ nameSubstitution ++ recipientFirstNameSubstitution
           )
-        } yield Option(response)
-      } else {
-        Future.successful(None)
-      }
+        )
+      } yield response
     })
 
   /*
