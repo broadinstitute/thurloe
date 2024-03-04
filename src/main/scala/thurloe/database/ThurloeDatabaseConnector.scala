@@ -136,7 +136,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       } else if (results.size == 1) {
         Future.successful(results.head)
       } else {
-        Future.successful(resolveConflictingKeys(results))
+        Future.successful(handleConflictingKeys(results))
       }
     } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
 
@@ -151,8 +151,8 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * 2. When the values are the same, we will return the first value.
    * 3. Otherwise return the first value that isn't 'N/A'.
    */
-  def resolveConflictingKeys(lookupResults: Seq[UserKeyValuePairWithId]): UserKeyValuePairWithId = {
-    val resolvedResult = lookupResults.reduceLeft((result1, result2) => {
+  def handleConflictingKeys(lookupResults: Seq[UserKeyValuePairWithId]): UserKeyValuePairWithId = {
+    val resolvedResult = lookupResults.reduceLeft { (result1, result2) =>
       val value1 = result1.userKeyValuePair.keyValuePair.value
       val value2 = result2.userKeyValuePair.keyValuePair.value
 
@@ -168,7 +168,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       } else {
         result2
       }
-    })
+    }
 
     resolvedResult
   }
@@ -240,14 +240,17 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * @return The type of operation which was carried out (as a Future)
    */
   private def databaseWrite(userKeyValuePair: UserKeyValuePair,
-                            encryptedValue: EncryptedBytes,
-                            samDao: SamDAO): Future[DatabaseOperation] = {
-    val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key, samDao)
+                            encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+    val lookupExists = lookupWithConstraint(thurloeRecord =>
+      thurloeRecord.key === userKeyValuePair.keyValuePair.key && thurloeRecord.userId === userKeyValuePair.userId
+    )
     lookupExists flatMap { existingKvp =>
-      update(existingKvp, userKeyValuePair, encryptedValue)
-    } recoverWith {
-      case _: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
-      case e                       => Future.failed(e)
+      if (existingKvp.nonEmpty) {
+        // Since we are only looking up by key and a single userId, there should only be one result.
+        update(existingKvp.head, userKeyValuePair, encryptedValue)
+      } else {
+        insert(userKeyValuePair, encryptedValue)
+      }
     }
   }
 
@@ -293,11 +296,11 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       )
     }
 
-  def set(samDao: SamDAO, userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
+  def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
     Future
       .sequence(userKeyValuePairs.toKeyValueSeq.map { userKeyValuePair =>
         Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
-          case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue, samDao)
+          case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
           case Failure(t)              => Future.failed(t)
         }
       })

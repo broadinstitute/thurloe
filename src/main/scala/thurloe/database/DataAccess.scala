@@ -7,7 +7,7 @@ import thurloe.service.{ThurloeQuery, UserKeyValuePair, UserKeyValuePairs}
 import scala.concurrent.Future
 
 trait DataAccess {
-  def set(samDao: SamDAO, keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation]
+  def set(keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation]
   def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair]
   def lookup(samDao: SamDAO, userId: String): Future[UserKeyValuePairs]
   def lookup(samDao: SamDAO, query: ThurloeQuery): Future[Seq[UserKeyValuePair]]

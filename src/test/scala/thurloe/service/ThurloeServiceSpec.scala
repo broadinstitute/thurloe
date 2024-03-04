@@ -561,5 +561,102 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         }
       }
     }
+
+    it(
+      "should resolve collisions between isRegistrationComplete records when it is stored under multiple types of ids for the same user"
+    ) {
+      // prepare values and mocks
+      val userSamId = "samId"
+      val userSubjectId = "subjectId"
+      val userB2cId = "b2cId"
+      val user1 = new sam.model.User()
+      user1.setId(userSamId)
+      user1.setGoogleSubjectId(userSubjectId)
+
+      val user2 = new sam.model.User()
+      user2.setId(userSamId)
+      user2.setGoogleSubjectId(userSubjectId)
+      user2.setAzureB2CId(userB2cId)
+
+      val key1 = "isRegistrationComplete"
+      val value1 = "1"
+      val k1v1 = KeyValuePair(key1, value1)
+
+      val value2 = "2"
+      val k1v2 = KeyValuePair(key1, value2)
+
+      val value3 = "0"
+      val k1v3 = KeyValuePair(key1, value3)
+
+      val thurloeService = new ThurloeService {
+        val samDao: SamDAO = mock[HttpSamDAO]
+        when(samDao.getUserById(userB2cId)).thenReturn(List(user1, user2))
+        when(samDao.getUserById(userSubjectId)).thenReturn(List(user1, user2))
+        when(samDao.getUserById(userSamId)).thenReturn(List(user1, user2))
+        val dataAccess = ThurloeDatabaseConnector
+
+        def actorRefFactory = system
+      }
+
+      val u1k1v1B2cId = UserKeyValuePairs(userB2cId, Seq(k1v1))
+      val u1k1v2SubjectId = UserKeyValuePairs(userSubjectId, Seq(k1v2))
+      val u1k1v3SamId = UserKeyValuePairs(userSamId, Seq(k1v3))
+
+      // Create key values for the user
+      Post(uriPrefix, u1k1v1B2cId) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      Post(uriPrefix, u1k1v2SubjectId) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+
+      Post(uriPrefix, u1k1v3SamId) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+
+      // Assert that the greater value is returned
+      Get(s"$uriPrefix/$userSubjectId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v2SubjectId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      Get(s"$uriPrefix/$userB2cId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v2SubjectId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      Get(s"$uriPrefix/$userB2cId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v2SubjectId.toKeyValueSeq.head) {
+          responseAs[UserKeyValuePair]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+    }
   }
 }
