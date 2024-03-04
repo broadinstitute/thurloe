@@ -136,14 +136,42 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       } else if (results.size == 1) {
         Future.successful(results.head)
       } else {
-        Future.failed(
-          InvalidDatabaseStateException(
-            s"Too many results returned from Thurloe's DB (${results.size}) for userId: $userId and key: $key" +
-              s"\nResults: ${results.map(thurloeRecord => s"KeyValuePair: ${thurloeRecord.userKeyValuePair}")}"
-          )
-        )
+        Future.successful(resolveConflictingKeys(results))
       }
     } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
+
+  /*
+   * It is possible for the same key to be stored under different 'types' of userIds (Sam UserID, GoogleSubject ID, or the Azure B2C ID).
+   * We eventually want to move to only using Sam User ID, but for now we need to resolve conflicts between these different types of userIds.
+   * This method will resolve any conflicts and return the resolved key value pair. Generally we have noticed that two records can be returned
+   * for the same user+key, but it is possible that three could be returned so we have to account for that.
+   *
+   * There are three known cases that can be resolved:
+   * 1. isRegistrationComplete: If the user has multiple values for this key, we will return the value that is greater.
+   * 2. When the values are the same, we will return the first value.
+   * 3. Otherwise return the first value that isn't 'N/A'.
+   */
+  def resolveConflictingKeys(lookupResults: Seq[UserKeyValuePairWithId]): UserKeyValuePairWithId = {
+    val resolvedResult = lookupResults.reduceLeft((result1, result2) => {
+      val value1 = result1.userKeyValuePair.keyValuePair.value
+      val value2 = result2.userKeyValuePair.keyValuePair.value
+
+      val isRegistrationComplete = result1.userKeyValuePair.keyValuePair.key == "isRegistrationComplete"
+      val isValue1Greater = value1.toInt > value2.toInt
+
+      if (isRegistrationComplete) {
+        if (isValue1Greater) result1 else result2
+      } else if (value1 == value2) {
+        result1
+      } else if (value1 != "N/A") {
+        result1
+      } else {
+        result2
+      }
+    })
+
+    resolvedResult
+  }
 
   def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair] =
     lookupIncludingDatabaseId(userId, key, samDao) map {
