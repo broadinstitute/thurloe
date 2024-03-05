@@ -150,8 +150,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
       WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(
-      ThurloeDatabaseConnector.set(samDao,
-                                   UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))),
+      ThurloeDatabaseConnector.set(UserKeyValuePairs(userId, Seq(KeyValuePair(addedNotification.key, "false")))),
       Duration.Inf
     )
 
@@ -210,7 +209,6 @@ class NotificationMonitorSpec(_system: ActorSystem)
       WorkspaceAddedNotification(WorkbenchUserId(userId), "foo", workspaceName, WorkbenchUserId("a_user_id2"))
 
     Await.result(ThurloeDatabaseConnector.set(
-                   samDao,
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))
                  ),
                  Duration.Inf)
@@ -268,7 +266,6 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     Await.result(
       ThurloeDatabaseConnector.set(
-        samDao,
         UserKeyValuePairs(
           userId,
           Seq(
@@ -342,7 +339,6 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     Await.result(
       ThurloeDatabaseConnector.set(
-        samDao,
         UserKeyValuePairs(userId, Seq(KeyValuePair(s"notifications/SuccessfulSubmissionNotification", "false")))
       ),
       Duration.Inf
@@ -397,7 +393,6 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     // Make sure notifications are turned on for the test user (notificationsOffKey -> false)
     Await.result(ThurloeDatabaseConnector.set(
-                   samDao,
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "false")))
                  ),
                  Duration.Inf)
