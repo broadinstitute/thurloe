@@ -10,6 +10,8 @@ import org.scalatest.funspec.AnyFunSpec
 import thurloe.dataaccess.{HttpSamDAO, SamDAO}
 import thurloe.database.{MockUnhealthyThurloeDatabaseConnector, ThurloeDatabaseConnector}
 
+import java.util.UUID
+
 class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
   import ApiDataModelsJsonProtocol._
@@ -365,9 +367,9 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
     it("should handle sam users with differing ids") {
       // prepare values and mocks
-      val userSamId = "samId"
-      val userSubjectId = "subjectId"
-      val userB2cId = "b2cId"
+      val userSamId = UUID.randomUUID().toString
+      val userSubjectId = UUID.randomUUID().toString
+      val userB2cId = UUID.randomUUID().toString
       val user1 = new sam.model.User()
 
       user1.setId(userSamId)
@@ -377,8 +379,8 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       val key1 = "key1"
       val value1 = "value1"
       val k1v1 = KeyValuePair(key1, value1)
-      val key2 = "key1"
-      val value2 = "value1"
+      val key2 = "key2"
+      val value2 = "value2"
       val k2v2 = KeyValuePair(key2, value2)
       val thurloeService = new ThurloeService {
         val samDao: SamDAO = mock[HttpSamDAO]
@@ -411,7 +413,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         assertResult("") {
           responseAs[String]
         }
-        assertResult(StatusCodes.OK) {
+        assertResult(StatusCodes.Created) {
           status
         }
       }
@@ -470,9 +472,9 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
 
     it("should gracefully handle sam record collision when one of the sam records has a b2c id") {
       // prepare values and mocks
-      val userSamId = "samId"
-      val userSubjectId = "subjectId"
-      val userB2cId = "b2cId"
+      val userSamId = UUID.randomUUID().toString
+      val userSubjectId = UUID.randomUUID().toString
+      val userB2cId = UUID.randomUUID().toString
       val user1 = new sam.model.User()
       user1.setId(userSamId)
       user1.setGoogleSubjectId(userSubjectId)
@@ -524,8 +526,8 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       "should fallback on the userId in the request when multiple records are returned from sam and none have an azure b2c id"
     ) {
       // prepare values and mocks
-      val userSamId = "samId"
-      val userSubjectId = "subjectId"
+      val userSamId = UUID.randomUUID().toString
+      val userSubjectId = UUID.randomUUID().toString
       val user1 = new sam.model.User()
       user1.setId(userSamId)
       user1.setGoogleSubjectId(userSubjectId)
@@ -566,9 +568,9 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       "should resolve collisions between isRegistrationComplete records when it is stored under multiple types of ids for the same user"
     ) {
       // prepare values and mocks
-      val userSamId = "samId"
-      val userSubjectId = "subjectId"
-      val userB2cId = "b2cId"
+      val userSamId = UUID.randomUUID().toString
+      val userSubjectId = UUID.randomUUID().toString
+      val userB2cId = UUID.randomUUID().toString
       val user1 = new sam.model.User()
       user1.setId(userSamId)
       user1.setGoogleSubjectId(userSubjectId)
@@ -616,7 +618,7 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         assertResult("") {
           responseAs[String]
         }
-        assertResult(StatusCodes.OK) {
+        assertResult(StatusCodes.Created) {
           status
         }
       }
@@ -625,35 +627,44 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
         assertResult("") {
           responseAs[String]
         }
-        assertResult(StatusCodes.OK) {
+        assertResult(StatusCodes.Created) {
           status
         }
       }
 
       // Assert that the greater value is returned
       Get(s"$uriPrefix/$userSubjectId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v2SubjectId.toKeyValueSeq.head) {
-          responseAs[UserKeyValuePair]
+        assertResult(u1k1v2SubjectId.toKeyValueSeq.head.userId) {
+          responseAs[UserKeyValuePair].userId
         }
-        assertResult(StatusCodes.Created) {
+        assertResult(value2) {
+          responseAs[UserKeyValuePair].keyValuePair.value
+        }
+        assertResult(StatusCodes.OK) {
           status
         }
       }
 
       Get(s"$uriPrefix/$userB2cId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v2SubjectId.toKeyValueSeq.head) {
-          responseAs[UserKeyValuePair]
+        assertResult(u1k1v1B2cId.toKeyValueSeq.head.userId) {
+          responseAs[UserKeyValuePair].userId
         }
-        assertResult(StatusCodes.Created) {
+        assertResult(value2) {
+          responseAs[UserKeyValuePair].keyValuePair.value
+        }
+        assertResult(StatusCodes.OK) {
           status
         }
       }
 
-      Get(s"$uriPrefix/$userB2cId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
-        assertResult(u1k1v2SubjectId.toKeyValueSeq.head) {
-          responseAs[UserKeyValuePair]
+      Get(s"$uriPrefix/$userSamId/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u1k1v3SamId.toKeyValueSeq.head.userId) {
+          responseAs[UserKeyValuePair].userId
         }
-        assertResult(StatusCodes.Created) {
+        assertResult(value2) {
+          responseAs[UserKeyValuePair].keyValuePair.value
+        }
+        assertResult(StatusCodes.OK) {
           status
         }
       }
