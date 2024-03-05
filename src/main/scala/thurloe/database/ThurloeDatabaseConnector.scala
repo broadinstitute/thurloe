@@ -157,10 +157,9 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       val value2 = result2.userKeyValuePair.keyValuePair.value
 
       val isRegistrationComplete = result1.userKeyValuePair.keyValuePair.key == "isRegistrationComplete"
-      val isValue1Greater = value1.toInt > value2.toInt
 
       if (isRegistrationComplete) {
-        if (isValue1Greater) result1 else result2
+        if (value1.toInt > value2.toInt) result1 else result2
       } else if (value1 == value2) {
         result1
       } else if (value1 != "N/A") {
