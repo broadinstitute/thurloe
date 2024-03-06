@@ -165,6 +165,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       } else if (value1 != "N/A") {
         result1
       } else {
+        // Thurloe doesnt store timestamps with key value pairs, so we assume that the last record is the most recent
         result2
       }
     }
