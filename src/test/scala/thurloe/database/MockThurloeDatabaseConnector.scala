@@ -15,7 +15,7 @@ case object MockThurloeDatabaseConnector extends DataAccess {
   // By default return no users
   when(samDAO.getUserById(any[String])).thenReturn(List.empty)
 
-  override def set(samDao: SamDAO, keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] = ???
+  override def set(keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] = ???
 
   override def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair] = ???
 

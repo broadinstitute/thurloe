@@ -136,14 +136,42 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       } else if (results.size == 1) {
         Future.successful(results.head)
       } else {
-        Future.failed(
-          InvalidDatabaseStateException(
-            s"Too many results returned from Thurloe's DB (${results.size}) for userId: $userId and key: $key" +
-              s"\nResults: ${results.map(thurloeRecord => s"KeyValuePair: ${thurloeRecord.userKeyValuePair}")}"
-          )
-        )
+        Future.successful(handleConflictingKeys(results))
       }
     } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
+
+  /*
+   * It is possible for the same key to be stored under different 'types' of userIds (Sam UserID, GoogleSubject ID, or the Azure B2C ID).
+   * We eventually want to move to only using Sam User ID, but for now we need to resolve conflicts between these different types of userIds.
+   * This method will resolve any conflicts and return the resolved key value pair. Generally we have noticed that two records can be returned
+   * for the same user+key, but it is possible that three could be returned so we have to account for that.
+   *
+   * There are three known cases that can be resolved:
+   * 1. isRegistrationComplete: If the user has multiple values for this key, we will return the value that is greater.
+   * 2. When the values are the same, we will return the first value.
+   * 3. Otherwise return the first value that isn't 'N/A'.
+   */
+  def handleConflictingKeys(lookupResults: Seq[UserKeyValuePairWithId]): UserKeyValuePairWithId = {
+    val resolvedResult = lookupResults.reduceLeft { (result1, result2) =>
+      val value1 = result1.userKeyValuePair.keyValuePair.value
+      val value2 = result2.userKeyValuePair.keyValuePair.value
+
+      val isRegistrationComplete = result1.userKeyValuePair.keyValuePair.key == "isRegistrationComplete"
+
+      if (isRegistrationComplete) {
+        if (value1.toInt > value2.toInt) result1 else result2
+      } else if (value1 == value2) {
+        result1
+      } else if (value1 != "N/A") {
+        result1
+      } else {
+        // Thurloe doesnt store timestamps with key value pairs, so we assume that the last record is the most recent
+        result2
+      }
+    }
+
+    resolvedResult
+  }
 
   def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair] =
     lookupIncludingDatabaseId(userId, key, samDao) map {
@@ -212,14 +240,17 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * @return The type of operation which was carried out (as a Future)
    */
   private def databaseWrite(userKeyValuePair: UserKeyValuePair,
-                            encryptedValue: EncryptedBytes,
-                            samDao: SamDAO): Future[DatabaseOperation] = {
-    val lookupExists = lookupIncludingDatabaseId(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key, samDao)
+                            encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+    val lookupExists = lookupWithConstraint(thurloeRecord =>
+      thurloeRecord.key === userKeyValuePair.keyValuePair.key && thurloeRecord.userId === userKeyValuePair.userId
+    )
     lookupExists flatMap { existingKvp =>
-      update(existingKvp, userKeyValuePair, encryptedValue)
-    } recoverWith {
-      case _: KeyNotFoundException => insert(userKeyValuePair, encryptedValue)
-      case e                       => Future.failed(e)
+      if (existingKvp.nonEmpty) {
+        // Since we are only looking up by key and a single userId, there should only be one result.
+        update(existingKvp.head, userKeyValuePair, encryptedValue)
+      } else {
+        insert(userKeyValuePair, encryptedValue)
+      }
     }
   }
 
@@ -265,11 +296,11 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       )
     }
 
-  def set(samDao: SamDAO, userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
+  def set(userKeyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
     Future
       .sequence(userKeyValuePairs.toKeyValueSeq.map { userKeyValuePair =>
         Aes256Cbc.encrypt(userKeyValuePair.keyValuePair.value.getBytes("UTF-8"), secretKey) match {
-          case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue, samDao)
+          case Success(encryptedValue) => databaseWrite(userKeyValuePair, encryptedValue)
           case Failure(t)              => Future.failed(t)
         }
       })

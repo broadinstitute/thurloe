@@ -93,7 +93,7 @@ trait ThurloeService extends LazyLogging {
     path(ThurloePrefix) {
       post {
         entity(as[UserKeyValuePairs]) { keyValuePairs =>
-          onComplete(dataAccess.set(samDao, keyValuePairs)) {
+          onComplete(dataAccess.set(keyValuePairs)) {
             case Success(setKeyResponse) =>
               complete(statusCode(setKeyResponse), HttpEntity(ContentTypes.`application/json`, ""))
             case Failure(e) =>

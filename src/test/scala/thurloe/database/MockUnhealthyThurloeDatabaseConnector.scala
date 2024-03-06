@@ -9,7 +9,7 @@ import scala.concurrent.Future
 
 case object MockUnhealthyThurloeDatabaseConnector extends DataAccess {
   val samDAO = mock[HttpSamDAO]
-  override def set(samDao: SamDAO, keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
+  override def set(keyValuePairs: UserKeyValuePairs): Future[DatabaseOperation] =
     Future.failed(new Exception("does not work"))
 
   override def lookup(samDao: SamDAO, userId: String, key: String): Future[UserKeyValuePair] =
