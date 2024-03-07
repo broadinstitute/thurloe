@@ -16,7 +16,7 @@ class EncryptionSpec extends AnyFunSpec {
       val plaintextBytes = plaintextString.getBytes("UTF-8")
 
       val encrypted = Aes256Cbc.encrypt(plaintextBytes, secretKey)
-      val decrypted = encrypted flatMap { x => Aes256Cbc.decrypt(x, secretKey) map { new String(_, "UTF-8") } }
+      val decrypted = encrypted flatMap { x => Aes256Cbc.decrypt(x, secretKey) map new String(_, "UTF-8") }
 
       decrypted match {
         case Success(decryptedValue) =>

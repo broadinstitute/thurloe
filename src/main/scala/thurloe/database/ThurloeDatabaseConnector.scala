@@ -48,15 +48,15 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
                                                userId: String,
                                                key: String,
                                                value: String,
-                                               iv: String): Try[UserKeyValuePairWithId] =
+                                               iv: String
+  ): Try[UserKeyValuePairWithId] =
     Aes256Cbc.decrypt(EncryptedBytes(value, iv), secretKey) map { decryptedBytes =>
       UserKeyValuePairWithId(id, UserKeyValuePair(userId, KeyValuePair(key, new String(decryptedBytes, "UTF-8"))))
     }
 
   private def interpretDatabaseResponse(resultSequence: Seq[DatabaseRow]): Seq[Future[UserKeyValuePairWithId]] =
-    resultSequence map {
-      case DatabaseRow(id, userId, key, value, iv) =>
-        Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
+    resultSequence map { case DatabaseRow(id, userId, key, value, iv) =>
+      Future.fromTry(databaseValuesToUserKeyValuePair(id, userId, key, value, iv))
     }
 
   /**
@@ -81,7 +81,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     } else {
       // If we get back multiple results, we assume the record with the b2c id is the most recent and return that one.
       results
-      // The user record is a java obj so we need to handle nulls properly
+        // The user record is a java obj so we need to handle nulls properly
         .find(samUserRecord => Option(samUserRecord.getAzureB2CId).isDefined)
         .map(Future.successful)
         .getOrElse(
@@ -97,15 +97,14 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     }
 
     // Fallback on the userId if we can't find the user in sam, this vastly simplifies the logic in the rest of the code
-    samUser.recoverWith({
-      case _: Exception =>
-        logger.warn(s"Unable to find user in sam, falling back on userId: $userId")
-        val dummySamUser = new sam.model.User()
-        dummySamUser.setGoogleSubjectId(userId)
-        dummySamUser.setAzureB2CId(userId)
-        dummySamUser.setId(userId)
+    samUser.recoverWith({ case _: Exception =>
+      logger.warn(s"Unable to find user in sam, falling back on userId: $userId")
+      val dummySamUser = new sam.model.User()
+      dummySamUser.setGoogleSubjectId(userId)
+      dummySamUser.setAzureB2CId(userId)
+      dummySamUser.setId(userId)
 
-        Future.successful(dummySamUser)
+      Future.successful(dummySamUser)
     })
   }
 
@@ -114,8 +113,8 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
     for {
       responseSequence <- database.run(query.result.transactionally)
-      result <- Future.sequence(interpretDatabaseResponse(responseSequence map {
-        case (id, userId, key, value, iv) => DatabaseRow(id, userId, key, value, iv)
+      result <- Future.sequence(interpretDatabaseResponse(responseSequence map { case (id, userId, key, value, iv) =>
+        DatabaseRow(id, userId, key, value, iv)
       }))
     } yield result
   }
@@ -131,13 +130,14 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
       results <- lookupWithConstraint(thurloeRecord =>
         thurloeRecord.key === key && (thurloeRecord.userId === samUser.getId || thurloeRecord.userId === samUser.getGoogleSubjectId || thurloeRecord.userId === samUser.getAzureB2CId)
       )
-      result <- if (results.isEmpty) {
-        Future.failed(KeyNotFoundException(userId, key))
-      } else if (results.size == 1) {
-        Future.successful(results.head)
-      } else {
-        Future.successful(handleConflictingKeys(results))
-      }
+      result <-
+        if (results.isEmpty) {
+          Future.failed(KeyNotFoundException(userId, key))
+        } else if (results.size == 1) {
+          Future.successful(results.head)
+        } else {
+          Future.successful(handleConflictingKeys(results))
+        }
     } yield result.copy(userKeyValuePair = result.userKeyValuePair.copy(userId = userId))
 
   /*
@@ -240,7 +240,8 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
    * @return The type of operation which was carried out (as a Future)
    */
   private def databaseWrite(userKeyValuePair: UserKeyValuePair,
-                            encryptedValue: EncryptedBytes): Future[DatabaseOperation] = {
+                            encryptedValue: EncryptedBytes
+  ): Future[DatabaseOperation] = {
     val lookupExists = lookupWithConstraint(thurloeRecord =>
       thurloeRecord.key === userKeyValuePair.keyValuePair.key && thurloeRecord.userId === userKeyValuePair.userId
     )
@@ -262,7 +263,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
         userKeyValuePair.keyValuePair.key,
         encryptedValue.base64CipherText,
         encryptedValue.base64Iv
-    )
+      )
 
     for {
       affectedRowsCount <- database.run(action.transactionally)
@@ -272,7 +273,8 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
   private def update(oldKeyValuePair: UserKeyValuePairWithId,
                      userKeyValuePair: UserKeyValuePair,
-                     newEncryptedValue: EncryptedBytes): Future[DatabaseOperation] =
+                     newEncryptedValue: EncryptedBytes
+  ): Future[DatabaseOperation] =
     // We've just looked up and found an entry, so this ID should never be None. However, belt and braces...
     oldKeyValuePair.id match {
       case None        => Future.failed(new KeyNotFoundException(userKeyValuePair.userId, userKeyValuePair.keyValuePair.key))
@@ -318,11 +320,12 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
 
     for {
       affectedRowCount <- affectedRowsCountFuture
-      _ <- if (affectedRowCount > 0) {
-        Future.successful(())
-      } else {
-        Future.failed(KeyNotFoundException(userId, key))
-      }
+      _ <-
+        if (affectedRowCount > 0) {
+          Future.successful(())
+        } else {
+          Future.failed(KeyNotFoundException(userId, key))
+        }
     } yield ()
   }
 
@@ -361,9 +364,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
             }
           }
           throw e
-      } finally {
-        dbConnection.close()
-      }
+      } finally dbConnection.close()
     }
   }
 }

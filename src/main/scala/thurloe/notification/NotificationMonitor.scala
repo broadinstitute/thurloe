@@ -36,7 +36,8 @@ object NotificationMonitorSupervisor {
             sendGridDAO: SendGridDAO,
             templateIdsByType: Map[String, String],
             fireCloudPortalUrl: String,
-            samDao: SamDAO)(implicit executionContext: ExecutionContext): Props =
+            samDao: SamDAO
+  )(implicit executionContext: ExecutionContext): Props =
     Props(
       new NotificationMonitorSupervisor(pollInterval,
                                         pollIntervalJitter,
@@ -47,7 +48,8 @@ object NotificationMonitorSupervisor {
                                         sendGridDAO,
                                         templateIdsByType,
                                         fireCloudPortalUrl,
-                                        samDao: SamDAO)
+                                        samDao: SamDAO
+      )
     )
 }
 
@@ -98,13 +100,11 @@ class NotificationMonitorSupervisor(
   }
 
   override val supervisorStrategy =
-    OneForOneStrategy() {
-      case e => {
-        logger.error("error sending notification", e)
-        // start one to replace the error, stop the errored child so that we also drop its mailbox (i.e. restart not good enough)
-        startOne()
-        Stop
-      }
+    OneForOneStrategy() { case e =>
+      logger.error("error sending notification", e)
+      // start one to replace the error, stop the errored child so that we also drop its mailbox (i.e. restart not good enough)
+      startOne()
+      Stop
     }
 
 }
@@ -120,7 +120,8 @@ object NotificationMonitor {
             templateIdsByType: Map[String, String],
             fireCloudPortalUrl: String,
             dataAccess: DataAccess,
-            samDao: SamDAO)(implicit executionContext: ExecutionContext): Props =
+            samDao: SamDAO
+  )(implicit executionContext: ExecutionContext): Props =
     Props(
       new NotificationMonitorActor(pollInterval,
                                    pollIntervalJitter,
@@ -130,7 +131,8 @@ object NotificationMonitor {
                                    templateIdsByType,
                                    fireCloudPortalUrl,
                                    dataAccess,
-                                   samDao: SamDAO)
+                                   samDao: SamDAO
+      )
     )
 
   val notificationsOffKey = "notifications.off"
@@ -144,7 +146,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                templateIdsByType: Map[String, String],
                                fireCloudPortalUrl: String,
                                dataAccess: DataAccess,
-                               samDao: SamDAO)(implicit executionContext: ExecutionContext)
+                               samDao: SamDAO
+)(implicit executionContext: ExecutionContext)
     extends Actor
     with LazyLogging {
 
@@ -272,7 +275,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Map("accessLevel" -> accessLevel,
               "namespace" -> workspaceName.namespace,
               "name" -> workspaceName.name,
-              "wsUrl" -> workspacePortalUrl(workspaceName)),
+              "wsUrl" -> workspacePortalUrl(workspaceName)
+          ),
           Map("originEmail" -> workspaceOwnerId),
           Map("userNameFL" -> workspaceOwnerId)
         )
@@ -286,7 +290,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Map("wsName" -> workspaceName.name,
               "wsUrl" -> workspacePortalUrl(workspaceName),
               "bucketName" -> bucketName,
-              "bucketUrl" -> bucketUrl(bucketName)),
+              "bucketUrl" -> bucketUrl(bucketName)
+          ),
           Map("originEmail" -> requesterId),
           Map("userNameFL" -> requesterId)
         )
@@ -298,7 +303,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Option(Set(requesterId)),
           templateId,
           Map("billingProjectName" -> billingProjectName,
-              "billingProjectNameUrl" -> billingProjectUrl(billingProjectName)),
+              "billingProjectNameUrl" -> billingProjectUrl(billingProjectName)
+          ),
           Map("originEmail" -> requesterId),
           Map("userNameFL" -> requesterId)
         )
@@ -312,7 +318,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Map("accessLevel" -> accessLevel,
               "namespace" -> workspaceName.namespace,
               "name" -> workspaceName.name,
-              "wsUrl" -> workspacePortalUrl(workspaceName)),
+              "wsUrl" -> workspacePortalUrl(workspaceName)
+          ),
           Map("originEmail" -> workspaceOwnerId),
           Map("userNameFL" -> workspaceOwnerId)
         )
@@ -324,7 +331,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                          workflowConfiguration,
                                          dataEntity,
                                          workflowCount,
-                                         comment) =>
+                                         comment
+          ) =>
         thurloe.service.Notification(
           Option(recipientUserid),
           None,
@@ -353,7 +361,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                             workflowConfiguration,
                                             dataEntity,
                                             workflowCount,
-                                            comment) =>
+                                            comment
+          ) =>
         thurloe.service.Notification(
           Option(recipientUserid),
           None,
@@ -382,7 +391,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                         workflowConfiguration,
                                         dataEntity,
                                         workflowCount,
-                                        comment) =>
+                                        comment
+          ) =>
         thurloe.service.Notification(
           Option(recipientUserid),
           None,
@@ -411,7 +421,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                      templateId,
                                      Map("wsName" -> workspaceName.name, "wsUrl" -> workspacePortalUrl(workspaceName)),
                                      Map.empty,
-                                     Map.empty)
+                                     Map.empty
+        )
 
       case GroupAccessRequestNotification(recipientUserId, groupName, replyTos, requesterId) =>
         thurloe.service.Notification(
@@ -427,9 +438,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
   }
 
   override val supervisorStrategy =
-    OneForOneStrategy() {
-      case _ => {
-        Escalate
-      }
+    OneForOneStrategy() { case _ =>
+      Escalate
     }
 }

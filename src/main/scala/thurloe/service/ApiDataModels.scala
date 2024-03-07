@@ -37,14 +37,16 @@ object ThurloeQuery {
     ThurloeQuery(getValues(asMap.get(UserIdParam)),
                  getValues(asMap.get(KeyParam)),
                  getValues(asMap.get(ValueParam)),
-                 getKeys(asMap.get(UnrecognizedParams)))
+                 getKeys(asMap.get(UnrecognizedParams))
+    )
   }
 }
 
 final case class ThurloeQuery(userId: Option[Seq[String]],
                               key: Option[Seq[String]],
                               value: Option[Seq[String]],
-                              unrecognizedFilters: Option[Seq[String]]) {
+                              unrecognizedFilters: Option[Seq[String]]
+) {
   def isEmpty: Boolean =
     userId.isEmpty && key.isEmpty && value.isEmpty
 }
@@ -62,4 +64,5 @@ case class Notification(userId: Option[WorkbenchUserId],
                         notificationId: String,
                         substitutions: Map[String, String],
                         emailLookupSubstitutions: Map[String, WorkbenchUserId],
-                        nameLookupSubstitution: Map[String, WorkbenchUserId])
+                        nameLookupSubstitution: Map[String, WorkbenchUserId]
+)
