@@ -36,7 +36,8 @@ trait SendGridDAO {
                 new NotificationException(StatusCodes.BadRequest,
                                           "No recipient specified",
                                           Seq.empty,
-                                          notification.notificationId)
+                                          notification.notificationId
+                )
               )
             )
         )
@@ -45,12 +46,12 @@ trait SendGridDAO {
         Future.traverse(_)(lookupPreferredEmail).map(replyToEmails => Option(replyToEmails))
       } getOrElse Future.successful(None)
 
-      val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions.toList) {
-        case (key, id) => lookupPreferredEmail(id).map(email => key -> email.value)
+      val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions.toList) { case (key, id) =>
+        lookupPreferredEmail(id).map(email => key -> email.value)
       }
 
-      val nameSubstitutionsFuture = Future.traverse(notification.nameLookupSubstitution.toList) {
-        case (key, id) => lookupUserName(id).map(name => key -> name)
+      val nameSubstitutionsFuture = Future.traverse(notification.nameLookupSubstitution.toList) { case (key, id) =>
+        lookupUserName(id).map(name => key -> name)
       }
 
       val recipientFirstNameSubstitutionFuture = notification.userId match {
@@ -82,7 +83,8 @@ trait SendGridDAO {
   def createEmail(toAddress: WorkbenchEmail,
                   replyTos: Option[Set[WorkbenchEmail]],
                   notificationId: String,
-                  substitutions: Map[String, String] = Map.empty): SendGrid.Email = {
+                  substitutions: Map[String, String] = Map.empty
+  ): SendGrid.Email = {
     val email = new SendGrid.Email()
 
     email.addTo(toAddress.value)
@@ -115,8 +117,8 @@ trait SendGridDAO {
 case class NotificationException(statusCode: StatusCode,
                                  message: String,
                                  recipients: Seq[String],
-                                 notificationId: String)
-    extends Exception {
+                                 notificationId: String
+) extends Exception {
   override def getMessage =
     s"Error message: [${message}], recipients: [${recipients.mkString(",")}], notificationId: [${notificationId}]"
 }

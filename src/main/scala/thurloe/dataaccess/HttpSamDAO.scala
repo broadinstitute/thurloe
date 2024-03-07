@@ -47,9 +47,8 @@ class HttpSamDAO(config: Config, credentials: GoogleCredentialModes.Pem) extends
   protected def adminApi(samApiClient: ApiClient) = new AdminApi(samApiClient)
 
   override def getUserById(userId: String): List[sam.model.User] =
-    try {
-      adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
-    } catch {
+    try adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
+    catch {
       case e: Exception =>
         logger.warn(s"Sam user not found: $userId", e)
         List.empty
