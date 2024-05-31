@@ -11,7 +11,7 @@ scalaVersion := "2.13.10"
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.3.3"
-val workbenchGoogleV = "0.28-3ad3700"
+val workbenchGoogleV = "0.32-89f86ba"
 val scalaTestV = "3.2.11"
 
 resolvers ++= Seq(
