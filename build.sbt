@@ -47,7 +47,7 @@ libraryDependencies ++= Seq(
   "commons-codec" % "commons-codec" % "1.15",
   "mysql" % "mysql-connector-java" % "8.0.28",
   "org.liquibase" % "liquibase-core" % "4.7.1",
-  "org.hsqldb" % "hsqldb" % "2.6.1",
+  "org.hsqldb" % "hsqldb" % "2.7.3",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
   "ch.qos.logback" % "logback-classic" % "1.4.14",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
