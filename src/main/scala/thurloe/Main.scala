@@ -7,6 +7,7 @@ import io.sentry.{Sentry, SentryOptions}
 import org.broadinstitute.dsde.workbench.google.{GoogleCredentialModes, HttpGooglePubSubDAO}
 import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import org.broadinstitute.dsde.workbench.util.toScalaDuration
+import thurloe.dataaccess.auth.CloudServiceAuthTokenProvider
 import thurloe.dataaccess.{HttpSamDAO, HttpSendGridDAO}
 import thurloe.notification.NotificationMonitorSupervisor
 import thurloe.service.ThurloeServiceActor
@@ -30,6 +31,10 @@ object Main extends App {
   val config = ConfigFactory.load()
   val gcsConfig = config.getConfig("gcs")
 
+  private val cloudAuthProvider = CloudServiceAuthTokenProvider.createProvider(config)
+
+  val samDao = new HttpSamDAO(config, cloudAuthProvider)
+
   val pem =
     GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
                               new File(gcsConfig.getString("pathToPem")))
@@ -40,7 +45,6 @@ object Main extends App {
     gcsConfig.getString("serviceProject")
   )
 
-  val samDao = new HttpSamDAO(config, pem)
   private val httpSendGridDAO = new HttpSendGridDAO(samDao)
   system.actorOf(
     NotificationMonitorSupervisor.props(
