@@ -17,10 +17,8 @@ trait CloudServiceAuthTokenProvider {
  * Factory for creating a CloudServiceAuthTokenProvider.
  */
 object CloudServiceAuthTokenProvider {
-  def createProvider(config: Config): CloudServiceAuthTokenProvider = {
-    val azureHostingEnabled = isAzureHostingEnabled(config)
-
-    if (azureHostingEnabled) {
+  def createProvider(config: Config): CloudServiceAuthTokenProvider =
+    if (isAzureHostingEnabled(config)) {
       new AzureAuthTokenProvider(config.getConfig("azureHosting"))
     } else {
       val gcsConfig = config.getConfig("gcs")
@@ -30,7 +28,6 @@ object CloudServiceAuthTokenProvider {
 
       new GcpAuthTokenProvider(pem)
     }
-  }
 
   def isAzureHostingEnabled(config: Config): Boolean =
     if (config.hasPath("azureHosting.enabled")) {

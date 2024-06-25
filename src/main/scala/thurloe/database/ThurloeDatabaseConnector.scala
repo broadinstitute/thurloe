@@ -74,13 +74,7 @@ case object ThurloeDatabaseConnector extends DataAccess with LazyLogging {
     val results = samDao.getUserById(userId)
 
     val samUser = if (results.isEmpty) {
-      val dummySamUser = new sam.model.User()
-      dummySamUser.setGoogleSubjectId(userId)
-      dummySamUser.setAzureB2CId(userId)
-      dummySamUser.setId(userId)
-
-      Future.successful(dummySamUser)
-      //Future.failed(new KeyNotFoundException(userId, "n/a"))
+      Future.failed(new KeyNotFoundException(userId, "n/a"))
     } else if (results.size == 1) {
       // If we get exactly one result we have found the user we want.
       Future.successful(results.head)
