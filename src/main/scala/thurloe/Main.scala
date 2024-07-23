@@ -2,18 +2,19 @@ package thurloe
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import io.sentry.{Sentry, SentryOptions}
 import org.broadinstitute.dsde.workbench.google.{GoogleCredentialModes, HttpGooglePubSubDAO}
 import org.broadinstitute.dsde.workbench.model.WorkbenchEmail
 import org.broadinstitute.dsde.workbench.util.toScalaDuration
 import thurloe.dataaccess.{HttpSamDAO, HttpSendGridDAO}
+import thurloe.dataaccess.auth.CloudServiceAuthTokenProvider
 import thurloe.notification.NotificationMonitorSupervisor
 import thurloe.service.ThurloeServiceActor
 
 import java.io.File
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 object Main extends App {
   val sentryDsn = sys.env.get("SENTRY_DSN")
@@ -25,42 +26,17 @@ object Main extends App {
   }
 
   // We need an ActorSystem to host our application in
-  implicit val system = ActorSystem("thurloe")
+  implicit val system: ActorSystem = ActorSystem("thurloe")
 
   val config = ConfigFactory.load()
-  val gcsConfig = config.getConfig("gcs")
 
-  val pem =
-    GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
-                              new File(gcsConfig.getString("pathToPem")))
-  val pubSubDAO = new HttpGooglePubSubDAO(
-    gcsConfig.getString("appName"),
-    pem,
-    "thurloe",
-    gcsConfig.getString("serviceProject")
-  )
+  private val cloudAuthProvider = CloudServiceAuthTokenProvider.createProvider(config)
 
-  val samDao = new HttpSamDAO(config, pem)
-  private val httpSendGridDAO = new HttpSendGridDAO(samDao)
-  system.actorOf(
-    NotificationMonitorSupervisor.props(
-      toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
-      toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollIntervalJitter")),
-      pubSubDAO,
-      gcsConfig.getString("notificationMonitor.topicName"),
-      gcsConfig.getString("notificationMonitor.subscriptionName"),
-      gcsConfig.getInt("notificationMonitor.workerCount"),
-      httpSendGridDAO,
-      config
-        .getConfig("notification.templateIds")
-        .entrySet()
-        .asScala
-        .map(entry => entry.getKey -> entry.getValue.unwrapped().toString)
-        .toMap,
-      config.getString("notification.fireCloudPortalUrl"),
-      samDao
-    )
-  )
+  val samDao = new HttpSamDAO(config, cloudAuthProvider)
+
+  if (isNotificationsEnabled(config)) {
+    startNotificationsMonitor(config, samDao)
+  }
 
   val routes = new ThurloeServiceActor(samDao)
 
@@ -74,4 +50,47 @@ object Main extends App {
     _ <- binding.whenTerminated
     _ <- system.terminate()
   } yield ()
+
+  private def startNotificationsMonitor(config: Config, httpSamDAO: HttpSamDAO) = {
+    val gcsConfig = config.getConfig("gcs")
+
+    val pem =
+      GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
+                                new File(gcsConfig.getString("pathToPem")))
+    val pubSubDAO = new HttpGooglePubSubDAO(
+      gcsConfig.getString("appName"),
+      pem,
+      "thurloe",
+      gcsConfig.getString("serviceProject")
+    )
+
+    val httpSendGridDAO = new HttpSendGridDAO(httpSamDAO)
+    system.actorOf(
+      NotificationMonitorSupervisor.props(
+        toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollInterval")),
+        toScalaDuration(gcsConfig.getDuration("notificationMonitor.pollIntervalJitter")),
+        pubSubDAO,
+        gcsConfig.getString("notificationMonitor.topicName"),
+        gcsConfig.getString("notificationMonitor.subscriptionName"),
+        gcsConfig.getInt("notificationMonitor.workerCount"),
+        httpSendGridDAO,
+        config
+          .getConfig("notification.templateIds")
+          .entrySet()
+          .asScala
+          .map(entry => entry.getKey -> entry.getValue.unwrapped().toString)
+          .toMap,
+        config.getString("notification.fireCloudPortalUrl"),
+        samDao
+      )
+    )
+  }
+
+  private def isNotificationsEnabled(config: Config): Boolean =
+    if (config.hasPath("app.enableNotifications")) {
+      config.getBoolean("app.enableNotifications")
+    } else {
+      // notifications are enabled by default
+      true
+    }
 }
