@@ -41,10 +41,9 @@ object Main extends App {
   val routes = new ThurloeServiceActor(samDao)
 
   for {
-    binding <- Http().newServerAt("0.0.0.0", 8000).bind(routes.route).recover {
-      case t: Throwable =>
-        system.log.error("FATAL - failure starting http server", t)
-        throw t
+    binding <- Http().newServerAt("0.0.0.0", 8000).bind(routes.route).recover { case t: Throwable =>
+      system.log.error("FATAL - failure starting http server", t)
+      throw t
     }
     _ = system.log.info("Thurloe now available for all your key/value pair and notification needs.")
     _ <- binding.whenTerminated
@@ -56,7 +55,8 @@ object Main extends App {
 
     val pem =
       GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
-                                new File(gcsConfig.getString("pathToPem")))
+                                new File(gcsConfig.getString("pathToPem"))
+      )
     val pubSubDAO = new HttpGooglePubSubDAO(
       gcsConfig.getString("appName"),
       pem,

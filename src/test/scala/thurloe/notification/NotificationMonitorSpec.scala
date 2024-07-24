@@ -76,7 +76,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         WorkspaceInvitedNotification(WorkbenchEmail(s"foo$i"),
                                      id,
                                      WorkspaceName("namespace", "name"),
-                                     "some-bucket-name")
+                                     "some-bucket-name"
+        )
       }
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
@@ -119,7 +120,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
-            "WorkspaceAddedNotification" -> "valid_notification_id1"),
+            "WorkspaceAddedNotification" -> "valid_notification_id1"
+        ),
         "foo",
         samDao
       )
@@ -185,7 +187,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
-            "WorkspaceAddedNotification" -> "valid_notification_id1"),
+            "WorkspaceAddedNotification" -> "valid_notification_id1"
+        ),
         "foo",
         samDao
       )
@@ -211,7 +214,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
     Await.result(ThurloeDatabaseConnector.set(
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "true")))
                  ),
-                 Duration.Inf)
+                 Duration.Inf
+    )
 
     // wait for all the messages to be published and throw an error if one happens (i.e. use Await.result not Await.ready)
     val testNotifications = Seq(removedNotification, addedNotification)
@@ -262,7 +266,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
                                        "some-config",
                                        "some-entity",
                                        15,
-                                       "no comment")
+                                       "no comment"
+      )
 
     Await.result(
       ThurloeDatabaseConnector.set(
@@ -335,7 +340,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
                                        "some-config",
                                        "some-entity",
                                        15,
-                                       "no comment")
+                                       "no comment"
+      )
 
     Await.result(
       ThurloeDatabaseConnector.set(
@@ -364,7 +370,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
     val topic = "topic"
 
     val workerCount = 1
-    val sendGridDAO = new MockSendGridDAOWithException // throws an KeyNotFoundException when calling `sendNotifications`
+    val sendGridDAO =
+      new MockSendGridDAOWithException // throws an KeyNotFoundException when calling `sendNotifications`
     system.actorOf(
       NotificationMonitorSupervisor.props(
         10 milliseconds,
@@ -375,7 +382,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
         workerCount,
         sendGridDAO,
         Map("WorkspaceRemovedNotification" -> "valid_notification_id1",
-            "WorkspaceAddedNotification" -> "valid_notification_id1"),
+            "WorkspaceAddedNotification" -> "valid_notification_id1"
+        ),
         "foo",
         samDao
       )
@@ -395,7 +403,8 @@ class NotificationMonitorSpec(_system: ActorSystem)
     Await.result(ThurloeDatabaseConnector.set(
                    UserKeyValuePairs(userId, Seq(KeyValuePair(NotificationMonitor.notificationsOffKey, "false")))
                  ),
-                 Duration.Inf)
+                 Duration.Inf
+    )
 
     val testNotifications = Seq(removedNotification, addedNotification)
     Await.result(
