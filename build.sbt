@@ -22,7 +22,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "4.1.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
-  "com.google.protobuf" % "protobuf-java" % "4.0.0-rc-2",
+  "com.google.protobuf" % "protobuf-java" % "4.27.3",
   "io.sentry" % "sentry" % "6.9.2",
   "io.sentry" % "sentry-logback" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
