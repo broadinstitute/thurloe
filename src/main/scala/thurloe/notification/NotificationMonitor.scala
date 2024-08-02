@@ -423,6 +423,13 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Map("originEmail" -> requesterId),
           Map("userNameFL" -> requesterId)
         )
+
+      case SnapshotReadyNotification(recipientUserId, snapshotExportLink, snapshotName, snapshotSummary) =>
+        thurloe.service.Notification(Option(recipientUserId), None, None, templateId, Map(
+          "snapshotExportLink" -> snapshotExportLink,
+          "snapshotName" -> snapshotName,
+          "snapshotSummary" -> snapshotSummary
+        ), Map.empty, Map.empty);
     }
   }
 
