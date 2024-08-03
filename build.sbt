@@ -51,7 +51,7 @@ libraryDependencies ++= Seq(
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
   "ch.qos.logback" % "logback-classic" % "1.4.14",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
-  "com.azure" % "azure-identity" % "1.12.2",
+  "com.azure" % "azure-identity" % "1.13.2",
   "com.azure" % "azure-core-management" % "1.15.0",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
