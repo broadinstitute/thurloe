@@ -439,7 +439,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Map.empty
         )
 
-      case SnapshotRequestSubmittedNotification(recipientUserId, requestName, requestId, dateSubmitted, requestSummary) =>
+      case SnapshotRequestSubmittedNotification(recipientUserId,
+                                                requestName,
+                                                requestId,
+                                                dateSubmitted,
+                                                requestSummary) =>
         thurloe.service.Notification(
           Option(recipientUserId),
           None,
