@@ -23,8 +23,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
   "com.google.protobuf" % "protobuf-java" % "4.29.0-RC1",
-  "io.sentry" % "sentry" % "6.9.2",
-  "io.sentry" % "sentry-logback" % "6.9.2",
+  "io.sentry" % "sentry" % "6.34.0",
+  "io.sentry" % "sentry-logback" % "6.34.0",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
     exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
     exclude("com.google.protobuf", "protobuf-java")
