@@ -10,6 +10,7 @@ import org.broadinstitute.dsde.workbench.util.toScalaDuration
 import thurloe.dataaccess.{HttpSamDAO, HttpSendGridDAO}
 import thurloe.dataaccess.auth.CloudServiceAuthTokenProvider
 import thurloe.notification.NotificationMonitorSupervisor
+import thurloe.security.CSPDirective.addCSP
 import thurloe.service.ThurloeServiceActor
 
 import java.io.File
@@ -41,7 +42,7 @@ object Main extends App {
   val routes = new ThurloeServiceActor(samDao)
 
   for {
-    binding <- Http().newServerAt("0.0.0.0", 8000).bind(routes.route).recover {
+    binding <- Http().newServerAt("0.0.0.0", 8000).bind(addCSP(routes.route)).recover {
       case t: Throwable =>
         system.log.error("FATAL - failure starting http server", t)
         throw t
