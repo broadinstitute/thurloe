@@ -7,6 +7,7 @@ import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import thurloe.dataaccess.{HttpSendGridDAO, SamDAO}
 import thurloe.database.ThurloeDatabaseConnector
+import thurloe.security.CSPDirective.addCSP
 
 class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices with StatusService {
   val authConfig = ConfigFactory.load().getConfig("auth")
@@ -14,10 +15,11 @@ class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices
   val samDao = httpSamDao
   override val dataAccess = ThurloeDatabaseConnector
   override val sendGridDAO = new HttpSendGridDAO(samDao)
-  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/4.1.3"
+  protected val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/5.17.14"
 
-  def route: Route =
+  def route: Route = addCSP {
     swaggerUiService ~ statusRoute ~ fireCloudProtectedRoutes
+  }
 
   val swaggerUiService = {
     path("") {
