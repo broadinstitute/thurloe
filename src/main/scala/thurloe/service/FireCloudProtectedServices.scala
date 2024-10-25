@@ -16,7 +16,7 @@ trait FireCloudProtectedServices extends ThurloeService with NotificationService
   val fireCloudProtectedRoutes: Route = optionalHeaderValueByName(fcHeader) {
     case Some(x) if x.equals(fcId) => pathPrefix("api")(keyValuePairRoutes ~ notificationRoutes)
     case Some(_)                   => complete(StatusCodes.BadRequest, s"Invalid '$fcHeader' Header Provided")
-    case None                      => complete(StatusCodes.BadRequest, s"Request is missing required HTTP header '$fcHeader'")
+    case None => complete(StatusCodes.BadRequest, s"Request is missing required HTTP header '$fcHeader'")
   }
 
 }

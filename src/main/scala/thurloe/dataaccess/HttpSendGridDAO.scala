@@ -32,7 +32,7 @@ class HttpSendGridDAO(samDao: SamDAO) extends SendGridDAO with LazyLogging {
     }
   }
 
-  //Looks up a KVP, converting empty values or missing KVPs into None
+  // Looks up a KVP, converting empty values or missing KVPs into None
   private def lookupNonEmptyKeyValuePair(userId: String, key: String) =
     dataAccess
       .lookup(samDao, userId, key)
@@ -42,7 +42,7 @@ class HttpSendGridDAO(samDao: SamDAO) extends SendGridDAO with LazyLogging {
       }
       .recover(_ => None)
 
-  //There are two cases that need to be handled when looking up the preferred contact email:
+  // There are two cases that need to be handled when looking up the preferred contact email:
   // 1) If the contactEmail is not present at all, the DB query will throw an exception. So that needs to be handled.
   // 2) If the contactEmail is present but blank, it also needs to be ignored. Thurloe accepts arbitrary key/value pairs
   //    and makes no guarantees about what the data might look like, so a blank value or invalid email is a valid case.
@@ -54,12 +54,13 @@ class HttpSendGridDAO(samDao: SamDAO) extends SendGridDAO with LazyLogging {
   //      how profiles are populated.
   def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail] =
     lookupNonEmptyKeyValuePair(userId.value, "contactEmail") flatMap {
-      case Some(kvp) => Future.successful(WorkbenchEmail(kvp.keyValuePair.value)) //contactEmail was found and non-empty
+      case Some(kvp) =>
+        Future.successful(WorkbenchEmail(kvp.keyValuePair.value)) // contactEmail was found and non-empty
       case None =>
         logger.info(s"Failed to get stored contactEmail for ${userId.value}. Defaulting to account email for user.")
         lookupNonEmptyKeyValuePair(userId.value, "email") flatMap {
           case Some(kvp) =>
-            Future.successful(WorkbenchEmail(kvp.keyValuePair.value)) //account email was found and non-empty
+            Future.successful(WorkbenchEmail(kvp.keyValuePair.value)) // account email was found and non-empty
           case None => Future.failed(new KeyNotFoundException(userId.value, "email"))
         }
     }

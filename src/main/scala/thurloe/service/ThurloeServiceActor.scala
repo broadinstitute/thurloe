@@ -21,7 +21,7 @@ class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices
     swaggerUiService ~ statusRoute ~ fireCloudProtectedRoutes
   }
 
-  val swaggerUiService = {
+  val swaggerUiService =
     path("") {
       get {
         serveIndex
@@ -41,7 +41,6 @@ class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices
           getFromResourceDirectory(swaggerUiPath)
         }
       }
-  }
 
   private val serveIndex: Route = {
     val swaggerOptions =
