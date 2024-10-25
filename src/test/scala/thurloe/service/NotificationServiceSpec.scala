@@ -20,21 +20,24 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
                                        "valid_notification_id1",
                                        Map.empty,
                                        Map.empty,
-                                       Map.empty)
+                                       Map.empty
+  )
   val validNotification2 = Notification(Some(WorkbenchUserId("a_user_id")),
                                         None,
                                         Option(Set(WorkbenchUserId("a_user_id"))),
                                         "valid_notification_id1",
                                         Map.empty,
                                         Map.empty,
-                                        Map.empty)
+                                        Map.empty
+  )
   val invalidNotification = Notification(Some(WorkbenchUserId("a_user_id")),
                                          None,
                                          None,
                                          "invalid_notification_id1",
                                          Map.empty,
                                          Map.empty,
-                                         Map.empty)
+                                         Map.empty
+  )
 
   def notificationService = new NotificationService {
     val sendGridDAO = new MockSendGridDAO
@@ -54,7 +57,9 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("should send a list of valid notifications to a user") {
-      Post("/notification", List(validNotification, validNotification2)) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification",
+           List(validNotification, validNotification2)
+      ) ~> notificationService.notificationRoutes ~> check {
         assertResult("OK") {
           responseAs[String]
         }
@@ -73,7 +78,9 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("should not send an invalid notification to a user in a list with a valid notification") {
-      Post("/notification", List(invalidNotification, validNotification)) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification",
+           List(invalidNotification, validNotification)
+      ) ~> notificationService.notificationRoutes ~> check {
         assertResult(StatusCodes.BadRequest) {
           status
         }
@@ -81,7 +88,9 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("should send a valid notification to a user with no contactEmail set") {
-      Post("/notification", List(validNotification.copy(userId = Some(WorkbenchUserId("a_user_id2"))))) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification",
+           List(validNotification.copy(userId = Some(WorkbenchUserId("a_user_id2"))))
+      ) ~> notificationService.notificationRoutes ~> check {
         assertResult("OK") {
           responseAs[String]
         }
@@ -92,7 +101,9 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("throw an exception when sending a valid notification to a user with no contact settings") {
-      Post("/notification", List(validNotification.copy(userId = Some(WorkbenchUserId("a_user_id3"))))) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification",
+           List(validNotification.copy(userId = Some(WorkbenchUserId("a_user_id3"))))
+      ) ~> notificationService.notificationRoutes ~> check {
         assertResult(StatusCodes.InternalServerError) {
           status
         }
@@ -111,7 +122,9 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
     }
 
     it("throw an exception when sending a notification with no userId or userEmail set") {
-      Post("/notification", List(validNotification.copy(userId = None))) ~> notificationService.notificationRoutes ~> check {
+      Post("/notification",
+           List(validNotification.copy(userId = None))
+      ) ~> notificationService.notificationRoutes ~> check {
         assertResult(StatusCodes.BadRequest) {
           status
         }

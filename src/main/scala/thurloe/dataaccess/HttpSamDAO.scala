@@ -37,9 +37,9 @@ class HttpSamDAO(config: Config, cloudServiceAuthTokenProvider: CloudServiceAuth
   protected def adminApi(samApiClient: ApiClient) = new AdminApi(samApiClient)
 
   override def getUserById(userId: String): List[sam.model.User] =
-    try {
+    try
       adminApi(getApiClient).adminGetUsersByQuery(userId, userId, userId, 5).asScala.toList
-    } catch {
+    catch {
       case e: Exception =>
         logger.warn(s"Sam user not found: $userId", e)
         List.empty
