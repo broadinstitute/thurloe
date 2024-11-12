@@ -12,7 +12,7 @@ val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.3.3"
 val workbenchGoogleV = "0.28-3ad3700"
-val scalaTestV = "3.2.11"
+val scalaTestV = "3.2.19"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
@@ -58,7 +58,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
-  "org.mockito" %% "mockito-scala-scalatest" % "1.17.12" % Test,
+  "org.mockito" %% "mockito-scala-scalatest" % "1.17.37" % Test,
   "org.yaml" % "snakeyaml" % "1.33" % Test
 )
 
