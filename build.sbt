@@ -11,8 +11,13 @@ scalaVersion := "2.13.15"
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.3.3"
-val workbenchGoogleV = "0.28-3ad3700"
+
 val scalaTestV = "3.2.19"
+
+val workbenchLibsHash = "9254729"
+val workbenchGoogleV = s"0.32-$workbenchLibsHash"
+val workbenchNotificationsV = s"0.7-$workbenchLibsHash"
+
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
@@ -32,7 +37,7 @@ libraryDependencies ++= Seq(
     exclude("org.bouncycastle", "bcprov-ext-jdk15on")
     exclude("org.bouncycastle", "bcutil-jdk15on")
     exclude("org.bouncycastle", "bcpkix-jdk15on"),
-  "org.broadinstitute.dsde.workbench" %% "workbench-notifications" % "0.7-9254729"
+  "org.broadinstitute.dsde.workbench" %% "workbench-notifications" % workbenchNotificationsV
     exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
     exclude("com.google.protobuf", "protobuf-java"),
   "com.typesafe.akka" %% "akka-http" % akkaHttpV,
