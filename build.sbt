@@ -10,14 +10,13 @@ scalaVersion := "2.13.15"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
-val slickV = "3.3.3"
+val slickV = "3.5.2"
 
 val scalaTestV = "3.2.19"
 
 val workbenchLibsHash = "9254729"
 val workbenchGoogleV = s"0.32-$workbenchLibsHash"
 val workbenchNotificationsV = s"0.7-$workbenchLibsHash"
-
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
