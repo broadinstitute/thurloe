@@ -5,13 +5,13 @@ import org.broadinstitute.dsde.workbench.model.WorkbenchIdentityJsonSupport.{
   WorkbenchEmailFormat,
   WorkbenchUserIdFormat
 }
-import spray.json.DefaultJsonProtocol
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
-  implicit val keyValuePairFormat = jsonFormat2(KeyValuePair)
-  implicit val userKeyValuePairFormat = jsonFormat2(UserKeyValuePair)
-  implicit val userKeyValuePairsFormat = jsonFormat2(UserKeyValuePairs)
-  implicit val notificationFormat = jsonFormat7(Notification)
+  implicit val keyValuePairFormat: RootJsonFormat[KeyValuePair] = jsonFormat2(KeyValuePair)
+  implicit val userKeyValuePairFormat: RootJsonFormat[UserKeyValuePair] = jsonFormat2(UserKeyValuePair)
+  implicit val userKeyValuePairsFormat: RootJsonFormat[UserKeyValuePairs] = jsonFormat2(UserKeyValuePairs)
+  implicit val notificationFormat: RootJsonFormat[Notification] = jsonFormat7(Notification)
 }
 
 object ThurloeQuery {
@@ -37,14 +37,16 @@ object ThurloeQuery {
     ThurloeQuery(getValues(asMap.get(UserIdParam)),
                  getValues(asMap.get(KeyParam)),
                  getValues(asMap.get(ValueParam)),
-                 getKeys(asMap.get(UnrecognizedParams)))
+                 getKeys(asMap.get(UnrecognizedParams))
+    )
   }
 }
 
 final case class ThurloeQuery(userId: Option[Seq[String]],
                               key: Option[Seq[String]],
                               value: Option[Seq[String]],
-                              unrecognizedFilters: Option[Seq[String]]) {
+                              unrecognizedFilters: Option[Seq[String]]
+) {
   def isEmpty: Boolean =
     userId.isEmpty && key.isEmpty && value.isEmpty
 }
@@ -62,4 +64,5 @@ case class Notification(userId: Option[WorkbenchUserId],
                         notificationId: String,
                         substitutions: Map[String, String],
                         emailLookupSubstitutions: Map[String, WorkbenchUserId],
-                        nameLookupSubstitution: Map[String, WorkbenchUserId])
+                        nameLookupSubstitution: Map[String, WorkbenchUserId]
+)
