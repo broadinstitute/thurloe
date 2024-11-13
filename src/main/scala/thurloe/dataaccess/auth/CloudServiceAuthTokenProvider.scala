@@ -24,7 +24,8 @@ object CloudServiceAuthTokenProvider {
       val gcsConfig = config.getConfig("gcs")
       val pem =
         GoogleCredentialModes.Pem(WorkbenchEmail(gcsConfig.getString("clientEmail")),
-                                  new File(gcsConfig.getString("pathToPem")))
+                                  new File(gcsConfig.getString("pathToPem"))
+        )
 
       new GcpAuthTokenProvider(pem)
     }

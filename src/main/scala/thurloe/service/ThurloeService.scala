@@ -71,7 +71,7 @@ trait ThurloeService extends LazyLogging {
     }
 
   val getAllRoute: Route =
-    path(ThurloePrefix / Segment) { (userId) =>
+    path(ThurloePrefix / Segment) { userId =>
       get {
         onComplete(dataAccess.lookup(samDao, userId)) {
           case Success(userKeyValuePairs) =>

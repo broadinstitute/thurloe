@@ -6,23 +6,27 @@ version := "0.2"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.13.10"
+scalaVersion := "2.13.15"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.5.2"
-val workbenchGoogleV = "0.28-3ad3700"
-val scalaTestV = "3.2.11"
+
+val scalaTestV = "3.2.19"
+
+val workbenchLibsHash = "9254729"
+val workbenchGoogleV = s"0.32-$workbenchLibsHash"
+val workbenchNotificationsV = s"0.7-$workbenchLibsHash"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
   "Broad Artifactory Snapshots" at "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "4.1.3",
+  "org.webjars" % "swagger-ui" % "5.17.14",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
-  "com.google.protobuf" % "protobuf-java" % "4.0.0-rc-2",
+  "com.google.protobuf" % "protobuf-java" % "4.29.0-RC1",
   "io.sentry" % "sentry" % "6.9.2",
   "io.sentry" % "sentry-logback" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
@@ -32,7 +36,7 @@ libraryDependencies ++= Seq(
     exclude("org.bouncycastle", "bcprov-ext-jdk15on")
     exclude("org.bouncycastle", "bcutil-jdk15on")
     exclude("org.bouncycastle", "bcpkix-jdk15on"),
-  "org.broadinstitute.dsde.workbench" %% "workbench-notifications" % "0.7-9254729"
+  "org.broadinstitute.dsde.workbench" %% "workbench-notifications" % workbenchNotificationsV
     exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
     exclude("com.google.protobuf", "protobuf-java"),
   "com.typesafe.akka" %% "akka-http" % akkaHttpV,
@@ -43,22 +47,22 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
   "com.typesafe" % "config" % "1.4.2",
-  "commons-io" % "commons-io" % "2.11.0",
-  "commons-codec" % "commons-codec" % "1.15",
+  "commons-io" % "commons-io" % "2.17.0",
+  "commons-codec" % "commons-codec" % "1.17.1",
   "mysql" % "mysql-connector-java" % "8.0.28",
-  "org.liquibase" % "liquibase-core" % "4.7.1",
-  "org.hsqldb" % "hsqldb" % "2.6.1",
+  "org.liquibase" % "liquibase-core" % "4.30.0",
+  "org.hsqldb" % "hsqldb" % "2.7.4",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
-  "ch.qos.logback" % "logback-classic" % "1.4.14",
+  "ch.qos.logback" % "logback-classic" % "1.5.12",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
   "com.azure" % "azure-identity" % "1.12.2",
-  "com.azure" % "azure-core-management" % "1.15.0",
+  "com.azure" % "azure-core-management" % "1.15.5",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
-  "org.mockito" %% "mockito-scala-scalatest" % "1.17.12" % Test,
+  "org.mockito" %% "mockito-scala-scalatest" % "1.17.37" % Test,
   "org.yaml" % "snakeyaml" % "1.33" % Test
 )
 
