@@ -5,13 +5,13 @@ import org.broadinstitute.dsde.workbench.model.WorkbenchIdentityJsonSupport.{
   WorkbenchEmailFormat,
   WorkbenchUserIdFormat
 }
-import spray.json.DefaultJsonProtocol
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 object ApiDataModelsJsonProtocol extends DefaultJsonProtocol {
-  implicit val keyValuePairFormat = jsonFormat2(KeyValuePair)
-  implicit val userKeyValuePairFormat = jsonFormat2(UserKeyValuePair)
-  implicit val userKeyValuePairsFormat = jsonFormat2(UserKeyValuePairs)
-  implicit val notificationFormat = jsonFormat7(Notification)
+  implicit val keyValuePairFormat: RootJsonFormat[KeyValuePair] = jsonFormat2(KeyValuePair)
+  implicit val userKeyValuePairFormat: RootJsonFormat[UserKeyValuePair] = jsonFormat2(UserKeyValuePair)
+  implicit val userKeyValuePairsFormat: RootJsonFormat[UserKeyValuePairs] = jsonFormat2(UserKeyValuePairs)
+  implicit val notificationFormat: RootJsonFormat[Notification] = jsonFormat7(Notification)
 }
 
 object ThurloeQuery {
