@@ -10,14 +10,13 @@ scalaVersion := "2.13.15"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
-val slickV = "3.3.3"
+val slickV = "3.5.2"
 
 val scalaTestV = "3.2.19"
 
 val workbenchLibsHash = "9254729"
 val workbenchGoogleV = s"0.32-$workbenchLibsHash"
 val workbenchNotificationsV = s"0.7-$workbenchLibsHash"
-
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
@@ -27,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "5.17.14",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
-  "com.google.protobuf" % "protobuf-java" % "4.29.0-RC1",
+  "com.google.protobuf" % "protobuf-java" % "4.29.0-RC2",
   "io.sentry" % "sentry" % "6.9.2",
   "io.sentry" % "sentry-logback" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
@@ -63,8 +62,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
-  "org.mockito" %% "mockito-scala-scalatest" % "1.17.37" % Test,
-  "org.yaml" % "snakeyaml" % "1.33" % Test
+  "org.mockito" %% "mockito-scala-scalatest" % "1.17.37" % Test
 )
 
 scalacOptions ++= Seq(
