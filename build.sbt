@@ -56,7 +56,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.5.12",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
   "com.azure" % "azure-identity" % "1.12.2",
-  "com.azure" % "azure-core-management" % "1.15.5",
+  "com.azure" % "azure-core-management" % "1.15.6",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
