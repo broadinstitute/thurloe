@@ -449,6 +449,60 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           ),
           Map.empty,
           Map.empty
+        )
+
+      case TeaspoonsJobSucceededNotification(recipientUserId,
+                                             pipelineDisplayName,
+                                             jobId,
+                                             timeSubmitted,
+                                             timeCompleted,
+                                             quotaConsumedByJob,
+                                             quotaRemaining,
+                                             userDescription) =>
+        thurloe.service.Notification(
+          Option(recipientUserId),
+          None,
+          None,
+          templateId,
+          Map(
+            "pipelineDisplayName" -> pipelineDisplayName,
+            "jobId" -> jobId,
+            "timeSubmitted" -> timeSubmitted,
+            "timeCompleted" -> timeCompleted,
+            "quotaConsumedByJob" -> quotaConsumedByJob,
+            "quotaRemaining" -> quotaRemaining,
+            "userDescription" -> userDescription
+          ),
+          Map.empty,
+          Map.empty
+        )
+
+      case TeaspoonsJobFailedNotification(recipientUserId,
+                                          pipelineDisplayName,
+                                          jobId,
+                                          errorMessage,
+                                          timeSubmitted,
+                                          timeCompleted,
+                                          quotaConsumedByJob,
+                                          quotaRemaining,
+                                          userDescription) =>
+        thurloe.service.Notification(
+          Option(recipientUserId),
+          None,
+          None,
+          templateId,
+          Map(
+            "pipelineDisplayName" -> pipelineDisplayName,
+            "jobId" -> jobId,
+            "errorMessage" -> errorMessage,
+            "timeSubmitted" -> timeSubmitted,
+            "timeCompleted" -> timeCompleted,
+            "quotaConsumedByJob" -> quotaConsumedByJob,
+            "quotaRemaining" -> quotaRemaining,
+            "userDescription" -> userDescription
+          ),
+          Map.empty,
+          Map.empty
         );
     }
   }
