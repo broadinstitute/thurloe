@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "5.18.2",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
-  "com.google.protobuf" % "protobuf-java" % "4.29.1",
+  "com.google.protobuf" % "protobuf-java" % "4.29.2",
   "io.sentry" % "sentry" % "6.9.2",
   "io.sentry" % "sentry-logback" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
@@ -53,7 +53,7 @@ libraryDependencies ++= Seq(
   "org.liquibase" % "liquibase-core" % "4.30.0",
   "org.hsqldb" % "hsqldb" % "2.7.4",
   "com.sendgrid" % "sendgrid-java" % "2.2.2",
-  "ch.qos.logback" % "logback-classic" % "1.5.12",
+  "ch.qos.logback" % "logback-classic" % "1.5.13",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
   "com.azure" % "azure-identity" % "1.14.2",
   "com.azure" % "azure-core-management" % "1.15.6",
