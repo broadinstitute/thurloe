@@ -10,7 +10,7 @@ echo "building thurloe jar..."
 
 docker run --rm -v $PWD:/working \
 -v jar-cache:/root/.ivy \
--v jar-cache:/root/.ivy2 sbtscala/scala-sbt:eclipse-temurin-17.0.13_11_1.10.5_2.13.15 /working/docker/install.sh /working
+-v jar-cache:/root/.ivy2 sbtscala/scala-sbt:eclipse-temurin-17.0.13_11_1.10.7_2.13.15 /working/docker/install.sh /working
 
 
 EXIT_CODE=$?
