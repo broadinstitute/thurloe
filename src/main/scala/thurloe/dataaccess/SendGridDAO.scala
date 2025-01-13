@@ -104,7 +104,7 @@ trait SendGridDAO {
 
     replyTos.foreach { userEmails =>
       val addrs = userEmails.map(_.value)
-      mail.addHeader("Reply-To", addrs.mkString(", "))
+      mail.setReplyTo(new Email(addrs.mkString(", ")))
     }
 
     mail
