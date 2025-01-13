@@ -91,13 +91,15 @@ class NotificationMonitorSpec(_system: ActorSystem)
     awaitAssert(
       testNotifications
         .map(n => n.recipientUserEmail.value)
-        .toSet should contain theSameElementsAs (sendGridDAO.emails.asScala.map(email => email.getTos.head).toSet),
+        .toSet should contain theSameElementsAs (sendGridDAO.emails.asScala
+        .map(email => sendGridDAO.getTos(email).head)
+        .toSet),
       10 seconds
     )
 
     awaitAssert(
       assertResult(testNotifications.map(n => n.requesterId.value).toSet) {
-        sendGridDAO.emails.asScala.map(email => email.getHeaders.get("Reply-To")).toSet
+        sendGridDAO.emails.asScala.map(email => email.getReplyto.getEmail).toSet
       },
       10 seconds
     )
