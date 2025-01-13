@@ -24,9 +24,9 @@ class MockSendGridDAO extends SendGridDAO {
 
   val emails = Collections.synchronizedList(new util.ArrayList[Mail]())
 
-  override def sendEmail(email: Mail): Future[Response] = Future {
-    val usedId = email.getTemplateId
-    email match {
+  override def sendMail(mail: Mail): Future[Response] = Future {
+    val usedId = mail.getTemplateId
+    mail match {
       case e
           if validNotificationIds
             .contains(e.getTemplateId) =>

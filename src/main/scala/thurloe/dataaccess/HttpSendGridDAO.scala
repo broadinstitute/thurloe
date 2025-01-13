@@ -16,23 +16,23 @@ import scala.concurrent.Future
 class HttpSendGridDAO(samDao: SamDAO) extends SendGridDAO with LazyLogging {
   val dataAccess = ThurloeDatabaseConnector
 
-  override def sendEmail(email: Mail): Future[Response] = {
+  override def sendMail(mail: Mail): Future[Response] = {
     val sendGrid = new SendGrid(apiKey)
 
     Future {
-      val sgRequest = new Request()
-      sgRequest.setMethod(Method.POST)
-      sgRequest.setEndpoint("mail/send")
-      sgRequest.setBody(email.build)
+      val request = new Request()
+      request.setMethod(Method.POST)
+      request.setEndpoint("mail/send")
+      request.setBody(mail.build)
 
-      val response = sendGrid.api(sgRequest)
+      val response = sendGrid.api(request)
       if (isSuccessful(response)) response
       else
-        throw new NotificationException(
+        throw NotificationException(
           StatusCodes.InternalServerError,
           "Unable to send notification, unexpected error occurred: " + response.getBody,
-          getTos(email),
-          email.getTemplateId
+          getTos(mail),
+          mail.getTemplateId
         )
     }
   }

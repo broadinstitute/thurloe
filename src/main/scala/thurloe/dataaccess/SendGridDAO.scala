@@ -23,7 +23,7 @@ trait SendGridDAO {
   val defaultFromAddress =
     new Email(sendGridConfig.getString("defaultFromAddress"), sendGridConfig.getString("defaultFromName"))
 
-  def sendEmail(email: Mail): Future[Response]
+  def sendMail(mail: Mail): Future[Response]
   def lookupPreferredEmail(userId: WorkbenchUserId): Future[WorkbenchEmail]
   def lookupUserName(userId: WorkbenchUserId): Future[String]
   def lookupUserFirstName(userId: WorkbenchUserId): Future[String]
@@ -69,8 +69,8 @@ trait SendGridDAO {
         emailSubstitutions <- emailSubstitutionsFuture
         nameSubstitution <- nameSubstitutionsFuture
         recipientFirstNameSubstitution <- recipientFirstNameSubstitutionFuture
-        response <- sendEmail(
-          createEmail(
+        response <- sendMail(
+          createMail(
             toAddress,
             replyTos,
             notification.notificationId,
@@ -84,30 +84,30 @@ trait SendGridDAO {
     Note: email.setSubject and email.setText must be set even if their values
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
-  def createEmail(toAddress: WorkbenchEmail,
-                  replyTos: Option[Set[WorkbenchEmail]],
-                  notificationId: String,
-                  substitutions: Map[String, String] = Map.empty
+  def createMail(toAddress: WorkbenchEmail,
+                 replyTos: Option[Set[WorkbenchEmail]],
+                 notificationId: String,
+                 substitutions: Map[String, String] = Map.empty
   ): Mail = {
-    val email = new Mail()
+    val mail = new Mail()
 
     // set recipient
     val personalization = new Personalization()
     personalization.addTo(new Email(toAddress.value))
     addSubstitutions(personalization, substitutions)
 
-    email.setFrom(defaultFromAddress)
-    email.setTemplateId(notificationId)
-    email.setSubject(" ")
+    mail.setFrom(defaultFromAddress)
+    mail.setTemplateId(notificationId)
+    mail.setSubject(" ")
 
-    email.addPersonalization(personalization)
+    mail.addPersonalization(personalization)
 
     replyTos.foreach { userEmails =>
       val addrs = userEmails.map(_.value)
-      email.addHeader("Reply-To", addrs.mkString(", "))
+      mail.addHeader("Reply-To", addrs.mkString(", "))
     }
 
-    email
+    mail
   }
 
   def isSuccessful(response: Response): Boolean =
