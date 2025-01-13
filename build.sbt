@@ -52,7 +52,7 @@ libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.28",
   "org.liquibase" % "liquibase-core" % "4.30.0",
   "org.hsqldb" % "hsqldb" % "2.7.4",
-  "com.sendgrid" % "sendgrid-java" % "2.2.2",
+  "com.sendgrid" % "sendgrid-java" % "4.10.3",
   "ch.qos.logback" % "logback-classic" % "1.5.16",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
   "com.azure" % "azure-identity" % "1.14.2",
