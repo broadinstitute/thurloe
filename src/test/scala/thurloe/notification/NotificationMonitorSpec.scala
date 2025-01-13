@@ -99,7 +99,7 @@ class NotificationMonitorSpec(_system: ActorSystem)
 
     awaitAssert(
       assertResult(testNotifications.map(n => n.requesterId.value).toSet) {
-        sendGridDAO.emails.asScala.map(email => email.getHeaders.get("Reply-To")).toSet
+        sendGridDAO.emails.asScala.map(email => email.getReplyto.getEmail).toSet
       },
       10 seconds
     )
