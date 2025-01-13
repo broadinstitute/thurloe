@@ -117,6 +117,7 @@ val customMergeStrategy: String => MergeStrategy = {
     }
   case PathList("javax", "annotation", _@_*) => MergeStrategy.first
   case "NOTICE" => MergeStrategy.discard
+  case "LICENSE" => MergeStrategy.first
   case "module-info.class" => MergeStrategy.discard
   case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.deduplicate
