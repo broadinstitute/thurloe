@@ -23,6 +23,8 @@ jobs:
           java-version: 17
           cache: sbt
 
+      - uses: sbt/setup-sbt@v1
+
       - name: Check formatting for modified files
         run: |
           sbt scalafmtCheckAll
