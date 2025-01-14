@@ -1,8 +1,8 @@
 package thurloe.dataaccess
 
 import akka.http.scaladsl.model.StatusCodes
-import com.sendgrid.Response
-import com.sendgrid.helpers.mail.Mail
+import com.sendgrid.SendGrid.Response
+import com.sendgrid._
 import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import thurloe.database.KeyNotFoundException
 import thurloe.service.Notification
@@ -18,18 +18,18 @@ import scala.concurrent.Future
 class MockSendGridDAO extends SendGridDAO {
 
   val desiredFrom = "good_from_user"
-  val ok = new Response(200, "OK", java.util.Map.of())
+  val ok = new Response(200, "OK")
 
   val validNotificationIds = Seq("valid_notification_id1", "valid_notification_id2")
 
-  val emails = Collections.synchronizedList(new util.ArrayList[Mail]())
+  val emails = Collections.synchronizedList(new util.ArrayList[SendGrid.Email]())
 
-  override def sendMail(mail: Mail): Future[Response] = Future {
-    val usedId = mail.getTemplateId
-    mail match {
+  override def sendEmail(email: SendGrid.Email): Future[Response] = Future {
+    val usedId = email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")
+    email match {
       case e
           if validNotificationIds
-            .contains(e.getTemplateId) =>
+            .contains(e.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")) =>
         emails.add(e)
         ok
       case _ =>
