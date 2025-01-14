@@ -52,7 +52,7 @@ libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.28",
   "org.liquibase" % "liquibase-core" % "4.30.0",
   "org.hsqldb" % "hsqldb" % "2.7.4",
-  "com.sendgrid" % "sendgrid-java" % "4.10.3",
+  "com.sendgrid" % "sendgrid-java" % "2.2.2",
   "ch.qos.logback" % "logback-classic" % "1.5.16",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
   "com.azure" % "azure-identity" % "1.14.2",
@@ -117,7 +117,6 @@ val customMergeStrategy: String => MergeStrategy = {
     }
   case PathList("javax", "annotation", _@_*) => MergeStrategy.first
   case "NOTICE" => MergeStrategy.discard
-  case "LICENSE" => MergeStrategy.first
   case "module-info.class" => MergeStrategy.discard
   case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.deduplicate

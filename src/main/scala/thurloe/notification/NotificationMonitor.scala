@@ -3,7 +3,7 @@ package thurloe.notification
 import akka.actor.SupervisorStrategy.{Escalate, Stop}
 import akka.actor._
 import akka.pattern._
-import com.sendgrid.Response
+import com.sendgrid.SendGrid.Response
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.workbench.google.GooglePubSubDAO
@@ -181,9 +181,9 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         .acknowledgeMessagesById(pubSubSubscriptionName, Seq(message.ackId))
         .map(_ => StartMonitorPass) pipeTo self
       responseOption match {
-        case Some(response: Response) if !sendGridDAO.isSuccessful(response) =>
+        case Some(response: Response) if !response.getStatus =>
           logger.error(
-            s"could not send notification ${message.contents}, sendgrid code: ${response.getStatusCode}, sendgrid message: ${response.getBody}"
+            s"could not send notification ${message.contents}, sendgrid code: ${response.getCode}, sendgrid message: ${response.getMessage}"
           )
         case _ => // log nothing
       }
