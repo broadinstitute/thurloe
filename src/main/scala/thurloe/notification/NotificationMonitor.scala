@@ -429,7 +429,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         thurloe.service.Notification(
           Option(recipientUserId),
           None,
-          Option(recipientUserId),
+          Option(requesterId),
           templateId,
           Map("groupName" -> groupName, "groupUrl" -> groupManagementUrl(groupName)),
           Map("originEmail" -> requesterId),
