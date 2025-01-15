@@ -24,7 +24,7 @@ class NotificationServiceSpec extends AnyFunSpec with ScalatestRouteTest {
   )
   val validNotification2 = Notification(Some(WorkbenchUserId("a_user_id")),
                                         None,
-                                        Option(Set(WorkbenchUserId("a_user_id"))),
+                                        Option(WorkbenchUserId("a_user_id")),
                                         "valid_notification_id1",
                                         Map.empty,
                                         Map.empty,
