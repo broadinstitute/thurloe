@@ -103,8 +103,13 @@ trait SendGridDAO {
     mail.addPersonalization(personalization)
 
     replyTos.foreach { userEmails =>
-      val addrs = userEmails.map(_.value)
-      mail.setReplyTo(new Email(addrs.mkString(", ")))
+      // sendgrid-java client library only supports a single reply-to address:
+      // https://github.com/sendgrid/sendgrid-java/issues/696
+      // so, we arbitrarily choose one of the reply-tos passed to this method.
+      // Calling code is reponsible for ensuring it only passes one email.
+      userEmails.headOption.foreach { replyTo =>
+        mail.setReplyTo(new Email(replyTo.value))
+      }
     }
 
     mail

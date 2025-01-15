@@ -425,11 +425,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                      Map.empty
         )
 
-      case GroupAccessRequestNotification(recipientUserId, groupName, replyTos, requesterId) =>
+      case GroupAccessRequestNotification(recipientUserId, groupName, _, requesterId) =>
         thurloe.service.Notification(
           Option(recipientUserId),
           None,
-          Option(replyTos),
+          Option(Set(requesterId)),
           templateId,
           Map("groupName" -> groupName, "groupUrl" -> groupManagementUrl(groupName)),
           Map("originEmail" -> requesterId),
