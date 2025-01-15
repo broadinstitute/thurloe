@@ -46,8 +46,8 @@ trait SendGridDAO {
             )
         )
 
-      val replyTosFuture = notification.replyTos.map {
-        Future.traverse(_)(lookupPreferredEmail).map(replyToEmails => Option(replyToEmails))
+      val replyToFuture = notification.replyTo.map {
+        lookupPreferredEmail(_).map(replyToEmail => Option(replyToEmail))
       } getOrElse Future.successful(None)
 
       val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions.toList) { case (key, id) =>
@@ -65,14 +65,14 @@ trait SendGridDAO {
 
       for {
         toAddress <- toAddressFuture
-        replyTos <- replyTosFuture
+        replyTo <- replyToFuture
         emailSubstitutions <- emailSubstitutionsFuture
         nameSubstitution <- nameSubstitutionsFuture
         recipientFirstNameSubstitution <- recipientFirstNameSubstitutionFuture
         response <- sendMail(
           createMail(
             toAddress,
-            replyTos,
+            replyTo,
             notification.notificationId,
             notification.substitutions ++ emailSubstitutions ++ nameSubstitution ++ recipientFirstNameSubstitution
           )
@@ -102,14 +102,8 @@ trait SendGridDAO {
 
     mail.addPersonalization(personalization)
 
-    replyTos.foreach { userEmails =>
-      // sendgrid-java client library only supports a single reply-to address:
-      // https://github.com/sendgrid/sendgrid-java/issues/696
-      // so, we arbitrarily choose one of the reply-tos passed to this method.
-      // Calling code is reponsible for ensuring it only passes one email.
-      userEmails.headOption.foreach { replyTo =>
-        mail.setReplyTo(new Email(replyTo.value))
-      }
+    replyTo.foreach { userEmail =>
+      mail.setReplyTo(new Email(replyTo.value))
     }
 
     mail
