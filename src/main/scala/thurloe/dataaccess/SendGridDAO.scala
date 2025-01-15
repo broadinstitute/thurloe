@@ -42,8 +42,8 @@ trait SendGridDAO {
             )
         )
 
-      val replyTosFuture = notification.replyTos.map {
-        Future.traverse(_)(lookupPreferredEmail).map(replyToEmails => Option(replyToEmails))
+      val replyToFuture = notification.replyTo.map {
+        lookupPreferredEmail(_).map(replyToEmail => Option(replyToEmail))
       } getOrElse Future.successful(None)
 
       val emailSubstitutionsFuture = Future.traverse(notification.emailLookupSubstitutions.toList) { case (key, id) =>
@@ -61,14 +61,14 @@ trait SendGridDAO {
 
       for {
         toAddress <- toAddressFuture
-        replyTos <- replyTosFuture
+        replyTo <- replyToFuture
         emailSubstitutions <- emailSubstitutionsFuture
         nameSubstitution <- nameSubstitutionsFuture
         recipientFirstNameSubstitution <- recipientFirstNameSubstitutionFuture
         response <- sendEmail(
           createEmail(
             toAddress,
-            replyTos,
+            replyTo,
             notification.notificationId,
             notification.substitutions ++ emailSubstitutions ++ nameSubstitution ++ recipientFirstNameSubstitution
           )
@@ -81,7 +81,7 @@ trait SendGridDAO {
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
   def createEmail(toAddress: WorkbenchEmail,
-                  replyTos: Option[Set[WorkbenchEmail]],
+                  replyTo: Option[WorkbenchEmail],
                   notificationId: String,
                   substitutions: Map[String, String] = Map.empty
   ): SendGrid.Email = {
@@ -92,9 +92,8 @@ trait SendGridDAO {
     email.setTemplateId(notificationId)
     email.setSubject(" ")
     email.setFromName(defaultFromName)
-    replyTos.map { userEmails =>
-      val addrs = userEmails.map(_.value)
-      email.addHeader("Reply-To", addrs.mkString(", "))
+    replyTo.foreach { userEmail =>
+      email.addHeader("Reply-To", userEmail.value)
     }
     email.setHtml(" ")
     addSubstitutions(email, substitutions)

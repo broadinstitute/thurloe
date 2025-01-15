@@ -60,7 +60,7 @@ case class UserKeyValuePairs(userId: String, keyValuePairs: Seq[KeyValuePair]) {
 }
 case class Notification(userId: Option[WorkbenchUserId],
                         userEmail: Option[WorkbenchEmail],
-                        replyTos: Option[Set[WorkbenchUserId]],
+                        replyTo: Option[WorkbenchUserId],
                         notificationId: String,
                         substitutions: Map[String, String],
                         emailLookupSubstitutions: Map[String, WorkbenchUserId],

@@ -271,7 +271,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         thurloe.service.Notification(
           Option(recipientUserId),
           None,
-          Option(Set(workspaceOwnerId)),
+          Option(workspaceOwnerId),
           templateId,
           Map("accessLevel" -> accessLevel,
               "namespace" -> workspaceName.namespace,
@@ -286,7 +286,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         thurloe.service.Notification(
           None,
           Option(recipientUserEmail),
-          Option(Set(requesterId)),
+          Option(requesterId),
           templateId,
           Map("wsName" -> workspaceName.name,
               "wsUrl" -> workspacePortalUrl(workspaceName),
@@ -301,7 +301,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         thurloe.service.Notification(
           None,
           Option(recipientUserEmail),
-          Option(Set(requesterId)),
+          Option(requesterId),
           templateId,
           Map("billingProjectName" -> billingProjectName,
               "billingProjectNameUrl" -> billingProjectUrl(billingProjectName)
@@ -314,7 +314,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
         thurloe.service.Notification(
           Option(recipientUserId),
           None,
-          Option(Set(workspaceOwnerId)),
+          Option(workspaceOwnerId),
           templateId,
           Map("accessLevel" -> accessLevel,
               "namespace" -> workspaceName.namespace,
@@ -425,11 +425,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                      Map.empty
         )
 
-      case GroupAccessRequestNotification(recipientUserId, groupName, replyTos, requesterId) =>
+      case GroupAccessRequestNotification(recipientUserId, groupName, _, requesterId) =>
         thurloe.service.Notification(
           Option(recipientUserId),
           None,
-          Option(replyTos),
+          Option(requesterId),
           templateId,
           Map("groupName" -> groupName, "groupUrl" -> groupManagementUrl(groupName)),
           Map("originEmail" -> requesterId),
