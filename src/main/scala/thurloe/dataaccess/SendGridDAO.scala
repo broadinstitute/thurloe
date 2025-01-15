@@ -85,7 +85,7 @@ trait SendGridDAO {
     aren't used. Supposedly this will be fixed in a future version of SendGrid
    */
   def createMail(toAddress: WorkbenchEmail,
-                 replyTos: Option[Set[WorkbenchEmail]],
+                 replyTo: Option[WorkbenchEmail],
                  notificationId: String,
                  substitutions: Map[String, String] = Map.empty
   ): Mail = {
@@ -103,7 +103,7 @@ trait SendGridDAO {
     mail.addPersonalization(personalization)
 
     replyTo.foreach { userEmail =>
-      mail.setReplyTo(new Email(replyTo.value))
+      mail.setReplyTo(new Email(userEmail.value))
     }
 
     mail
