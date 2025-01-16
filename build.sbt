@@ -6,7 +6,7 @@ version := "0.2"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.13.15"
+scalaVersion := "2.13.16"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
