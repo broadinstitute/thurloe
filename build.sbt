@@ -14,9 +14,9 @@ val slickV = "3.5.2"
 
 val scalaTestV = "3.2.19"
 
-val workbenchLibsHash = "5d9c477"
-val workbenchGoogleV = s"0.33-$workbenchLibsHash"
-val workbenchNotificationsV = s"0.9-$workbenchLibsHash"
+val workbenchLibsHash = "4292239"
+val workbenchGoogleV = s"0.34-$workbenchLibsHash"
+val workbenchNotificationsV = s"0.10-$workbenchLibsHash"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
