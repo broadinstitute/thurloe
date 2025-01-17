@@ -14,9 +14,9 @@ val slickV = "3.5.2"
 
 val scalaTestV = "3.2.19"
 
-val workbenchLibsHash = "5d9c477"
-val workbenchGoogleV = s"0.33-$workbenchLibsHash"
-val workbenchNotificationsV = s"0.9-$workbenchLibsHash"
+val workbenchLibsHash = "4292239"
+val workbenchGoogleV = s"0.34-$workbenchLibsHash"
+val workbenchNotificationsV = s"0.10-$workbenchLibsHash"
 
 resolvers ++= Seq(
   "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
@@ -52,7 +52,7 @@ libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.28",
   "org.liquibase" % "liquibase-core" % "4.30.0",
   "org.hsqldb" % "hsqldb" % "2.7.4",
-  "com.sendgrid" % "sendgrid-java" % "2.2.2",
+  "com.sendgrid" % "sendgrid-java" % "4.10.3",
   "ch.qos.logback" % "logback-classic" % "1.5.16",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
   "com.azure" % "azure-identity" % "1.15.0",
@@ -117,6 +117,7 @@ val customMergeStrategy: String => MergeStrategy = {
     }
   case PathList("javax", "annotation", _@_*) => MergeStrategy.first
   case "NOTICE" => MergeStrategy.discard
+  case "LICENSE" => MergeStrategy.first
   case "module-info.class" => MergeStrategy.discard
   case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.deduplicate

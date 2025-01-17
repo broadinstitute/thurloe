@@ -1,8 +1,8 @@
 package thurloe.dataaccess
 
 import akka.http.scaladsl.model.StatusCodes
-import com.sendgrid.SendGrid.Response
-import com.sendgrid._
+import com.sendgrid.{Method, Request, Response, SendGrid}
+import com.sendgrid.helpers.mail.Mail
 import com.typesafe.scalalogging.LazyLogging
 import org.broadinstitute.dsde.workbench.model.{WorkbenchEmail, WorkbenchUserId}
 import thurloe.database.{KeyNotFoundException, ThurloeDatabaseConnector}
@@ -16,18 +16,23 @@ import scala.concurrent.Future
 class HttpSendGridDAO(samDao: SamDAO) extends SendGridDAO with LazyLogging {
   val dataAccess = ThurloeDatabaseConnector
 
-  override def sendEmail(email: SendGrid.Email): Future[Response] = {
+  override def sendMail(mail: Mail): Future[Response] = {
     val sendGrid = new SendGrid(apiKey)
 
     Future {
-      val response = sendGrid.send(email)
-      if (response.getStatus) response
+      val request = new Request()
+      request.setMethod(Method.POST)
+      request.setEndpoint("mail/send")
+      request.setBody(mail.build)
+
+      val response = sendGrid.api(request)
+      if (isSuccessful(response)) response
       else
-        throw new NotificationException(
+        throw NotificationException(
           StatusCodes.InternalServerError,
-          "Unable to send notification, unexpected error occurred: " + response.getMessage,
-          email.getTos.toSeq,
-          email.getFilters.getJSONObject("templates").getJSONObject("settings").getString("template_id")
+          "Unable to send notification, unexpected error occurred: " + response.getBody,
+          getTos(mail),
+          mail.getTemplateId
         )
     }
   }
