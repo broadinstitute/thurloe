@@ -16,7 +16,6 @@ import thurloe.database.{DataAccess, KeyNotFoundException, ThurloeDatabaseConnec
 import thurloe.notification.NotificationMonitor.StartMonitorPass
 import thurloe.notification.NotificationMonitorSupervisor._
 
-import scala.annotation.nowarn
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -258,7 +257,6 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
   def groupManagementUrl(groupName: String): String = s"$fireCloudPortalUrl/#groups/${groupName}"
   def bucketUrl(bucketName: String): String = s"https://console.cloud.google.com/storage/browser/${bucketName}"
 
-  @nowarn("cat=deprecation")
   def toThurloeNotification(notification: Notification): thurloe.service.Notification = {
     val templateId = templateIdsByType(notification.getClass.getSimpleName)
 
@@ -425,20 +423,6 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                      Map("wsName" -> workspaceName.name, "wsUrl" -> workspacePortalUrl(workspaceName)),
                                      Map.empty,
                                      Map.empty
-        )
-
-      // GroupAccessRequestNotification is deprecated. Once Sam switches over to sending
-      // GroupAccessRequestNotificationV2, delete this case and the @nowarn annotation
-      // on the enclosing method.
-      case GroupAccessRequestNotification(recipientUserId, groupName, _, requesterId) =>
-        thurloe.service.Notification(
-          Option(recipientUserId),
-          None,
-          Option(requesterId),
-          templateId,
-          Map("groupName" -> groupName, "groupUrl" -> groupManagementUrl(groupName)),
-          Map("originEmail" -> requesterId),
-          Map("userNameFL" -> requesterId)
         )
 
       case GroupAccessRequestNotificationV2(recipientUserId, groupName, replyTo, requesterId) =>
