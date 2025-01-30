@@ -459,7 +459,7 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                              quotaConsumedByJob,
                                              quotaRemaining,
                                              userDescription,
-      userDataTtlDays
+                                             userDataTtlDays
           ) =>
         thurloe.service.Notification(
           Option(recipientUserId),
