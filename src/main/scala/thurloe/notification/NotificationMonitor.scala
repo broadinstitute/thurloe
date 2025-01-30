@@ -458,7 +458,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
                                              timeCompleted,
                                              quotaConsumedByJob,
                                              quotaRemaining,
-                                             userDescription
+                                             userDescription,
+      userDataTtlDays
           ) =>
         thurloe.service.Notification(
           Option(recipientUserId),
@@ -472,7 +473,8 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
             "timeCompleted" -> timeCompleted,
             "quotaConsumedByJob" -> quotaConsumedByJob,
             "quotaRemaining" -> quotaRemaining,
-            "userDescription" -> userDescription
+            "userDescription" -> userDescription,
+            "userDataTtlDays" -> userDataTtlDays
           ),
           Map.empty,
           Map.empty
