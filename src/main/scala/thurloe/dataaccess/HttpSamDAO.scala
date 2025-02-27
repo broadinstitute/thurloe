@@ -27,6 +27,7 @@ class HttpSamDAO(config: Config, cloudServiceAuthTokenProvider: CloudServiceAuth
     new ApiClient().getHttpClient.newBuilder
       .readTimeout(timeout.toJava)
       .protocols(Seq(Protocol.HTTP_1_1).asJava)
+      .dispatcher(dispatcher)
       .build()
   }
 
