@@ -2,7 +2,7 @@ package thurloe.dataaccess
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import okhttp3.Protocol
+import okhttp3.{Dispatcher, Protocol}
 import org.broadinstitute.dsde.workbench.client.sam
 import org.broadinstitute.dsde.workbench.client.sam.ApiClient
 import org.broadinstitute.dsde.workbench.client.sam.api.AdminApi
@@ -20,13 +20,19 @@ class HttpSamDAO(config: Config, cloudServiceAuthTokenProvider: CloudServiceAuth
   private val samServiceURL = samConfig.getString("samBaseUrl")
   private val timeout = samConfig.getDuration("timeout").toScala
 
-  private def getApiClient = {
-    val okHttpClient = new ApiClient().getHttpClient
-
-    val okHttpClientBuilder = okHttpClient.newBuilder
+  private val okHttpClient = {
+    val dispatcher = new Dispatcher()
+    dispatcher.setMaxRequests(samConfig.getInt("maxConcurrentRequests"))
+    dispatcher.setMaxRequestsPerHost(samConfig.getInt("maxConcurrentRequests"))
+    new ApiClient().getHttpClient.newBuilder
       .readTimeout(timeout.toJava)
+      .protocols(Seq(Protocol.HTTP_1_1).asJava)
+      .dispatcher(dispatcher)
+      .build()
+  }
 
-    val samApiClient = new ApiClient(okHttpClientBuilder.protocols(Seq(Protocol.HTTP_1_1).asJava).build())
+  private def getApiClient = {
+    val samApiClient = new ApiClient(okHttpClient)
     samApiClient.setBasePath(samServiceURL)
 
     val token: String = cloudServiceAuthTokenProvider.getAccessToken
