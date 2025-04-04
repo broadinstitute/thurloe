@@ -23,7 +23,7 @@ resolvers ++= Seq(
   "Broad Artifactory Snapshots" at "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "5.18.2",
+  "org.webjars" % "swagger-ui" % "5.18.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
   "com.google.protobuf" % "protobuf-java" % "4.29.3",
