@@ -9,6 +9,8 @@ import thurloe.dataaccess.{HttpSendGridDAO, SamDAO}
 import thurloe.database.ThurloeDatabaseConnector
 import thurloe.security.CSPDirective.addCSP
 
+import scala.util.matching.Regex
+
 class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices with StatusService {
   val authConfig = ConfigFactory.load().getConfig("auth")
 
@@ -16,6 +18,9 @@ class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices
   override val dataAccess = ThurloeDatabaseConnector
   override val sendGridDAO = new HttpSendGridDAO(samDao)
   private val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/5.18.2"
+
+  private val regexJs: Regex = ".+\\.js$".r
+  private val regexCss: Regex = ".+\\.css$".r
 
   def route: Route = addCSP {
     swaggerUiService ~ statusRoute ~ fireCloudProtectedRoutes
@@ -35,8 +40,8 @@ class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices
       // We have to be explicit about the paths here since we're matching at the root URL and we don't
       // want to catch all paths lest we circumvent Spray's not-found and method-not-allowed error
       // messages.
-      (pathPrefixTest("swagger-ui") | pathPrefixTest("oauth2") | pathSuffixTest("js")
-        | pathSuffixTest("css") | pathPrefixTest("favicon")) {
+      (pathPrefixTest("swagger-ui") | pathPrefixTest("oauth2") | pathSuffixTest(regexJs)
+        | pathSuffixTest(regexCss) | pathPrefixTest("favicon")) {
         get {
           getFromResourceDirectory(swaggerUiPath)
         }
