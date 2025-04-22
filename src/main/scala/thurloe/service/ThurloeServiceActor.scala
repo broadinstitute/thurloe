@@ -40,8 +40,13 @@ class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices
       // We have to be explicit about the paths here since we're matching at the root URL and we don't
       // want to catch all paths lest we circumvent Spray's not-found and method-not-allowed error
       // messages.
-      (pathPrefixTest("swagger-ui") | pathPrefixTest("oauth2") | pathSuffixTest(regexJs)
-        | pathSuffixTest(regexCss) | pathPrefixTest("favicon")) {
+      (pathPrefixTest("swagger-ui") | pathPrefixTest("oauth2") | pathPrefixTest("favicon")) {
+        get {
+          getFromResourceDirectory(swaggerUiPath)
+        }
+      } ~
+      // regex paths don't like to be mixed with string paths; they have different Directive signatures
+      (pathSuffixTest(regexJs) | pathSuffixTest(regexCss)) { _ =>
         get {
           getFromResourceDirectory(swaggerUiPath)
         }
