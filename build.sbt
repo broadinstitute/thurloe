@@ -14,9 +14,9 @@ val slickV = "3.5.2"
 
 val scalaTestV = "3.2.19"
 
-val workbenchLibsHash = "411cd3f"
-val workbenchGoogleV = s"0.34-$workbenchLibsHash"
-val workbenchNotificationsV = s"1.1-$workbenchLibsHash"
+val workbenchLibsHash = "56f2c74"
+val workbenchGoogleV = s"0.35-$workbenchLibsHash"
+val workbenchNotificationsV = s"2.0-$workbenchLibsHash"
 
 resolvers ++= Seq(
   "Google Artifact Repository Releases" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-release/",
