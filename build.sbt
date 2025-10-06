@@ -14,13 +14,13 @@ val slickV = "3.5.2"
 
 val scalaTestV = "3.2.19"
 
-val workbenchLibsHash = "4292239"
-val workbenchGoogleV = s"0.34-$workbenchLibsHash"
-val workbenchNotificationsV = s"0.10-$workbenchLibsHash"
+val workbenchLibsHash = "56f2c74"
+val workbenchGoogleV = s"0.35-$workbenchLibsHash"
+val workbenchNotificationsV = s"2.0-$workbenchLibsHash"
 
 resolvers ++= Seq(
-  "Broad Artifactory Releases" at "https://broadinstitute.jfrog.io/broadinstitute/libs-release/",
-  "Broad Artifactory Snapshots" at "https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot/")
+  "Google Artifact Repository Releases" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-release/",
+  "Google Artifact Repository Snapshots" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-snapshot/")
 
 libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "5.18.2",
@@ -55,7 +55,7 @@ libraryDependencies ++= Seq(
   "com.sendgrid" % "sendgrid-java" % "4.10.3",
   "ch.qos.logback" % "logback-classic" % "1.5.16",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
-  "com.azure" % "azure-identity" % "1.15.0",
+  "com.azure" % "azure-identity" % "1.15.4",
   "com.azure" % "azure-core-management" % "1.15.6",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
