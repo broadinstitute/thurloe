@@ -50,7 +50,7 @@ libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.18.0",
   "commons-codec" % "commons-codec" % "1.17.2",
   "mysql" % "mysql-connector-java" % "8.0.28",
-  "org.liquibase" % "liquibase-core" % "4.30.0",
+  "org.liquibase" % "liquibase-core" % "4.31.0",
   "org.hsqldb" % "hsqldb" % "2.7.4",
   "com.sendgrid" % "sendgrid-java" % "4.10.3",
   "ch.qos.logback" % "logback-classic" % "1.5.16",
