@@ -23,7 +23,7 @@ resolvers ++= Seq(
   "Google Artifact Repository Snapshots" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "5.18.2",
+  "org.webjars" % "swagger-ui" % "5.18.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
   "com.google.protobuf" % "protobuf-java" % "4.29.3",
@@ -55,8 +55,6 @@ libraryDependencies ++= Seq(
   "com.sendgrid" % "sendgrid-java" % "4.10.3",
   "ch.qos.logback" % "logback-classic" % "1.5.16",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
-  "com.azure" % "azure-identity" % "1.15.4",
-  "com.azure" % "azure-core-management" % "1.15.6",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
