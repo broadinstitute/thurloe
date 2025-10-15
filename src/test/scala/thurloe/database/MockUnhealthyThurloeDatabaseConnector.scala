@@ -23,5 +23,7 @@ case object MockUnhealthyThurloeDatabaseConnector extends DataAccess {
 
   override def delete(userId: String, key: String) = Future.failed(new Exception("does not work"))
 
+  override def deleteAll(userId: String) = Future.failed(new Exception("does not work"))
+
   override def status() = Future.failed(new Exception("Failure from \"unhealthy\" mock DAO"))
 }
