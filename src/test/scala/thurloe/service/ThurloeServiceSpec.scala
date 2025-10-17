@@ -329,6 +329,77 @@ class ThurloeServiceSpec extends AnyFunSpec with ScalatestRouteTest {
       }
     }
 
+    it("should allow deleting all keys for a user") {
+      // create two keys for user1
+      Post(uriPrefix, u1k1v1) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      Post(uriPrefix, u1k2v2) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+      // create two keys for user2
+      Post(uriPrefix, u2k1v2) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      Post(uriPrefix, u2k2v1) ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.Created) {
+          status
+        }
+      }
+
+      // ask to delete all keys for user1; it should succeed
+      Delete(s"$uriPrefix/$user1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult("") {
+          responseAs[String]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+
+      // ask again to delete all keys for user1; it should fail with user-not-found
+      Delete(s"$uriPrefix/$user1") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(StatusCodes.NotFound) {
+          status
+        }
+        assertResult(s"User not found: $user1") {
+          responseAs[String]
+        }
+      }
+
+      // retrieve keys for user2; they should still exist
+      val u2batch = UserKeyValuePairs(user2, Seq(k1v2, k2v1))
+      Get(s"$uriPrefix/$user2") ~> thurloeService.keyValuePairRoutes ~> check {
+        assertResult(u2batch) {
+          responseAs[UserKeyValuePairs]
+        }
+        assertResult(StatusCodes.OK) {
+          status
+        }
+      }
+
+    }
+
     it("should return an appropriate error code and message for a missing value during GET") {
       Get(s"$uriPrefix/$user1/$key1") ~> thurloeService.keyValuePairRoutes ~> check {
         assertResult(s"Key not found: $key1") {

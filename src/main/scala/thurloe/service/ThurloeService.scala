@@ -9,7 +9,7 @@ import io.sentry.Sentry
 import spray.json._
 import thurloe.dataaccess.SamDAO
 import thurloe.database.DatabaseOperation.DatabaseOperation
-import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException}
+import thurloe.database.{DataAccess, DatabaseOperation, KeyNotFoundException, UserNotFoundException}
 import thurloe.service.ApiDataModelsJsonProtocol._
 
 import scala.concurrent.Future
@@ -117,5 +117,19 @@ trait ThurloeService extends LazyLogging {
       }
     }
 
-  val keyValuePairRoutes = getRoute ~ getAllRoute ~ queryRoute ~ setRoute ~ deleteRoute
+  val deleteAllRoute: Route =
+    path(ThurloePrefix / Segment) { userId =>
+      delete {
+        onComplete(dataAccess.deleteAll(userId)) {
+          case Success(_) =>
+            complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, ""))
+          case Failure(_: UserNotFoundException) =>
+            complete(StatusCodes.NotFound, s"User not found: $userId")
+          case Failure(e) =>
+            handleError(e)
+        }
+      }
+    }
+
+  val keyValuePairRoutes = getRoute ~ getAllRoute ~ queryRoute ~ setRoute ~ deleteRoute ~ deleteAllRoute
 }

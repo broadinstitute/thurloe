@@ -25,5 +25,7 @@ case object MockThurloeDatabaseConnector extends DataAccess {
 
   override def delete(userId: String, key: String) = ???
 
+  override def deleteAll(userId: String) = ???
+
   override def status() = Future.successful(())
 }
