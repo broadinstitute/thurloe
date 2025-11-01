@@ -46,7 +46,7 @@ libraryDependencies ++= Seq(
     exclude("com.google.protobuf", "protobuf-java"),
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
-  "com.typesafe" % "config" % "1.4.2",
+  "com.typesafe" % "config" % "1.4.5",
   "commons-io" % "commons-io" % "2.18.0",
   "commons-codec" % "commons-codec" % "1.17.2",
   "mysql" % "mysql-connector-java" % "8.0.28",
