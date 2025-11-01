@@ -24,7 +24,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "5.18.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
   "com.google.protobuf" % "protobuf-java" % "4.29.5",
   "io.sentry" % "sentry" % "6.9.2",
