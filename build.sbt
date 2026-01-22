@@ -23,7 +23,7 @@ resolvers ++= Seq(
   "Google Artifact Repository Snapshots" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "5.30.1",
+  "org.webjars" % "swagger-ui" % "5.30.1", // If this version changes, update ThurloeServiceActor.scala as well
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
   "com.google.protobuf" % "protobuf-java" % "4.29.5",
