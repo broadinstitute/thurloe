@@ -6,11 +6,11 @@ version := "0.2"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.13.16"
+scalaVersion := "2.13.17"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
-val slickV = "3.5.2"
+val slickV = "3.6.1"
 
 val scalaTestV = "3.2.19"
 
@@ -23,10 +23,10 @@ resolvers ++= Seq(
   "Google Artifact Repository Snapshots" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "5.18.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+  "org.webjars" % "swagger-ui" % "5.30.1", // If this version changes, update ThurloeServiceActor.scala as well
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
-  "com.google.protobuf" % "protobuf-java" % "4.29.3",
+  "com.google.protobuf" % "protobuf-java" % "4.29.5",
   "io.sentry" % "sentry" % "6.9.2",
   "io.sentry" % "sentry-logback" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
@@ -46,21 +46,21 @@ libraryDependencies ++= Seq(
     exclude("com.google.protobuf", "protobuf-java"),
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
-  "com.typesafe" % "config" % "1.4.2",
-  "commons-io" % "commons-io" % "2.18.0",
-  "commons-codec" % "commons-codec" % "1.17.2",
+  "com.typesafe" % "config" % "1.4.5",
+  "commons-io" % "commons-io" % "2.20.0",
+  "commons-codec" % "commons-codec" % "1.19.0",
   "mysql" % "mysql-connector-java" % "8.0.28",
-  "org.liquibase" % "liquibase-core" % "4.31.0",
+  "org.liquibase" % "liquibase-core" % "4.31.1",
   "org.hsqldb" % "hsqldb" % "2.7.4",
   "com.sendgrid" % "sendgrid-java" % "4.10.3",
-  "ch.qos.logback" % "logback-classic" % "1.5.16",
+  "ch.qos.logback" % "logback-classic" % "1.5.20",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
-  "org.mockito" %% "mockito-scala-scalatest" % "1.17.37" % Test
+  "org.mockito" %% "mockito-scala-scalatest" % "1.17.45" % Test
 )
 
 scalacOptions ++= Seq(
