@@ -506,12 +506,14 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           Map.empty
         )
 
-      case TeaspoonsUserQuotaChangedNotification(recipientUserId: WorkbenchUserId,
-      pipelineDisplayName: String,
-      previousQuotaLimit: String,
-      newQuotaLimit: String,
-      quotaConsumedByUser: String,
-      quotaAvailable: String) =>
+      case TeaspoonsUserQuotaChangedNotification(
+            recipientUserId: WorkbenchUserId,
+            pipelineDisplayName: String,
+            previousQuotaLimit: String,
+            newQuotaLimit: String,
+            quotaConsumedByUser: String,
+            quotaAvailable: String
+          ) =>
         thurloe.service.Notification(
           Option(recipientUserId),
           None,
