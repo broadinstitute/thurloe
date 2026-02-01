@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "swagger-ui" % "5.30.1", // If this version changes, update ThurloeServiceActor.scala as well
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
-  "com.google.protobuf" % "protobuf-java" % "4.29.5",
+  "com.google.protobuf" % "protobuf-java" % "4.33.5",
   "io.sentry" % "sentry" % "6.9.2",
   "io.sentry" % "sentry-logback" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
