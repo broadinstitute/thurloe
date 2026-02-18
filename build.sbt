@@ -60,7 +60,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
-  "org.mockito" %% "mockito-scala-scalatest" % "1.17.45" % Test
+  "org.mockito" %% "mockito-scala-scalatest" % "2.0.0" % Test
 )
 
 scalacOptions ++= Seq(
