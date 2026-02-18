@@ -14,7 +14,7 @@ val slickV = "3.6.1"
 
 val scalaTestV = "3.2.19"
 
-val workbenchLibsHash = "56f2c74"
+val workbenchLibsHash = "38a12df"
 val workbenchGoogleV = s"0.35-$workbenchLibsHash"
 val workbenchNotificationsV = s"2.0-$workbenchLibsHash"
 
