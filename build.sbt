@@ -14,7 +14,7 @@ val slickV = "3.6.1"
 
 val scalaTestV = "3.2.19"
 
-val workbenchLibsHash = "56f2c74"
+val workbenchLibsHash = "38a12df"
 val workbenchGoogleV = s"0.35-$workbenchLibsHash"
 val workbenchNotificationsV = s"2.0-$workbenchLibsHash"
 
@@ -60,7 +60,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test,
   "org.scalatest" %% "scalatest" % scalaTestV % Test,
-  "org.mockito" %% "mockito-scala-scalatest" % "1.17.45" % Test
+  "org.mockito" %% "mockito-scala-scalatest" % "2.0.0" % Test
 )
 
 scalacOptions ++= Seq(
