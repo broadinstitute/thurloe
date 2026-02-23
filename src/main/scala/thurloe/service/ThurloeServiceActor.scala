@@ -15,7 +15,7 @@ class ThurloeServiceActor(httpSamDao: SamDAO) extends FireCloudProtectedServices
   val samDao = httpSamDao
   override val dataAccess = ThurloeDatabaseConnector
   override val sendGridDAO = new HttpSendGridDAO(samDao)
-  private val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/5.30.1"
+  private val swaggerUiPath = "META-INF/resources/webjars/swagger-ui/5.30.3"
 
   def route: Route = addCSP {
     swaggerUiService ~ statusRoute ~ fireCloudProtectedRoutes

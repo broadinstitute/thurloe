@@ -6,7 +6,7 @@ version := "0.2"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.13.17"
+scalaVersion := "2.13.18"
 
 val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
@@ -23,10 +23,10 @@ resolvers ++= Seq(
   "Google Artifact Repository Snapshots" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-snapshot/")
 
 libraryDependencies ++= Seq(
-  "org.webjars" % "swagger-ui" % "5.30.1", // If this version changes, update ThurloeServiceActor.scala as well
+  "org.webjars" % "swagger-ui" % "5.30.3", // If this version changes, update ThurloeServiceActor.scala as well
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.9",
-  "com.google.protobuf" % "protobuf-java" % "4.29.5",
+  "com.google.protobuf" % "protobuf-java" % "4.33.5",
   "io.sentry" % "sentry" % "6.9.2",
   "io.sentry" % "sentry-logback" % "6.9.2",
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV
@@ -47,13 +47,13 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
   "com.typesafe" % "config" % "1.4.5",
-  "commons-io" % "commons-io" % "2.20.0",
-  "commons-codec" % "commons-codec" % "1.19.0",
+  "commons-io" % "commons-io" % "2.21.0",
+  "commons-codec" % "commons-codec" % "1.21.0",
   "mysql" % "mysql-connector-java" % "8.0.28",
-  "org.liquibase" % "liquibase-core" % "4.31.1",
+  "org.liquibase" % "liquibase-core" % "4.33.0",
   "org.hsqldb" % "hsqldb" % "2.7.4",
   "com.sendgrid" % "sendgrid-java" % "4.10.3",
-  "ch.qos.logback" % "logback-classic" % "1.5.20",
+  "ch.qos.logback" % "logback-classic" % "1.5.27",
   "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
