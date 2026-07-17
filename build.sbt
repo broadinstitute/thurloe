@@ -14,9 +14,9 @@ val slickV = "3.6.1"
 
 val scalaTestV = "3.2.19"
 
-val workbenchLibsHash = "2e5c77a"
-val workbenchGoogleV = s"0.36-$workbenchLibsHash"
-val workbenchNotificationsV = s"2.1-$workbenchLibsHash"
+val workbenchLibsHash = "38a12df"
+val workbenchGoogleV = s"0.35-$workbenchLibsHash"
+val workbenchNotificationsV = s"2.0-$workbenchLibsHash"
 
 resolvers ++= Seq(
   "Google Artifact Repository Releases" at "https://us-central1-maven.pkg.dev/dsp-artifact-registry/libs-release/",
@@ -35,8 +35,7 @@ libraryDependencies ++= Seq(
     exclude("org.bouncycastle", "bcprov-jdk15on")
     exclude("org.bouncycastle", "bcprov-ext-jdk15on")
     exclude("org.bouncycastle", "bcutil-jdk15on")
-    exclude("org.bouncycastle", "bcpkix-jdk15on")
-    exclude("io.kubernetes", "client-java"),
+    exclude("org.bouncycastle", "bcpkix-jdk15on"),
   "org.broadinstitute.dsde.workbench" %% "workbench-notifications" % workbenchNotificationsV
     exclude("com.typesafe.akka", "akka-protobuf-v3_2.13")
     exclude("com.google.protobuf", "protobuf-java"),
@@ -55,7 +54,7 @@ libraryDependencies ++= Seq(
   "org.hsqldb" % "hsqldb" % "2.7.4",
   "com.sendgrid" % "sendgrid-java" % "4.10.3",
   "ch.qos.logback" % "logback-classic" % "1.5.27",
-  "org.broadinstitute.dsde.workbench" %% "sam-client" % "v0.0.447",
+  "org.broadinstitute.dsde.workbench" %% "sam-client" % "0.1-4cde1ff",
 //---------- Test libraries -------------------//
   "org.broadinstitute.dsde.workbench" %%  "workbench-google" % workbenchGoogleV % Test classifier "tests",
   "com.typesafe.akka" %% "akka-testkit" % akkaV % Test,
