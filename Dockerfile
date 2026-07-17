@@ -1,4 +1,4 @@
-FROM us.gcr.io/broad-dsp-gcr-public/base/jre:11-debian
+FROM us.gcr.io/broad-dsp-gcr-public/base/jre:17-debian
 
 # Thurloe's HTTP Port
 EXPOSE 8000
