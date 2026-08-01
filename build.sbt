@@ -48,7 +48,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick" % slickV,
   "com.typesafe.slick" %% "slick-hikaricp" % slickV,
   "com.typesafe" % "config" % "1.4.9",
-  "commons-io" % "commons-io" % "2.21.0",
+  "commons-io" % "commons-io" % "2.22.0",
   "commons-codec" % "commons-codec" % "1.22.1",
   "mysql" % "mysql-connector-java" % "8.0.28",
   "org.liquibase" % "liquibase-core" % "4.33.0",
