@@ -12,7 +12,7 @@ val akkaV = "2.6.18"
 val akkaHttpV = "10.2.7"
 val slickV = "3.6.1"
 
-val scalaTestV = "3.2.19"
+val scalaTestV = "3.2.20"
 
 val workbenchLibsHash = "2e5c77a"
 val workbenchGoogleV = s"0.36-$workbenchLibsHash"
