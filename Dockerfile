@@ -1,4 +1,3 @@
-# 2026-11-02: this comment forces a full rebuild on the latest blessed base image (CTM-739).
 FROM us.gcr.io/broad-dsp-gcr-public/base/jre:17-debian
 
 # Thurloe's HTTP Port
