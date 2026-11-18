@@ -509,9 +509,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
       case TeaspoonsUserQuotaChangedNotification(
             recipientUserId: WorkbenchUserId,
             pipelineDisplayName: String,
-            previousQuotaLimit: String,
-            newQuotaLimit: String,
-            quotaConsumedByUser: String,
+            customMessage: String,
+            previousQuotaAllocated: String,
+            updatedQuotaAllocated: String,
+            previousQuotaConsumed: String,
+            updatedQuotaConsumed: String,
             quotaAvailable: String
           ) =>
         thurloe.service.Notification(
@@ -521,9 +523,11 @@ class NotificationMonitorActor(val pollInterval: FiniteDuration,
           templateId,
           Map(
             "pipelineDisplayName" -> pipelineDisplayName,
-            "previousQuotaLimit" -> previousQuotaLimit,
-            "newQuotaLimit" -> newQuotaLimit,
-            "quotaConsumedByUser" -> quotaConsumedByUser,
+            "customMessage" -> customMessage,
+            "previousQuotaAllocated" -> previousQuotaAllocated,
+            "updatedQuotaAllocated" -> updatedQuotaAllocated,
+            "previousQuotaConsumed" -> previousQuotaConsumed,
+            "updatedQuotaConsumed" -> updatedQuotaConsumed,
             "quotaAvailable" -> quotaAvailable
           ),
           Map.empty,
